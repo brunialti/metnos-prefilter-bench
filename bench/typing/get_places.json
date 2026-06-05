@@ -1,0 +1,38 @@
+{
+  "name": "get_places",
+  "manifest_mtime": 1779789111,
+  "inputs": {
+    "from_step": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "count",
+      "role": "piping",
+      "format_hint": "integer"
+    },
+    "coords": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "json_object[]",
+      "role": "source",
+      "format_hint": "[{\"lat\": float, \"lon\": float}, ...]"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object[]",
+    "schema": {
+      "lat": "scalar_metric",
+      "lon": "scalar_metric",
+      "place": "slug"
+    }
+  },
+  "unresolved_args": [
+    "coords"
+  ],
+  "consumes": [
+    "piping:from_step"
+  ],
+  "propagates_constraints": false
+}

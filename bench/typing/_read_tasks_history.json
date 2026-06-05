@@ -1,0 +1,20 @@
+{
+  "name": "read_tasks_history",
+  "manifest_mtime": 0,
+  "inputs": {
+    "task_id": {"structural_type": "string", "required": false, "default": null, "semantic_type": "slug", "role": "source", "format_hint": "task id"},
+    "time_window": {"structural_type": "string", "required": false, "default": "last-7d", "semantic_type": "time_window", "role": "filter", "format_hint": "today|last-Nd"}
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "task_entry[]",
+    "schema": {"id": "name", "name": "name", "fired_at": "iso_timestamp", "duration_ms": "scalar_metric", "result": "free_text", "error": "free_text"},
+    "may_be_truncated": true,
+    "may_be_empty": true
+  },
+  "consumes": ["filter:time_window"],
+  "propagates_constraints": false,
+  "preconditions": [],
+  "_builtin": true,
+  "_terminator": false
+}

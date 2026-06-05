@@ -1,0 +1,86 @@
+{
+  "name": "get_signatures",
+  "manifest_mtime": 1778847229,
+  "inputs": {
+    "kind": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "blacklist|whitelist|graylist|forbidden|promotion_candidates|seed_diff"
+    },
+    "signature": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "text_path",
+      "role": "filter",
+      "format_hint": "binary:subcmd:target_kind"
+    },
+    "argv": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text[]",
+      "role": "filter",
+      "format_hint": "array of tokens"
+    },
+    "record_use": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "meta"
+    },
+    "min_uses": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 5,
+      "semantic_type": "count",
+      "role": "filter"
+    },
+    "max_age_days": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 30,
+      "semantic_type": "duration_secs",
+      "role": "filter"
+    },
+    "seed_path": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "file_path",
+      "role": "source"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "negate": "bool",
+      "matched_pattern": "regex_pattern",
+      "severity": "scalar_metric",
+      "reason": "free_text",
+      "allow": "bool",
+      "age_class": "name",
+      "uses": "count",
+      "last_used_at": "iso_timestamp",
+      "matched_path": "file_path"
+    }
+  },
+  "unresolved_args": [
+    "kind",
+    "signature",
+    "argv",
+    "seed_path"
+  ],
+  "consumes": [
+    "filter:name",
+    "filter:text_path",
+    "filter:count",
+    "filter:duration_secs"
+  ],
+  "propagates_constraints": false
+}

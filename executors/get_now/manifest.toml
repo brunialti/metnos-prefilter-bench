@@ -1,0 +1,76 @@
+# Manifest dell'executor `time_read` — Metnos v1.1
+
+manifest_format = "1.0"
+
+name        = "get_now"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "time", "ora", "ore", "data", "orario", "orari", "fuso", "calendario", "now", "adesso",
+                "current", "che ora", "what time", "today", "oggi", "epoch", "timestamp"
+            ]
+
+[description]
+it = "Restituisce l'ora corrente come ISO 8601, in UTC o in un fuso orario IANA specificato."
+en = "Returns the current time as ISO 8601, in UTC or in a specified IANA time zone."
+
+[code]
+files  = ["get_now.py"]
+digest = "sha256:fe5d8a0b7fb26fec07f657bbd8a2f41abe72a37ce73bc754e99368b6f56ff8f1"
+
+[args]
+type = "object"
+
+[args.properties.timezone]
+type        = "string"
+default     = "UTC"
+
+[args.properties.timezone.description]
+it = "Fuso orario IANA (es. 'Europe/Rome'). Default 'UTC'."
+en = "IANA Timezone (e.g., 'Europe/Rome'). Default 'UTC'."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  content: str,
+  metadata: { timezone: str, iso8601: str, epoch: float },
+  error?: str
+}
+"""
+
+[[capabilities]]
+name = "time:read"
+hint = []  # capability atomica, target_kind='none'
+
+[[tests]]
+name   = "ora_utc_default"
+input  = {}
+expect = { ok = true, metadata_field_eq = { timezone = "UTC" } }
+
+[[tests]]
+name   = "ora_in_europe_rome"
+input  = { timezone = "Europe/Rome" }
+expect = { ok = true, metadata_field_eq = { timezone = "Europe/Rome" } }
+
+[[tests]]
+name   = "fallisce_su_timezone_invalido"
+input  = { timezone = "Mars/Olympus" }
+expect = { ok = false, error_contains = "non valido" }
+
+# Sample concreto di output (one-shot per synt + fast-path generator).
+[[tests]]
+name        = "happy_path_sample"
+input       = { timezone = "Europe/Rome" }
+expect      = { ok = true, metadata_field_eq = { timezone = "Europe/Rome" } }
+expect_full = """
+{
+  "ok": true,
+  "content": "2026-05-06T16:45:23.123456+02:00",
+  "metadata": {
+    "timezone": "Europe/Rome",
+    "iso8601": "2026-05-06T16:45:23.123456+02:00",
+    "epoch": 1778078723.123456
+  }
+}
+"""

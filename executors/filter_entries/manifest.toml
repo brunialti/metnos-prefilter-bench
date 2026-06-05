@@ -1,0 +1,225 @@
+# Manifest dell'executor `filter_entries` — Metnos v1.1
+# Executor PURO: nessuna I/O, nessuna capability speciale.
+
+manifest_format = "1.0"
+
+name        = "filter_entries"
+version     = "0.4.0"
+author      = "Roberto Brunialti"
+affinity    = ["filter", "filtra", "select", "where", "criterio", "subset", "match", "partiziona", "scarta", "tieni", "solo"]
+
+[description]
+it = "Filtra una lista di entries (dict) per criteri arbitrari. Lavora SOLO IN MEMORIA su entries gia' raccolte da un executor upstream — NON usarlo per cercare file dal disco (quello e' find_files/list_dirs). PASSAGGIO DELLA LISTA: usa `from_step=N` dove N e' il numero dello step precedente che ha prodotto la lista (es. find_files al passo 1 → from_step=1). Il runtime recupera automaticamente le entries dallo scratchpad. Due famiglie di criteri, cumulative AND fra le diverse, OR dentro le liste di valori: (1) FILESYSTEM-NATIVO — kind ('image','video','audio','text','document','archive','dir','symlink'), type ('file','dir','symlink'), mime_prefix ('image/'), name_glob ('*.jpg' o '*.jpg,*.png'), name_regex (Python regex case-insensitive), size_min, size_max, mtime_after, mtime_before (ISO 8601). (2) GENERICO PER CAMPO ARBITRARIO — where_field='nomecampo' + uno fra: where_in=[...] (match esatto in lista) o where_not_in=[...] (NOT in lista) o where_value='x' (shortcut per where_in=['x']) o where_starts_with='HLT' (prefix case-insensitive) o where_contains='dentista' (substring case-insensitive) o where_glob='HLT*' (pattern fnmatch case-insensitive: * = qualunque, ? = un char) o where_regex='^HLT[\\s-]+' (regex Python case-insensitive). where_field SENZA NESSUNO dei modi sopra e' un no-op. Esempi: appuntamenti HLT -> from_step=1, where_field='summary', where_starts_with='HLT'; foto 2024 -> from_step=1, kind='image', mtime_after='2024-01-01'; mail rilevanti -> from_step=2, where_field='relevance', where_in=['high','medium']."
+en = "Filter a list of entries (dict) based on arbitrary criteria. Work ONLY IN MEMORY on entries already collected by an upstream executor — DO NOT use it to search for files on disk (that is find_files/list_dirs). LIST PASSAGE: use `from_step=N` where N is the number of the previous step that produced the list (e.g., find_files at step 1 → from_step=1). The runtime automatically retrieves the entries from the scratchpad. Two families of criteria, cumulative AND between different ones, OR within value lists: (1) FILESYSTEM-NATIVE — kind ('image','video','audio','text','document','archive','dir','symlink'), type ('file','dir','symlink'), mime_prefix ('image/'), name_glob ('*.jpg' or '*.jpg,*.png'), name_regex (Python regex case-insensitive), size_min, size_max, mtime_after, mtime_before (ISO 8601). (2) GENERIC FOR ARBITRARY FIELD — where_field='fieldname' + one of: where_in=[...] (exact match in list) or where_not_in=[...] (NOT in list) or where_value='x' (shortcut) or where_starts_with='HLT' (case-insensitive prefix) or where_contains='dentist' (case-insensitive substring) or where_glob='HLT*' (case-insensitive fnmatch: * any, ? one char) or where_regex='^HLT[\\s-]+' (Python regex case-insensitive). where_field WITHOUT any of these is a no-op. Examples: HLT appointments -> from_step=1, where_field='summary', where_starts_with='HLT'; 2024 photos -> from_step=1, kind='image', mtime_after='2024-01-01'; relevant emails -> from_step=2, where_field='relevance', where_in=['high','medium']."
+
+[code]
+files  = ["filter_entries.py"]
+digest = "sha256:0e8da54de363feb9eb00aca0e41a27a33bc17fa170330c8af56694092899e3a6"
+
+[args]
+type     = "object"
+required = ["from_step"]
+
+[args.properties.from_step]
+type        = "integer"
+minimum     = 1
+
+[args.properties.from_step.description]
+it = "Numero dello step precedente (in questo turno) che ha prodotto la lista da filtrare. Es. se al passo 1 hai chiamato find_files, qui passi from_step=1: il runtime recupera automaticamente le entries dallo scratchpad."
+en = "Number of the previous step (in this turn) that produced the list to filter. E.g. if at step 1 you called find_files, here you pass from_step=1: the runtime automatically retrieves the entries from the scratchpad."
+
+[args.properties.kind]
+type        = "string"
+
+[args.properties.kind.description]
+it = "Filtra per categoria semantica (campo entry.kind): 'image', 'video', 'audio', 'text', 'document', 'archive', 'binary', 'dir', 'symlink'. Per piu' categorie puoi passare una stringa con virgole o l'array equivalente."
+en = "Filter by semantic category (field entry.kind): 'image', 'video', 'audio', 'text', 'document', 'archive', 'binary', 'dir', 'symlink'. For multiple categories, you can pass a comma-separated string or the equivalent array."
+
+[args.properties.type]
+type        = "string"
+
+[args.properties.type.description]
+it = "Filtra per tipo filesystem (campo entry.type): 'file', 'dir', 'symlink'."
+en = "Filter by filesystem type (field entry.type): 'file', 'dir', 'symlink'."
+
+[args.properties.mime_prefix]
+type        = "string"
+
+[args.properties.mime_prefix.description]
+it = "Filtra per prefisso del mime type. Es. 'image/' (qualunque immagine), 'application/pdf'."
+en = "Filter by mime type prefix. E.g. 'image/' (any image), 'application/pdf'."
+
+[args.properties.name_glob]
+type        = "string"
+
+[args.properties.name_glob.description]
+it = "Pattern glob applicato al nome (case-insensitive). Es. '*.jpg', 'IMG_*'. Per piu' pattern usa virgole/pipe ('*.jpg,*.png')."
+en = "Glob pattern applied to the name (case-insensitive). E.g. '*.jpg', 'IMG_*'. For multiple patterns use commas/pipe ('*.jpg,*.png')."
+
+[args.properties.name_regex]
+type        = "string"
+
+[args.properties.name_regex.description]
+it = "Espressione regolare (Python) applicata al nome (case-insensitive). Es. '^IMG_\\d{4}\\.JPG$'."
+en = "Regular expression (Python) applied to the name (case-insensitive). E.g. '^IMG_\\d{4}\\.JPG$'."
+
+[args.properties.size_min]
+type        = "integer"
+
+[args.properties.size_min.description]
+it = "Dimensione minima in byte (incluso). Esclude entries piu' piccole."
+en = "Minimum size in bytes (inclusive). Excludes smaller entries."
+
+[args.properties.size_max]
+type        = "integer"
+
+[args.properties.size_max.description]
+it = "Dimensione massima in byte (incluso). Esclude entries piu' grandi."
+en = "Maximum size in bytes (inclusive). Excludes larger entries."
+
+[args.properties.mtime_after]
+type        = "string"
+
+[args.properties.mtime_after.description]
+it = "Data minima di modifica (ISO 8601, es. '2024-01-01' o '2024-01-01T10:00:00'). Esclude entries piu' vecchie."
+en = "Minimum modification date (ISO 8601, e.g., '2024-01-01' or '2024-01-01T10:00:00'). Exclude older entries."
+
+[args.properties.mtime_before]
+type        = "string"
+
+[args.properties.mtime_before.description]
+it = "Data massima di modifica (ISO 8601). Esclude entries piu' recenti."
+en = "Maximum modification date (ISO 8601). Excludes more recent entries."
+
+[args.properties.where_field]
+type        = "string"
+
+[args.properties.where_field.description]
+it = "Nome del campo della entry su cui applicare un filtro generico (es. 'relevance', 'category', 'priority'). Da combinare con where_in / where_not_in / where_value. Senza i tre arg associati e' un no-op. Tipicamente usato dopo un executor che arricchisce le entries con un'etichetta (classify_entries, ecc.)."
+en = "Name of the entry field on which to apply a generic filter (e.g., 'relevance', 'category', 'priority'). To be combined with where_in / where_not_in / where_value. Without the three associated args, it is a no-op. Typically used after an executor that enriches the entries with a label (classify_entries, etc.)."
+
+[args.properties.where_in]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.where_in.description]
+it = "Lista di valori ammessi per where_field. Una entry passa il filtro se entry[where_field] e' uno qualsiasi di questi. Es. where_field='relevance', where_in=['high','medium'] tiene solo le rilevanti. Richiede where_field."
+en = "List of allowed values for where_field. An entry passes the filter if entry[where_field] is any of these. E.g. where_field='relevance', where_in=['high','medium'] keeps only the relevant ones. Requires where_field."
+
+[args.properties.where_not_in]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.where_not_in.description]
+it = "Lista di valori esclusi per where_field. Una entry passa il filtro se entry[where_field] NON e' fra questi. Es. where_field='relevance', where_not_in=['junk'] scarta solo gli item etichettati junk. Richiede where_field. Combinabile con where_in (AND)."
+en = "List of excluded values for where_field. An entry passes the filter if entry[where_field] is NOT among these. E.g. where_field='relevance', where_not_in=['junk'] discards only items labeled junk. Requires where_field. Combinable with where_in (AND)."
+
+[args.properties.where_value]
+type        = "string"
+
+# Niente capability: filter_entries e' puro, lavora solo su dati gia' in memoria.
+# Nessuna sezione [[capabilities]].
+
+[args.properties.where_value.description]
+it = "Shortcut per where_in=['x']. Es. where_field='relevance', where_value='high'. Richiede where_field. Se passi sia where_value che where_in vince where_in."
+en = "Shortcut for where_in=['x']. E.g. where_field='relevance', where_value='high'. Requires where_field. If you pass both where_value and where_in, where_in wins."
+
+[args.properties.where_starts_with]
+type        = "string"
+
+[args.properties.where_starts_with.description]
+it = "Prefix match case-insensitive su where_field. Es. where_field='summary', where_starts_with='HLT' tiene entries il cui summary inizia con 'HLT' (incluso 'HLT - Dentista', 'HLT-Visita'). Richiede where_field. Combinabile con where_in (AND)."
+en = "Case-insensitive prefix match on where_field. E.g. where_field='summary', where_starts_with='HLT' keeps entries whose summary starts with 'HLT' (including 'HLT - Dentista', 'HLT-Visit'). Requires where_field. Combinable with where_in (AND)."
+
+[args.properties.where_contains]
+type        = "string"
+
+[args.properties.where_contains.description]
+it = "Substring match case-insensitive su where_field. Es. where_field='summary', where_contains='dentista' tiene entries il cui summary contiene 'dentista' in qualsiasi posizione. Richiede where_field."
+en = "Case-insensitive substring match on where_field. E.g. where_field='summary', where_contains='dentist' keeps entries whose summary contains 'dentist' anywhere. Requires where_field."
+
+[args.properties.where_glob]
+type        = "string"
+
+[args.properties.where_glob.description]
+it = "Pattern glob (fnmatch) case-insensitive su where_field. Es. where_field='summary', where_glob='HLT*' tiene entries il cui summary inizia con 'HLT'. Usa '*' (qualunque), '?' (un char), '[abc]'. Richiede where_field."
+en = "Case-insensitive glob (fnmatch) pattern on where_field. E.g. where_field='summary', where_glob='HLT*' keeps entries whose summary starts with 'HLT'. Use '*' (any), '?' (one char), '[abc]'. Requires where_field."
+
+[args.properties.where_regex]
+type        = "string"
+
+[args.properties.where_regex.description]
+it = "Espressione regolare Python case-insensitive su where_field. Es. where_field='summary', where_regex='^HLT[\\s-]+' matcha 'HLT - X' e 'HLT-X'. Richiede where_field."
+en = "Case-insensitive Python regular expression on where_field. E.g. where_field='summary', where_regex='^HLT[\\s-]+' matches 'HLT - X' and 'HLT-X'. Requires where_field."
+
+[args.properties.overlap_step]
+type        = "integer"
+minimum     = 1
+
+[args.properties.overlap_step.description]
+it = "AND temporale fra la lista corrente (from_step) e le entries di un altro step. Pattern §7.3 general-purpose per pipeline 'due liste, intersezione temporale'. Estrae automatic window (start,end) da ogni entry usando i campi standard: 'start'/'end' (events), 'started_at'/'finished_at' (history task), 'taken_at_iso' (foto), 'mtime' (file). Una entry passa se il suo intervallo si sovrappone con almeno una entry dell'altro step. Es. AND fra 'eventi HLT' (step A) e 'eventi MNM' (step B): filter_entries(from_step=A, overlap_step=B) → eventi A che hanno overlap temporale con B. Aggiunge `_overlap_with` ai risultati con label dell'overlap matched."
+en = "Temporal AND between current list (from_step) and entries of another step. General §7.3 pattern for 'two lists, temporal intersection' pipelines. Auto-extracts window (start,end) from each entry using standard fields: 'start'/'end' (events), 'started_at'/'finished_at' (task history), 'taken_at_iso' (photos), 'mtime' (files). An entry passes if its interval overlaps at least one entry of the other step. E.g. AND between 'HLT events' (step A) and 'MNM events' (step B): filter_entries(from_step=A, overlap_step=B) → A events with temporal overlap with B. Adds `_overlap_with` to results with the matched overlap label."
+
+[args.properties.overlap_field_start]
+type        = "string"
+
+[args.properties.overlap_field_start.description]
+it = "Override del field-name 'start' per il calcolo overlap (default autodetect: start/started_at/taken_at_iso/mtime_iso)."
+en = "Override of 'start' field-name for overlap calc (default autodetect: start/started_at/taken_at_iso/mtime_iso)."
+
+[args.properties.overlap_field_end]
+type        = "string"
+
+[args.properties.overlap_field_end.description]
+it = "Override del field-name 'end' per overlap (default autodetect: end/finished_at; fallback start se assente — entry istante)."
+en = "Override of 'end' field-name for overlap (default autodetect: end/finished_at; fallback start if missing — instantaneous entry)."
+
+[[tests]]
+name   = "filtra_kind_image"
+input  = { entries = [{name="a.jpg", kind="image", mime="image/jpeg", size=1000, type="file"}, {name="b.txt", kind="text", mime="text/plain", size=10, type="file"}], kind = "image" }
+expect = { ok = true, metadata_field_eq = { count_out = 1 } }
+
+[[tests]]
+name   = "filtra_size_min"
+input  = { entries = [{name="a", size=100, type="file"}, {name="b", size=1000, type="file"}], size_min = 500 }
+expect = { ok = true, metadata_field_eq = { count_out = 1 } }
+
+[[tests]]
+name   = "name_regex_case_insensitive"
+input  = { entries = [{name="IMG_001.JPG", type="file"}, {name="other.txt", type="file"}], name_regex = "^img_.*\\.jpg$" }
+expect = { ok = true, metadata_field_eq = { count_out = 1 } }
+
+[[tests]]
+name   = "compound_glob"
+input  = { entries = [{name="a.jpg", type="file"}, {name="b.png", type="file"}, {name="c.txt", type="file"}], name_glob = "*.jpg,*.png" }
+expect = { ok = true, metadata_field_eq = { count_out = 2 } }
+
+[[tests]]
+name   = "no_criteri_passa_tutto"
+input  = { entries = [{name="a", type="file"}, {name="b", type="dir"}] }
+expect = { ok = true, metadata_field_eq = { count_out = 2 } }
+
+[[tests]]
+name   = "entries_invalid_fallisce"
+input  = { entries = "non una lista" }
+expect = { ok = false, error_contains = "deve essere una lista" }
+
+[[tests]]
+name   = "where_in_relevance"
+input  = { entries = [{name="m1", relevance="high"}, {name="m2", relevance="junk"}, {name="m3", relevance="medium"}, {name="m4", relevance="low"}], where_field = "relevance", where_in = ["high","medium"] }
+expect = { ok = true, metadata_field_eq = { count_out = 2 } }
+
+[[tests]]
+name   = "where_not_in_scarta_junk"
+input  = { entries = [{relevance="high"}, {relevance="junk"}, {relevance="low"}], where_field = "relevance", where_not_in = ["junk"] }
+expect = { ok = true, metadata_field_eq = { count_out = 2 } }
+
+[[tests]]
+name   = "where_value_shortcut"
+input  = { entries = [{cat="a"}, {cat="b"}, {cat="a"}], where_field = "cat", where_value = "a" }
+expect = { ok = true, metadata_field_eq = { count_out = 2 } }
+
+[[tests]]
+name   = "where_senza_field_fallisce"
+input  = { entries = [{x=1}], where_in = ["a"] }
+expect = { ok = false, error_contains = "richiedono where_field" }

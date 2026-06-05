@@ -1,0 +1,73 @@
+{
+  "name": "find_dirs",
+  "manifest_mtime": 1779461693,
+  "inputs": {
+    "base_path": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "dir_path",
+      "role": "source",
+      "format_hint": "absolute path or expandable tilde"
+    },
+    "recursive": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": true,
+      "semantic_type": "bool",
+      "role": "filter",
+      "format_hint": "boolean"
+    },
+    "max_depth": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 10,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "max_results": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 1000,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "include_hidden": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "filter",
+      "format_hint": "boolean"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "local",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "backend identifier"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "dir_entry[]",
+    "schema": {
+      "name": "name",
+      "file_count": "count",
+      "total_bytes": "size_bytes",
+      "size_min": "size_bytes",
+      "size_max": "size_bytes",
+      "mtime": "iso_timestamp",
+      "count_dirs": "count",
+      "file_count_total": "count",
+      "truncated": "bool"
+    }
+  },
+  "unresolved_args": [
+    "client"
+  ],
+  "propagates_constraints": false
+}

@@ -1,0 +1,47 @@
+{
+  "name": "group_entries",
+  "manifest_mtime": 1778121456,
+  "inputs": {
+    "entries_lists": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "message_entry[]",
+      "role": "piping",
+      "format_hint": "list of lists of dicts"
+    },
+    "entries": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "message_entry[]",
+      "role": "piping",
+      "format_hint": "flat list of dicts"
+    },
+    "dedup_key": {
+      "structural_type": "string",
+      "required": false,
+      "default": "url",
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "field name string"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "message_entry[]",
+    "schema": {
+      "entries": "message_entry[]",
+      "total_in": "count"
+    }
+  },
+  "unresolved_args": [
+    "entries_lists",
+    "entries",
+    "dedup_key"
+  ],
+  "consumes": [
+    "filter:any"
+  ],
+  "propagates_constraints": false
+}

@@ -1,0 +1,34 @@
+{
+  "name": "read_files_ocr",
+  "manifest_mtime": 1778121522,
+  "inputs": {
+    "paths": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "file_entry[]",
+      "role": "source",
+      "format_hint": "list of image_path or pdf_path"
+    },
+    "lang": {
+      "structural_type": "string",
+      "required": false,
+      "default": "ita+eng",
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "tesseract language codes (e.g., 'ita', 'eng', 'ita+eng')"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "message_entry[]",
+    "schema": {
+      "path": "file_path",
+      "content": "free_text"
+    }
+  },
+  "unresolved_args": [
+    "lang"
+  ],
+  "propagates_constraints": false
+}

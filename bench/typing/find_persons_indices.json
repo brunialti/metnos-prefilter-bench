@@ -1,0 +1,88 @@
+{
+  "name": "find_persons_indices",
+  "manifest_mtime": 1778328745,
+  "inputs": {
+    "name": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "person_name",
+      "role": "filter",
+      "format_hint": "string"
+    },
+    "reference_images": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "image_path[]",
+      "role": "filter",
+      "format_hint": "list of paths"
+    },
+    "base_path": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "dir_path",
+      "role": "source",
+      "format_hint": "directory path"
+    },
+    "top_k": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 100,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "min_face_pixels": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "scalar_metric",
+      "role": "filter",
+      "format_hint": "integer (area)"
+    },
+    "min_face_count": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "count",
+      "role": "filter",
+      "format_hint": "integer"
+    },
+    "max_face_count": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "count",
+      "role": "filter",
+      "format_hint": "integer"
+    },
+    "time_window": {
+      "structural_type": "string",
+      "required": false,
+      "default": "all",
+      "semantic_type": "time_window",
+      "role": "filter",
+      "format_hint": "string/interval"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "image_entry[]",
+    "schema": {
+      "path": "image_path",
+      "timestamp": "iso_timestamp",
+      "metadata": "json_object"
+    }
+  },
+  "unresolved_args": [],
+  "consumes": [
+    "filter:person_name",
+    "filter:image_path[]",
+    "filter:scalar_metric",
+    "filter:count",
+    "filter:time_window"
+  ],
+  "propagates_constraints": true
+}

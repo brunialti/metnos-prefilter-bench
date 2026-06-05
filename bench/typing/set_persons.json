@@ -1,0 +1,60 @@
+{
+  "name": "set_persons",
+  "manifest_mtime": 1778416978,
+  "inputs": {
+    "name": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "person_name",
+      "role": "filter",
+      "format_hint": "Display name used for indexing"
+    },
+    "paths": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "image_path[]",
+      "role": "source",
+      "format_hint": "List of absolute or expandable paths to reference photos"
+    },
+    "mode": {
+      "structural_type": "string",
+      "required": false,
+      "default": "add",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "add | replace"
+    },
+    "face_choices": {
+      "structural_type": "object",
+      "required": false,
+      "default": null,
+      "semantic_type": "json_object",
+      "role": "piping",
+      "format_hint": "{path_or_var: face_idx}"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "ok": "bool",
+      "decision": "name",
+      "needs_inputs": "json_object",
+      "results": "person_entry[]",
+      "errors": "json_object[]",
+      "n_examples_after": "count",
+      "warn": "name",
+      "final_message_hint": "free_text",
+      "error": "free_text"
+    }
+  },
+  "unresolved_args": [
+    "mode"
+  ],
+  "consumes": [
+    "filter:person_name"
+  ],
+  "propagates_constraints": false
+}

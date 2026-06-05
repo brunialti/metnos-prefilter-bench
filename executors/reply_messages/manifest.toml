@@ -1,0 +1,102 @@
+# Manifest dell'executor `reply_messages` — Metnos v1.1 (24/5/2026).
+# Naming compositivo §2.2: verbo_oggetto_plurale. Vettoriale.
+# Verbo `reply` non e' standalone nel vocab ma usato come variant di
+# send con header In-Reply-To/References + Subject auto 'Re: ...'.
+
+manifest_format = "1.0"
+
+name        = "reply_messages"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity = [
+    "reply", "rispondi", "risposta", "rispondere",
+    "messages", "messaggi", "mail", "email",
+    "in-reply-to", "thread", "discussione",
+]
+
+revertible = false
+lifecycle  = "active"
+
+[description]
+it = "Risponde in-thread a uno o piu' messaggi (Gmail). Distinto da `send_messages` perche': richiede message_id originale, headers In-Reply-To/References autocomposti, Subject auto-prefissato 'Re: '. USO CORRETTO: 'rispondi a queste mail con \\\"ok ricevuto\\\"' -> reply_messages(message_ids=..., body='ok ricevuto'). NON CONFONDERE CON `send_messages` (nuovo thread, richiede to/recipient_id) o `set_messages` (cambia labels). Backend: solo client='google_workspace' (SMTP/IMAP reply manuale non implementato MVP)."
+en = "Reply in-thread to one or more messages (Gmail). Distinct from `send_messages` because: requires original message_id, In-Reply-To/References headers auto-composed, Subject auto-prefixed 'Re: '. CORRECT USE: 'reply to these mails with \\\"ok received\\\"' -> reply_messages(message_ids=..., body='ok received'). DO NOT CONFUSE WITH `send_messages` (new thread, requires to/recipient_id) or `set_messages` (changes labels). Backend: only client='google_workspace' (SMTP/IMAP manual reply not implemented MVP)."
+
+[code]
+files  = ["reply_messages.py"]
+digest = "sha256:73b449d773b83152d8970534b3d692880b988b923b44f8856f252224af81db92"
+
+[args]
+type     = "object"
+required = ["body"]
+
+[args.properties.message_ids]
+type  = "array"
+items = { type = "string" }
+
+[args.properties.message_ids.description]
+it = "Lista di id messaggi a cui rispondere (Gmail). MATCH ESATTO."
+en = "List of message IDs to reply to (Gmail). EXACT MATCH."
+
+[args.properties.message_id]
+type = "string"
+
+[args.properties.message_id.description]
+it = "Singolo id messaggio (alternativo a message_ids per N=1)."
+en = "Single message ID (alternative to message_ids for N=1)."
+
+[args.properties.body]
+type = "string"
+
+[args.properties.body.description]
+it = "Testo plain della risposta. Stesso body per tutti i message_ids in input. Esempio: 'Grazie, confermo'."
+en = "Plain reply text. Same body for all message_ids in input. Example: 'Thanks, confirmed'."
+
+[args.properties.from_header]
+type    = "string"
+default = ""
+
+[args.properties.from_header.description]
+it = "Header From custom (es. '\"Nome\" <user@dominio>'). Opzionale; default: account autenticato."
+en = "Custom From header (e.g. '\"Name\" <user@domain>'). Optional; default: authenticated account."
+
+[args.properties.via_channel]
+type    = "string"
+enum    = ["email", "mail"]
+default = "email"
+
+[args.properties.via_channel.description]
+it = "Canale: 'email' (default). 'mail' alias storico."
+en = "Channel: 'email' (default). 'mail' historical alias."
+
+[args.properties.client]
+type    = "string"
+enum    = ["google_workspace"]
+default = "google_workspace"
+
+[args.properties.client.description]
+it = "Backend: solo 'google_workspace' (Gmail API). SMTP reply manuale non supportato in MVP."
+en = "Backend: only 'google_workspace' (Gmail API). Manual SMTP reply not supported in MVP."
+
+[[capabilities]]
+name = "mail:send"
+hint = ["gmail:send"]
+
+[[tests]]
+name   = "args_invalidi_no_ids"
+input  = { body = "ok" }
+expect = { ok = false }
+
+[[tests]]
+name   = "args_invalidi_no_body"
+input  = { message_ids = ["x"] }
+expect = { ok = false }
+
+[[tests]]
+name   = "args_invalidi_body_empty"
+input  = { message_ids = ["x"], body = "" }
+expect = { ok = false }
+
+[[tests]]
+name   = "args_invalidi_client_imap"
+input  = { message_ids = ["x"], body = "ok", client = "metnos" }
+expect = { ok = false, error_contains = "Operazione non applicabile per questo provider" }

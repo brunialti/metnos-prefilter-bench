@@ -1,0 +1,80 @@
+# Manifest dell'executor `find_contacts` — Metnos v1.1 (24/5/2026)
+# Naming compositivo §2.2: find_contacts. Read-only su rubrica esterna.
+
+manifest_format = "1.0"
+
+name        = "find_contacts"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "find", "trova", "cerca", "search", "ricerca",
+    "contatto", "contatti", "contact", "contacts",
+    "rubrica", "address book", "agenda contatti",
+    "amico", "amici", "persona", "people", "person",
+    "telefono", "numero", "phone", "email", "indirizzo"
+]
+
+[description]
+it = """Cerca contatti nella rubrica esterna (Google People API di default) per nome/email/telefono. Read-only.
+
+USO: chiamare quando l'utente vuole "numero di Luca", "email di Mario", "trova contatti con cognome Rossi". Match substring case-insensitive su name + emails + phones.
+
+NON CONFONDERE CON: `find_persons` (registro UTENTI del SISTEMA Metnos: Roberto, ospiti via pairing, familiari nominati in chat). `contacts` = rubrica di TERZI (di chi parli); `persons` = chi parla a Metnos.
+
+OK: find_contacts(query="Luca") -> entries=[{name:"Luca Bianchi", emails:["luca@..."], phones:["+39..."]}].
+
+Output entries=[{id, name, emails, phones}]. Cap default 50 (max teorico 1000). Truncation: truncated_what='contact'."""
+en = """Search contacts in external address book (Google People API by default) by name/email/phone. Read-only.
+
+USE: call when the user wants "Luca's number", "Mario's email", "find contacts with surname Rossi". Substring case-insensitive match on name + emails + phones.
+
+DO NOT CONFUSE WITH: `find_persons` (registry of Metnos SYSTEM USERS: Roberto, paired guests, family named in chat). `contacts` = address book of THIRD PARTIES (who you talk about); `persons` = who talks to Metnos.
+
+OK: find_contacts(query="Luca") -> entries=[{name:"Luca Bianchi", emails:["luca@..."], phones:["+39..."]}].
+
+Output entries=[{id, name, emails, phones}]. Cap default 50 (theoretical max 1000). Truncation: truncated_what='contact'."""
+
+[code]
+files  = ["find_contacts.py"]
+digest = "sha256:5c8eeb3ef559e87dbabe71b04a8fc7da66c96ff799fad04152fcfa2e33cea305"
+
+[args]
+type     = "object"
+
+[args.properties.query]
+type    = "string"
+[args.properties.query.description]
+it = "Stringa da matchare in name/emails/phones (substring case-insensitive). Vuota → tutti i contatti."
+en = "String to match in name/emails/phones (substring case-insensitive). Empty → all contacts."
+
+[args.properties.max_results]
+type    = "integer"
+default = 50
+[args.properties.max_results.description]
+it = "Cap risultati ritornati (default 50, max 1000)."
+en = "Returned results cap (default 50, max 1000)."
+
+[args.properties.client]
+type    = "string"
+enum    = ["google_workspace"]
+default = "google_workspace"
+[args.properties.client.description]
+it = "Backend rubrica. Default 'google_workspace'. Futuro: 'local' (vCard import)."
+en = "Address book backend. Default 'google_workspace'. Future: 'local' (vCard import)."
+
+[[capabilities]]
+name = "exec_subprocess"
+hint = ["subprocess Python google_api.py contacts list"]
+
+[[capabilities]]
+name = "exec_net"
+hint = ["Google People API HTTPS"]
+
+[reversible]
+value = false
+
+[tests]
+"caso felice" = {args = {query = ""}, expected = {ok = true}}
+"con query"   = {args = {query = "luca", max_results = 5}, expected = {ok = true}}
+"client invalido" = {args = {client = "invalid"}, expected = {ok = false}}
+"max_results piccolo" = {args = {max_results = 1}, expected = {ok = true}}

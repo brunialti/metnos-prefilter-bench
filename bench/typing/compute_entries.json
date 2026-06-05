@@ -1,0 +1,63 @@
+{
+  "name": "compute_entries",
+  "manifest_mtime": 1779461229,
+  "inputs": {
+    "entries": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "file_entry[]",
+      "role": "piping",
+      "format_hint": "list of dicts"
+    },
+    "key": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "dict key string"
+    },
+    "op": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "max|min|avg|sum|count|count_distinct"
+    },
+    "return_entry": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "value": "scalar_metric",
+      "op": "name",
+      "key": "name",
+      "count_in": "count",
+      "entry": "file_entry"
+    }
+  },
+  "unresolved_args": [
+    "entries",
+    "key",
+    "op"
+  ],
+  "consumes": [
+    "aggregate:max",
+    "aggregate:min",
+    "aggregate:avg",
+    "aggregate:sum",
+    "aggregate:count",
+    "aggregate:count_distinct"
+  ],
+  "propagates_constraints": false
+}

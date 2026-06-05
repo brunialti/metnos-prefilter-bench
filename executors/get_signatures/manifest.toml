@@ -1,0 +1,77 @@
+manifest_format = "1.0"
+name        = "get_signatures"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["safety", "signatures", "lookup", "verifica permessi",
+                "controllo autorizzazioni", "elenco autorizzati",
+                "elenco vietati", "review pending", "candidati promozione",
+                "differenze seed"]
+
+revertible       = true
+reverse_pattern  = []
+
+[description]
+it = "Lookup nelle liste di sicurezza shell (whitelist, blacklist, graylist, forbidden). Un solo executor, parametro `kind` che seleziona la modalita':\n\n- kind='blacklist': verifica se `signature` e' in blacklist. Output: {negate, matched_pattern, severity, reason}.\n- kind='whitelist': verifica se `signature` e' in whitelist o graylist. Output: {allow, age_class, uses, last_used_at}. Se `record_use=true`, incrementa uses.\n- kind='forbidden': verifica argv RAW contro path/dispositivi proibiti (Legge 1). Richiede argv invece di signature. Output: {negate, matched_path, reason}.\n- kind='graylist': elenca tutte le entry in graylist (review). Output: entries[].\n- kind='promotion_candidates': elenca graylist entries sopra soglia di uso (default uses>=5). Args opzionali: min_uses, max_age_days. Output: entries[].\n- kind='seed_diff': mostra differenze fra seed file e DB. Output: diff{added, modified, removed, user_overridden, user_only, auto_promoted}.\n- kind='all': elenca tutte le signature, qualunque kind. Output: entries[].\n\nTipico uso da admin: prima compute_signatures(op='command') per ottenere la signature, poi find_signatures(kind='forbidden') seguito da find_signatures(kind='blacklist'), poi find_signatures(kind='whitelist')."
+en = "Lookup in shell security lists (whitelist, blacklist, graylist, forbidden). A single executor, parameter `kind` selects the mode:  - kind='blacklist': checks if `signature` is in blacklist. Output: {negate, matched_pattern, severity, reason}. - kind='whitelist': checks if `signature` is in whitelist or graylist. Output: {allow, age_class, uses, last_used_at}. If `record_use=true`, increment uses. - kind='forbidden': checks argv RAW against forbidden path/devices (Law 1). Requires argv instead of signatures. Output: {negate, matched_path, reason}. - kind='graylist': lists all entries in graylist (review). Output: entries[]. - kind='promotion_candidates': lists graylist entries above usage threshold (default uses>=5). Optional args: min_uses, max_age_days. Output: entries[]. - kind='seed_diff': shows differences between seed files and DB. Output: diff{added, modified, removed, user_overridden, user_only, auto_promoted}. - kind='all': lists all signatures, regardless of kind. Output: entries[].  Typical admin usage: first compute_signatures(op='command') to obtain the signature, then find_signatures(kind='forbidden') followed by find_signatures(kind='blacklist'), then find_signatures(kind='whitelist')."
+
+[code]
+files  = ["get_signatures.py"]
+digest = "sha256:b61c2c8e66b35743fdf234b2329d5084c1ce2a4aa2c62a54fa0461a923e67390"
+
+[args]
+type     = "object"
+required = ["kind"]
+
+[args.properties.kind]
+type        = "string"
+enum        = ["blacklist", "whitelist", "graylist", "forbidden", "all", "promotion_candidates", "seed_diff"]
+
+[args.properties.kind.description]
+it = "Modalita' di lookup. Vedi description per dettagli."
+en = "Lookup mode. See description for details."
+
+[args.properties.signature]
+type        = "string"
+
+[args.properties.signature.description]
+it = "Per kind='blacklist'/'whitelist': signature da cercare (formato 'binary:subcmd:target_kind'). Per altri kind: ignorato."
+en = "For kind='blacklist'/'whitelist': signature to search for (format 'binary:subcmd:target_kind'). For other kinds: ignored."
+
+[args.properties.argv]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.argv.description]
+it = "Per kind='forbidden': argv da verificare contro path/dispositivi proibiti. MATCH ESATTO sui token (security): wildcard `*`/`?` NON supportati. Glob/regex sono nei pattern lato DB, non negli argv input."
+en = "For kind='forbidden': argv to be verified against forbidden paths/devices. EXACT MATCH on tokens (security): wildcards `*`/`?` NOT supported. Glob/regex live in DB patterns, not in input argv."
+
+[args.properties.record_use]
+type        = "boolean"
+default     = false
+
+[args.properties.record_use.description]
+it = "Per kind='whitelist': se true e c'e' match, incrementa uses + last_used_at."
+en = "For kind='whitelist': if true and there is a match, increment uses + last_used_at."
+
+[args.properties.min_uses]
+type        = "integer"
+default     = 5
+
+[args.properties.min_uses.description]
+it = "Per kind='promotion_candidates': soglia minima uso. Default 5."
+en = "For kind='promotion_candidates': minimum usage threshold. Default 5."
+
+[args.properties.max_age_days]
+type        = "integer"
+default     = 30
+
+[args.properties.max_age_days.description]
+it = "Per kind='promotion_candidates': finestra in giorni. Default 30."
+en = "For kind='promotion_candidates': window in days. Default 30."
+
+[args.properties.seed_path]
+type        = "string"
+
+[args.properties.seed_path.description]
+it = "Per kind='seed_diff': path del seed file. Default runtime/safety_seeds/v1.toml."
+en = "For kind='seed_diff': path of the seed file. Default runtime/safety_seeds/v1.toml."

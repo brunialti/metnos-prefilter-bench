@@ -1,0 +1,46 @@
+{
+  "name": "get_files",
+  "manifest_mtime": 1779788996,
+  "inputs": {
+    "from_step": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "count",
+      "role": "piping",
+      "format_hint": "integer index of previous step"
+    },
+    "paths": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "image_path[]",
+      "role": "piping",
+      "format_hint": "list of local filesystem paths to images"
+    },
+    "fields": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text[]",
+      "role": "meta",
+      "format_hint": "list of metadata keys to extract"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "image_entry[]",
+    "schema": {
+      "path": "image_path",
+      "capture_date": "iso_timestamp",
+      "gps_coords": "free_text",
+      "location": "free_text",
+      "camera_model": "name",
+      "dimensions": "scalar_metric"
+    }
+  },
+  "unresolved_args": [
+    "fields"
+  ],
+  "propagates_constraints": false
+}

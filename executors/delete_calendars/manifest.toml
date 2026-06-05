@@ -1,0 +1,88 @@
+# Manifest dell'executor `delete_calendars` — Metnos v1.1
+# Naming compositivo §2.2: azione_oggetto. Object `calendars` (3/6/2026).
+# Cancella un CALENDARIO-contenitore Google. DESTRUTTIVO + IRREVERSIBILE.
+
+manifest_format = "1.0"
+
+name        = "delete_calendars"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "cancella calendario", "elimina calendario", "rimuovi calendario",
+    "delete calendar", "remove calendar", "calendario", "calendar"
+]
+revertible       = false
+lifecycle        = "active"
+
+[description]
+it = "SCOPO: cancella uno o piu' calendari-contenitore Google (DESTRUTTIVO: elimina anche gli eventi dentro). PATTERN: delete_calendars(summary=\"metnos\") oppure delete_calendars(ids=[\"<calendar_id>\"]). NON: NON per cancellare un EVENTO -> delete_events; NON per creare -> create_calendars. Accetta il NOME (lo risolve a id, mai il primario). OUT: results=[{ok, calendar_id, deleted}]."
+en = "SCOPO: delete one or more Google calendar containers (DESTRUCTIVE: also removes the events inside). PATTERN: delete_calendars(summary=\"metnos\") or delete_calendars(ids=[\"<calendar_id>\"]). NON: NOT to delete an EVENT -> delete_events; NOT to create -> create_calendars. Accepts the NAME (resolves to id, never the primary). OUT: results=[{ok, calendar_id, deleted}]."
+
+[code]
+files  = ["delete_calendars.py"]
+digest = "sha256:e4e31433bc852da1d601eea61bc03fe7a845fe287f8eff484f8c0f294c5113a7"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.ids]
+type  = "array"
+items = { type = "string" }
+
+[args.properties.ids.description]
+it = "Lista di calendar_id da cancellare. MATCH ESATTO (ID Google), wildcard NON supportati. Vettoriale §2.1."
+en = "List of calendar_id to delete. EXACT MATCH (Google IDs), wildcards NOT supported. Vectorial §2.1."
+
+[args.properties.calendar_id]
+type = "string"
+
+[args.properties.calendar_id.description]
+it = "Singolo calendar_id (alternativa a `ids`)."
+en = "Single calendar_id (alternative to `ids`)."
+
+[args.properties.summary]
+type = "string"
+
+[args.properties.summary.description]
+it = "Nome del calendario da cancellare (es. 'metnos'): risolto a id via list, mai il primario. Alternativa a `ids`."
+en = "Name of the calendar to delete (e.g. 'metnos'): resolved to id via list, never the primary. Alternative to `ids`."
+
+[args.properties.client]
+type = "string"
+enum = ["google_workspace"]
+runtime_resolved = true
+
+[args.properties.client.description]
+it = "Backend. DEVI OMETTERLO: i calendari sono solo Google → runtime forza google_workspace."
+en = "Backend. YOU MUST OMIT IT: calendars are Google-only → runtime forces google_workspace."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  results: Array<dict>,
+  used: int,
+  ok_count: int,
+  error?: str,
+  error_class?: str
+}
+"""
+
+[[capabilities]]
+name = "metnos:write"
+
+[[tests]]
+name   = "non_dict_args_fails"
+input  = "notadict"
+expect = { ok = false }
+
+[[tests]]
+name   = "no_target_fails"
+input  = {}
+expect = { ok = false }
+
+[[tests]]
+name   = "wrong_client_rejected"
+input  = { ids = ["x"], client = "local" }
+expect = { ok = false, error_contains = "local" }

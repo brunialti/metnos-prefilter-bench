@@ -1,0 +1,41 @@
+{
+  "name": "delete_dirs",
+  "manifest_mtime": 1779121548,
+  "inputs": {
+    "paths": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "dir_path[]",
+      "role": "source",
+      "format_hint": "list of absolute or tilde-expandable directory paths"
+    },
+    "force": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "true for recursive rmtree, false for empty dirs only"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "local",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "backend implementation identifier (e.g., 'local')"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "bool",
+    "schema": {
+      "success": "bool"
+    }
+  },
+  "unresolved_args": [
+    "client"
+  ],
+  "propagates_constraints": false
+}

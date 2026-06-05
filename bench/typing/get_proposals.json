@@ -1,0 +1,49 @@
+{
+  "name": "get_proposals",
+  "manifest_mtime": 1779121549,
+  "inputs": {
+    "kind": {
+      "structural_type": "string",
+      "required": false,
+      "default": "all",
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "dedupe | generalize | specialize"
+    },
+    "since_iso": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "iso_timestamp",
+      "role": "filter",
+      "format_hint": "ISO 8601"
+    },
+    "max_results": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 50,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "task_entry[]",
+    "schema": {
+      "kind": "name",
+      "timestamp": "iso_timestamp",
+      "content": "json_object",
+      "status": "name"
+    }
+  },
+  "unresolved_args": [
+    "kind",
+    "since_iso"
+  ],
+  "consumes": [
+    "filter:name",
+    "filter:iso_timestamp"
+  ],
+  "propagates_constraints": false
+}

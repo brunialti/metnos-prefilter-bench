@@ -1,0 +1,56 @@
+# Manifest dell'executor `group_entries` — Metnos v1.1
+# Merge di N liste di entries con dedup per chiave (4/5/2026).
+
+manifest_format = "1.0"
+
+name        = "group_entries"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["group", "raggruppa", "merge", "unisci", "concatena", "dedup", "deduplicate", "join", "combine", "entries"]
+
+[description]
+it = "Unisce N liste di entries (provenienti da step diversi del piano ReAct) in una lista unica deduplicata. Tipico dopo split read_html/read_pdf in una pipeline web: find_urls -> filter_entries(html) + filter_entries(pdf) -> read_urls_html + read_urls_pdf -> group_entries -> describe_entries. Args: entries_lists (lista di liste di dict) o entries (lista piatta, treated come N=1). dedup_key (default 'url') indica il campo per deduplicazione: entries con stessa chiave vengono fuse mantenendo la prima occorrenza. dedup_key=None -> niente dedup. Output: entries (lista unica), total_in (input pre-dedup), dedupes (numero di entry scartate)."
+en = "Joins N lists of entries (coming from different steps of the ReAct plan) into a single deduplicated list. Typical after a read_html/read_pdf split in a web pipeline: find_urls -> filter_entries(html) + filter_entries(pdf) -> read_urls_html + read_urls_pdf -> group_entries -> describe_entries. Args: entries_lists (list of lists of dicts) or entries (flat list, treated as N=1). dedup_key (default 'url') indicates the field for deduplication: entries with the same key are merged, keeping the first occurrence. dedup_key=None -> no dedup. Output: entries (single list), total_in (input pre-dedup), dedupes (number of entries discarded)."
+
+[code]
+files  = ["group_entries.py"]
+digest = "sha256:1a6b78b046750fec42a694819d6526d34ccaabc79dfab4fc9ec7384105c6558b"
+
+[args]
+type     = "object"
+
+[args.properties.entries_lists]
+type        = "array"
+
+[args.properties.entries_lists.description]
+it = "Lista di liste di entries. Ogni elemento e' una lista di dict (l'output di un altro executor). Esempio: [[{...},{...}], [{...}]]."
+en = "List of lists of entries. Each element is a list of dicts (the output of another executor). Example: [[{...},{...}], [{...}]]."
+
+[args.properties.entries]
+type        = "array"
+
+[args.properties.entries.description]
+it = "Lista piatta di entries. Treated come una singola lista (N=1) per compatibilita' con da-piping standard."
+en = "Flat list of entries. Treated as a single list (N=1) for compatibility with standard da-piping."
+
+[args.properties.dedup_key]
+type        = "string"
+default     = "url"
+
+[args.properties.dedup_key.description]
+it = "Nome del campo per la deduplicazione. Default 'url'. Passa None / vuoto per disabilitare dedup."
+en = "Field name for deduplication. Default 'url'. Pass None / empty to disable dedup."
+
+[[capabilities]]
+name = "compute.pure"
+hint = []
+
+[[tests]]
+name   = "merge_due_liste"
+input  = { entries_lists = [[{ url = "a" }, { url = "b" }], [{ url = "b" }, { url = "c" }]] }
+expect = { ok = true, metadata_field_eq = { ok_count = 3, dedupes = 1 } }
+
+[[tests]]
+name   = "lista_vuota"
+input  = { entries_lists = [] }
+expect = { ok = true, metadata_field_eq = { ok_count = 0 } }

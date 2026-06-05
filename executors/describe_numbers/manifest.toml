@@ -1,0 +1,82 @@
+# Manifest dell'executor `describe_numbers` — Metnos v1.1
+# Statistiche descrittive su lista numerica. Pure compute.
+
+manifest_format = "1.0"
+
+name        = "describe_numbers"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["describe", "stats", "statistica", "media", "mean", "mediana", "median", "deviation", "percentile", "summary", "numbers"]
+revertible  = false
+lifecycle   = "active"
+
+[description]
+it = "Calcola statistiche descrittive su una lista di numeri (int o float). Pattern fields[]: l'utente seleziona quali metriche calcolare. Default fields=['n','mean','median','stdev','min','max']; usa 'all' per tutto. Field disponibili: n (count valori validi), mean, median, stdev, variance, min, max, range, sum, p25/p50/p75/p90/p95/p99 (percentili), n_missing (None/NaN/inf/non-numerici scartati). Pure compute: niente I/O, niente dipendenze (solo statistics+math da stdlib). Robusto a None, NaN, infinity (scartati come missing). Su lista vuota: ok=true, tutto a None tranne n=0."
+en = "Calculate descriptive statistics on a list of numbers (int or float). Pattern fields[]: the user selects which metrics to calculate. Default fields=['n','mean','median','stdev','min','max']; use 'all' for everything. Available fields: n (count of valid values), mean, median, stdev, variance, min, max, range, sum, p25/p50/p75/p90/p95/p99 (percentiles), n_missing (None/NaN/inf/non-numeric discarded). Pure compute: no I/O, no dependencies (only statistics+math from stdlib). Robust to None, NaN, infinity (discarded as missing). On empty list: ok=true, everything is None except n=0."
+
+[code]
+files  = ["describe_numbers.py"]
+digest = "sha256:b871de49c972e002cf3344a99e99465733f47c53d9cb9c6f91cbd485c9ad3e54"
+
+[args]
+type     = "object"
+# `values` NON required (§2.8): se il planner lo pipa con un placeholder non
+# risolvibile (es. ${stepN.result} verso compute_entries che espone `value`),
+# il guard unresolved-placeholder lo DROPPA invece di rigettare lo step; l'
+# executor risponde n=0 ok (stats vuote) senza spezzare la pipeline. Bug q44 5/6.
+required = []
+
+[args.properties.values]
+type        = "array"
+items       = { type = "number" }
+
+[args.properties.values.description]
+it = "Lista di numeri (int o float). Valori None, NaN, infinity, booleani, stringhe vengono scartati e contati come `n_missing`."
+en = "List of numbers (int or float). None, NaN, infinity, boolean, and string values are discarded and counted as `n_missing`."
+
+[args.properties.fields]
+type        = "array"
+items       = { type = "string" }
+
+# Pure compute: niente capabilities I/O.
+
+[args.properties.fields.description]
+it = "Lista di metriche da calcolare. Default ['n','mean','median','stdev','min','max']. Stringa 'all' per tutte. Valori validi: 'n','mean','median','stdev','variance','min','max','range','sum','p25','p50','p75','p90','p95','p99','n_missing'."
+en = "List of metrics to calculate. Default ['n','mean','median','stdev','min','max']. String 'all' for all. Valid values: 'n','mean','median','stdev','variance','min','max','range','sum','p25','p50','p75','p90','p95','p99','n_missing'."
+
+[[tests]]
+name   = "default_fields_su_lista_semplice"
+input  = { values = [1, 2, 3, 4, 5] }
+expect = { ok = true }
+
+[[tests]]
+name   = "all_keyword"
+input  = { values = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100], fields = "all" }
+expect = { ok = true }
+
+[[tests]]
+name   = "lista_vuota_n_zero"
+input  = { values = [] }
+expect = { ok = true }
+
+[[tests]]
+name   = "field_invalido"
+input  = { values = [1, 2, 3], fields = ["mean", "kurtosis"] }
+expect = { ok = false, error_contains = "Campi sconosciuti" }
+
+[[tests]]
+name   = "scarta_non_numerici"
+# TOML non supporta null; il test che valori non-numerici (string "x") finiscano
+# in n_missing e' coperto qui. Per null/NaN/inf vedi test Python unitari.
+input  = { values = [1, 2, 4, 5], fields = ["n", "n_missing", "mean"] }
+expect = { ok = true }
+
+[[tests]]
+name   = "values_non_lista"
+input  = { values = 42 }
+expect = { ok = false, error_contains = "deve essere una lista" }
+
+[[tests]]
+name   = "percentili_su_dataset_grande"
+input  = { values = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20], fields = ["p25", "p50", "p75", "p99"] }
+expect = { ok = true }

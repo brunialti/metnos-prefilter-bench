@@ -1,0 +1,172 @@
+# Manifest dell'executor `move_files` — Metnos v1.1
+# Naming compositivo: verbo_oggetto_plurale. Vettoriale per costruzione.
+# Sostituisce `move_file` (single-item) il 27 aprile 2026.
+
+manifest_format = "1.0"
+
+name        = "move_files"
+version     = "0.9.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "move", "sposta", "rinomina", "rename", "mv", "spostare", "rinominare", "ordina",
+                "organizza", "batch"
+            ]
+revertible      = true
+reverse_pattern = ["swap_src_dst", "delete_created_dirs"]
+
+[description]
+it = "Sposta o rinomina una o piu' entries (file) in una sola call. PASSAGGIO DELLA LISTA: usa `from_step=N` dove N e' lo step precedente che ha prodotto la lista (es. find_files al passo 1 o get_files al passo 2 → from_step=2). Il runtime recupera automaticamente le entries dallo scratchpad. SAFETY NET: rifiuta entries di tipo directory o file di sistema (Thumbs.db, .DS_Store, ecc.) di default — usa allow_dirs=true / allow_system=true per opt-in esplicito. La destinazione si calcola da `dst_template` espandendo placeholder coi campi della entry: {path}, {name}, {stem}, {ext}, {parent}, e i placeholder data {date_year} (YYYY), {date_yymmdd}, {date_yyyymmdd}, {place} (slug del luogo, 'unknown' se assente). I placeholder data e place usano `date_epoch`/`place` della entry quando presenti (arricchimento da `get_files`); senza, cadono su mtime/'unknown'. Esempio: dst_template=\"/home/user/images/{date_year}/{date_yymmdd}_{place}_{name}\". Default fallisce se dst esiste; usa overwrite=true. Crea le dir parent mancanti (registrate nel result come `dirs_created`). Best-effort: una entry fallita non blocca le altre. Operazione critical reversibile: il runtime registra ogni op nell'undo log; `undo_last_turn` la ribalta multistage (sposta dst→src + rimuove dirs_created vuote)."
+en = "Move or rename one or more entries (files) in a single call. LIST PASSING: use `from_step=N` where N is the previous step that produced the list (e.g., find_files at step 1 or get_files at step 2 → from_step=2). The runtime automatically retrieves the entries from the scratchpad. SAFETY NET: refuse directory type entries or system files (Thumbs.db, .DS_Store, etc.) by default — use allow_dirs=true / allow_system=true for explicit opt-in. The destination is calculated from `dst_template` by expanding placeholders with the entry fields: {path}, {name}, {stem}, {ext}, {parent}, and the data placeholders {date_year} (YYYY), {date_yymmdd}, {date_yyyymmdd}, {place} (place slug, 'unknown' if absent). The data and place placeholders use the entry's `date_epoch`/`place` when present (enrichment from `get_files`); otherwise, they fall back to mtime/'unknown'. Example: dst_template=\"/home/user/images/{date_year}/{date_yymmdd}_{place}_{name}\". Default fails if dst exists; use overwrite=true. Create missing parent dirs (recorded in the result as `dirs_created`). Best-effort: one failed entry does not block the others. Reversible critical operation: the runtime records every op in the undo log; `undo_last_turn` reverses it multistage (moves dst→src + removes empty dirs_created)."
+
+[code]
+files  = ["move_files.py"]
+digest = "sha256:01d1671b5e09e4e85a775d93f9d496f3d237f495856309a33e2ab2a783ac78a2"
+
+[args]
+type     = "object"
+required = ["from_step", "dst_template"]
+
+[args.properties.from_step]
+type        = "integer"
+minimum     = 1
+
+[args.properties.from_step.description]
+it = "Numero dello step precedente (in questo turno) che ha prodotto la lista di file da spostare. Es. al passo 1 find_files trova le foto, al passo 2 get_files le arricchisce con date EXIF, al passo 3 move_files riceve from_step=2 e usa quelle entries arricchite."
+en = "Number of the previous step (in this turn) that produced the list of files to move. E.g., at step 1 find_files finds the photos, at step 2 get_files enriches them with EXIF dates, at step 3 move_files receives from_step=2 and uses those enriched entries."
+
+[args.properties.dst_template]
+type        = "string"
+
+[args.properties.dst_template.description]
+it = "Template del path di destinazione, con placeholder ricavati dai campi della entry. Placeholder: {path}, {name}, {stem}, {ext}, {parent}, {date_year}, {date_yymmdd}, {date_yyyymmdd}. I placeholder data usano `date_epoch` della entry se presente, altrimenti mtime del filesystem (chiama `get_files` con fields=['dates.semantic'] prima per ottenere data EXIF/birth). Esempi: \"/home/user/archive/{date_year}/{name}\", \"/tmp/sorted/{date_yymmdd}_{name}\". Tutti i path risultanti devono essere dentro lo scope fs:write autorizzato."
+en = "Destination path template, with placeholders derived from the entry fields. Placeholders: {path}, {name}, {stem}, {ext}, {parent}, {date_year}, {date_yymmdd}, {date_yyyymmdd}. Date placeholders use the entry's `date_epoch` if present, otherwise the filesystem mtime (call `get_files` with fields=['dates.semantic'] first to obtain EXIF/birth date). Examples: \"/home/user/archive/{date_year}/{name}\", \"/tmp/sorted/{date_yymmdd}_{name}\". All resulting paths must be within the authorized fs:write scope."
+
+[args.properties.overwrite]
+type        = "boolean"
+default     = false
+
+[args.properties.overwrite.description]
+it = "Se true, rimpiazza dst se esiste (rimuove prima). Default false: la singola entry fallisce e le altre proseguono."
+en = "If true, replace dst if it exists (removes it first). Default false: the single entry fails and the others proceed."
+
+[args.properties.parents]
+type        = "boolean"
+default     = true
+
+[args.properties.parents.description]
+it = "Se true (default), crea la dir parent di dst se manca."
+en = "If true (default), create the parent dir of dst if it is missing."
+
+[args.properties.allow_dirs]
+type        = "boolean"
+default     = false
+
+[args.properties.allow_dirs.description]
+it = "Se true, consente di spostare entries di tipo directory. Default false: il safety net rifiuta dir per evitare di muovere cartelle pre-esistenti per errore. Imposta esplicitamente solo quando l'utente vuole davvero spostare cartelle."
+en = "If true, allows moving entries of type directory. Default false: the safety net refuses dir to avoid moving pre-existing folders by mistake. Set explicitly only when the user truly wants to move folders."
+
+[args.properties.allow_system]
+type        = "boolean"
+default     = false
+
+[args.properties.allow_system.description]
+it = "Se true, consente di spostare file di sistema (Thumbs.db, .DS_Store, desktop.ini). Default false: il safety net li rifiuta. Imposta solo se l'utente li vuole davvero includere."
+en = "If true, allows moving system files (Thumbs.db, .DS_Store, desktop.ini). Default false: the safety net rejects them. Set only if the user truly wants to include them."
+
+[args.properties.client]
+type        = "string"
+enum        = ["local"]
+default     = "local"
+
+[args.properties.client.description]
+it = "Implementazione backend (default 'local' = filesystem locale). Plugin esterni futuri (gdrive, dropbox, ecc.) potranno aggiungere altri client."
+en = "Backend implementation (default 'local' = local filesystem). Future external plugins (gdrive, dropbox, etc.) may add other clients."
+
+[[capabilities]]
+name = "fs:write"
+hint = ["~/notes/**", "/tmp/**"]
+
+[[tests]]
+name     = "rinomina_lista_di_uno"
+setup    = "mkdir -p /tmp/metnos_test_move_files && echo x > /tmp/metnos_test_move_files/a.txt"
+input    = { entries = [{path = "/tmp/metnos_test_move_files/a.txt"}], dst_template = "/tmp/metnos_test_move_files/b.txt" }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_move_files"
+
+[[tests]]
+name   = "lista_vuota_ok"
+input  = { entries = [], dst_template = "/tmp/foo/{name}" }
+expect = { ok = true, ok_count_eq = 0, fail_count_eq = 0 }
+
+[[tests]]
+name     = "ordina_per_anno_template_fallback_mtime"
+setup    = "mkdir -p /tmp/metnos_test_move_files && echo x > /tmp/metnos_test_move_files/a.JPG && touch -d '2024-06-15 12:00:00' /tmp/metnos_test_move_files/a.JPG && echo y > /tmp/metnos_test_move_files/b.JPG && touch -d '2025-03-10 09:00:00' /tmp/metnos_test_move_files/b.JPG"
+input    = { entries = [{path = "/tmp/metnos_test_move_files/a.JPG"}, {path = "/tmp/metnos_test_move_files/b.JPG"}], dst_template = "/tmp/metnos_test_move_files/{date_year}/{date_yymmdd}_{name}" }
+expect   = { ok = true, ok_count_eq = 2 }
+teardown = "rm -rf /tmp/metnos_test_move_files"
+
+[[tests]]
+name     = "ordina_per_data_semantica_via_date_epoch"
+setup    = "mkdir -p /tmp/metnos_test_move_files && echo x > /tmp/metnos_test_move_files/a.JPG && touch -d '2026-04-27 12:00:00' /tmp/metnos_test_move_files/a.JPG"
+# date_epoch = 2024-06-15 12:00:00 UTC = 1718452800; il file ha mtime 2026-04-27
+# il dst deve usare date_epoch (2024) e non mtime (2026)
+input    = { entries = [{path = "/tmp/metnos_test_move_files/a.JPG", date_epoch = 1718452800}], dst_template = "/tmp/metnos_test_move_files/{date_year}/{name}" }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_move_files"
+
+[[tests]]
+name     = "best_effort_alcuni_falliscono"
+setup    = "mkdir -p /tmp/metnos_test_move_files && echo x > /tmp/metnos_test_move_files/a.txt && echo y > /tmp/metnos_test_move_files/b.txt && echo z > /tmp/metnos_test_move_files/dst_a.txt"
+input    = { entries = [{path = "/tmp/metnos_test_move_files/a.txt"}, {path = "/tmp/metnos_test_move_files/b.txt"}], dst_template = "/tmp/metnos_test_move_files/dst_{name}" }
+expect   = { ok = false, ok_count_eq = 1, fail_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_move_files"
+
+[[tests]]
+name     = "overwrite_true_rimpiazza"
+setup    = "mkdir -p /tmp/metnos_test_move_files && echo x > /tmp/metnos_test_move_files/a.txt && echo y > /tmp/metnos_test_move_files/b.txt"
+input    = { entries = [{path = "/tmp/metnos_test_move_files/a.txt"}], dst_template = "/tmp/metnos_test_move_files/b.txt", overwrite = true }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_move_files"
+
+[[tests]]
+name   = "src_inesistente_fallisce_solo_quella"
+input  = { entries = [{path = "/tmp/metnos_does_not_exist_xyz/foo"}], dst_template = "/tmp/foo/{name}" }
+expect = { ok = false, ok_count_eq = 0, fail_count_eq = 1 }
+
+[[tests]]
+name     = "blocca_dst_fuori_scope"
+setup    = "mkdir -p /tmp/metnos_test_move_files && echo x > /tmp/metnos_test_move_files/a.txt"
+input    = { entries = [{path = "/tmp/metnos_test_move_files/a.txt"}], dst_template = "/etc/{name}" }
+expect   = { ok = false, error_contains = "outside allowed scope" }
+teardown = "rm -rf /tmp/metnos_test_move_files"
+
+[[tests]]
+name   = "args_invalidi_entries_non_lista"
+input  = { entries = "/tmp/foo", dst_template = "/tmp/bar/{name}" }
+expect = { ok = false, error_contains = "must be a list" }
+
+[[tests]]
+name   = "args_invalidi_dst_template_mancante"
+input  = { entries = [{path = "/tmp/foo"}] }
+expect = { ok = false, error_contains = "dst_template" }
+
+[[tests]]
+name     = "rifiuta_directory_di_default"
+setup    = "mkdir -p /tmp/metnos_test_move_files/sub"
+input    = { entries = [{path = "/tmp/metnos_test_move_files/sub", kind = "dir"}], dst_template = "/tmp/metnos_test_move_files/dst_{name}" }
+expect   = { ok = false, fail_count_eq = 1, error_contains = "passa allow_dirs=true o filtra prima con filter_entries" }
+teardown = "rm -rf /tmp/metnos_test_move_files"
+
+[[tests]]
+name     = "allow_dirs_true_consente"
+setup    = "mkdir -p /tmp/metnos_test_move_files/sub"
+input    = { entries = [{path = "/tmp/metnos_test_move_files/sub"}], dst_template = "/tmp/metnos_test_move_files/dst_sub", allow_dirs = true }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_move_files"
+
+[[tests]]
+name     = "rifiuta_system_file_di_default"
+setup    = "mkdir -p /tmp/metnos_test_move_files && echo x > /tmp/metnos_test_move_files/Thumbs.db"
+input    = { entries = [{path = "/tmp/metnos_test_move_files/Thumbs.db"}], dst_template = "/tmp/metnos_test_move_files/dst/{name}" }
+expect   = { ok = false, fail_count_eq = 1, error_contains = "system file" }
+teardown = "rm -rf /tmp/metnos_test_move_files"

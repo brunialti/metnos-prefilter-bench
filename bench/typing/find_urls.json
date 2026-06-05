@@ -1,0 +1,186 @@
+{
+  "name": "find_urls",
+  "manifest_mtime": 1779488926,
+  "inputs": {
+    "search_query": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "natural language query"
+    },
+    "seed_urls": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "url_entry[]",
+      "role": "source",
+      "format_hint": "list of http/https urls"
+    },
+    "topic": {
+      "structural_type": [
+        "string",
+        "array"
+      ],
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "string or array of keywords"
+    },
+    "min_score": {
+      "structural_type": "number",
+      "required": false,
+      "default": null,
+      "semantic_type": "scalar_metric",
+      "role": "filter",
+      "format_hint": "BM25 score threshold"
+    },
+    "max_per_domain": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 3,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "max entries per eTLD+1"
+    },
+    "mode": {
+      "structural_type": "string",
+      "required": false,
+      "default": "default",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "search | default"
+    },
+    "trust": {
+      "structural_type": "string",
+      "required": false,
+      "default": "auto",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "auto | owned | cookie:<domain>"
+    },
+    "max_depth": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 2,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "BFS hop limit"
+    },
+    "max_pages": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 1000,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "total url limit"
+    },
+    "same_origin_only": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": true,
+      "semantic_type": "bool",
+      "role": "filter",
+      "format_hint": "boolean"
+    },
+    "path_include": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "glob_pattern[]",
+      "role": "filter",
+      "format_hint": "regex/glob on URL path"
+    },
+    "path_exclude": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "glob_pattern[]",
+      "role": "filter",
+      "format_hint": "regex/glob on URL path"
+    },
+    "respect_robots": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": true,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean"
+    },
+    "auth_cookies_file": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "file_path",
+      "role": "source",
+      "format_hint": "path to cookie file"
+    },
+    "time_window": {
+      "structural_type": "string",
+      "required": false,
+      "default": "all",
+      "semantic_type": "time_window",
+      "role": "filter",
+      "format_hint": "today | last-24h | last-7d | last-Nd | all"
+    },
+    "rate_limit_ms": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 500,
+      "semantic_type": "duration_secs",
+      "role": "meta",
+      "format_hint": "milliseconds"
+    },
+    "timeout_s": {
+      "structural_type": "number",
+      "required": false,
+      "default": 10.0,
+      "semantic_type": "duration_secs",
+      "role": "meta",
+      "format_hint": "seconds"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "httpx",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "httpx | playwright"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "url_entry[]",
+    "schema": {
+      "url": "url",
+      "title": "free_text",
+      "score": "scalar_metric",
+      "domain": "name",
+      "path": "free_text"
+    }
+  },
+  "unresolved_args": [
+    "search_query",
+    "seed_urls",
+    "topic",
+    "min_score",
+    "mode",
+    "trust",
+    "path_include",
+    "path_exclude",
+    "auth_cookies_file",
+    "timeout_s",
+    "client"
+  ],
+  "consumes": [
+    "filter:free_text",
+    "filter:url_entry[]",
+    "filter:scalar_metric",
+    "filter:glob_pattern[]",
+    "filter:time_window",
+    "filter:bool"
+  ],
+  "propagates_constraints": false
+}

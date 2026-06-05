@@ -1,0 +1,100 @@
+# Manifest dell'executor `delete_events` — Metnos v1.1
+# Naming compositivo §2.2: azione_oggetto[_qualifier].
+# Dispatcher canonical (sequel di create_events, 13/5/2026).
+
+manifest_format = "1.0"
+
+name        = "delete_events"
+version     = "0.4.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "cancella", "elimina", "delete", "remove", "rimuovi", "appuntamento", "agenda", "evento",
+                "calendario", "calendar", "riunione", "incontro", "meeting"
+            ]
+# §2.3 reversibile via module.reverse(): LOCAL ICS cattura il blocco VEVENT
+# prima di rimuoverlo e l'undo lo re-inserisce identico; GOOGLE non e'
+# ricreabile dal solo payload del delete (undo onesto: non-ribaltabile §2.8).
+revertible  = true
+lifecycle   = "active"
+
+[description]
+it = "Cancella 1+ appuntamenti dal calendario. Dispatcher canonical: backend AUTO-RILEVATO dal runtime (OMETTI `client`). USO CORRETTO: delete_events(event_ids=['ev1','ev2']) oppure delete_events(entries={{step1.entries}}) dopo un read_events. Vettoriale §2.1: accetta `event_ids` (plurale), `event_id` (singolare, normalizzato a list len-1), o `entries` (id pescato dal record). NON DEVI usarla per LEGGERE eventi (usa read_events). NON CONFONDERE CON: `delete_tasks` (per CANCELLARE TASK RICORRENTI / TIMER / PROMEMORIA schedulati, NON eventi calendar). §2.6 trasformativo: ritorna `results: list`. §2.3 reversibile via undo_last_turn (LOCAL ICS: re-inserisce il VEVENT catturato; GOOGLE: non ricreabile da undo). Backend auto-rilevato (OMETTI `client`): google_workspace se OAuth presente, altrimenti local ICS — entrambi implementati. ERRORE: invocare senza nessuno di event_ids/event_id/entries (manca l'id)."
+en = "Deletes 1+ calendar appointments. Canonical dispatcher: backend AUTO-DETECTED by the runtime (OMIT `client`). CORRECT USE: delete_events(event_ids=['ev1','ev2']) or delete_events(entries={{step1.entries}}) after a read_events. Vectorial §2.1: accepts `event_ids` (plural), `event_id` (singular, normalized to list len-1), or `entries` (id taken from the record). MUST NOT be used to READ events (use read_events). DO NOT CONFUSE WITH: `delete_tasks` (for CANCELING RECURRING TASKS / TIMERS / REMINDERS scheduled in Metnos, NOT calendar events). §2.6 transformative: returns `results: list`. §2.3 reversible via undo_last_turn (LOCAL ICS: re-inserts the captured VEVENT; GOOGLE: not recreatable by undo). Backend auto-detected (OMIT `client`): google_workspace if OAuth present, else local ICS — both implemented. ERROR: invoking without any of event_ids/event_id/entries (missing id)."
+
+[code]
+files  = ["delete_events.py"]
+digest = "sha256:eda548beef4374f9f1c6272ec5ffbec3da63ea719fee214ddb565bb77f49e283"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.event_id]
+type    = "string"
+
+[args.properties.event_id.description]
+it = "Identificatore singolo (forma scalare). Normalizzato internamente a list len-1."
+en = "Single identifier (scalar form). Internally normalized to list len-1."
+
+[args.properties.event_ids]
+type    = "array"
+items   = { type = "string" }
+
+[args.properties.event_ids.description]
+it = "Lista di identificatori (vettoriale §2.1: il backend itera la cancellazione)."
+en = "List of identifiers (vectorial §2.1: the backend iterates the deletion)."
+
+[args.properties.entries]
+type    = "array"
+items   = { type = "object" }
+
+[args.properties.entries.description]
+it = "Lista di entries da from_step di un produttore (es. read_events): il campo `id` di ognuno alimenta event_ids. Pipeline read -> delete tipica."
+en = "List of entries from from_step of a producer (e.g. read_events): the `id` field of each feeds event_ids. Typical read -> delete pipeline."
+
+[args.properties.calendar_id]
+type    = "string"
+default = "primary"
+
+[args.properties.calendar_id.description]
+it = "Identificatore del calendario. Default 'primary'."
+en = "Calendar identifier. Default 'primary'."
+
+[args.properties.client]
+type        = "string"
+enum        = ["local", "google_workspace"]
+# backend = configurazione, NON intento → risolto dal runtime, NON esposto
+# all'LLM (lessons A3/B1: l'enum induce bias). L'utente non lo sceglie via LLM.
+runtime_resolved = true
+
+[args.properties.client.description]
+it = "Backend calendario. DEVI OMETTERLO: il runtime auto-rileva (google_workspace se OAuth, altrimenti local ICS). NON DEVI passare 'client' a meno che l'utente non lo chieda. Coerenza: create e delete devono usare lo STESSO backend → ometti in entrambi (altrimenti cancelli su un calendario diverso da dove hai creato)."
+en = "Calendar backend. YOU MUST OMIT IT: the runtime auto-detects (google_workspace if OAuth, else local ICS). YOU MUST NOT pass 'client' unless the user asks. Consistency: create and delete must use the SAME backend → omit in both (else you delete on a different calendar than where you created)."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  results: Array<dict>,
+  n_deleted: int,
+  used: int,
+  partial?: bool,
+  failures?: Array<{id, error, error_class}>,
+  error?: str,
+  error_class?: str
+}
+"""
+
+[[capabilities]]
+name = "metnos:write"
+hint = ["~/.local/share/metnos/calendar.ics"]
+
+[[tests]]
+name   = "delete_missing_idempotent"
+input  = { event_id = "test-id-1", client = "local" }
+expect = { ok = true }
+
+[[tests]]
+name   = "invalid_client_rejected"
+input  = { event_id = "x", client = "gdrive" }
+expect = { ok = false, error_contains = "gdrive" }

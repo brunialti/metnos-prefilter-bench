@@ -1,0 +1,62 @@
+{
+  "name": "list_dirs",
+  "manifest_mtime": 1779461205,
+  "inputs": {
+    "path": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "dir_path",
+      "role": "source",
+      "format_hint": "absolute path or tilde expansion"
+    },
+    "recursive": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "true/false"
+    },
+    "sort": {
+      "structural_type": "string",
+      "required": false,
+      "default": "name",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "name|mtime|size"
+    },
+    "max_results": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 1000,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "max_depth": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 10,
+      "semantic_type": "scalar_metric",
+      "role": "meta",
+      "format_hint": "integer"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "file_entry[]",
+    "schema": {
+      "name": "name",
+      "type": "name",
+      "kind": "name",
+      "mime": "name",
+      "size": "size_bytes",
+      "mtime": "iso_timestamp"
+    }
+  },
+  "unresolved_args": [
+    "sort"
+  ],
+  "propagates_constraints": false
+}

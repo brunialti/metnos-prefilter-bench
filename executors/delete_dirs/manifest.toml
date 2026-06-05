@@ -1,0 +1,105 @@
+# Manifest dell'executor `delete_dirs` — Metnos v1.1
+# Naming compositivo: verbo_oggetto_plurale. Vettoriale per costruzione.
+# Rinominato da `remove_dirs` (audit semantic drift 12/5/2026): `delete`
+# e' il verbo canonico §2.2 per distruzione filesystem; `remove` non e'
+# nel vocabolario chiuso.
+
+manifest_format = "1.0"
+
+name        = "delete_dirs"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "delete", "elimina", "cancella", "rmdir", "rimuovi", "remove", "directory", "cartella"
+            ]
+
+[description]
+it = "Rimuove una o piu' directory in scope di scrittura. Accetta sempre una lista (anche di un solo path, o vuota). Default: rimuove SOLO directory vuote (sicuro). Per rimozione ricorsiva di un albero non vuoto serve `force=true` esplicito (l'utente lo chiede). Best-effort: ogni dir e' indipendente, una failure non blocca le altre. Operazione critical irreversibile (le sotto-cartelle e i file rimossi NON sono restorabili senza backup esterno)."
+en = "Removes one or more directories within writing scope. Always accepts a list (even with a single path, or empty). Default: removes ONLY empty directories (safe). For recursive removal of a non-empty tree, an explicit `force=true` is required (the user asks for it). Best-effort: each dir is independent, one failure does not block the others. Irreversible critical operation (removed sub-folders and files ARE NOT restorable without an external backup)."
+
+[code]
+files  = ["delete_dirs.py"]
+digest = "sha256:fd01e9c28f503ca229201f2d72b4518eebe6f985516b8dccdaba92bb967ca91b"
+
+[args]
+type     = "object"
+required = ["paths"]
+
+[args.properties.paths]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.paths.description]
+it = "Lista di path di directory da rimuovere. Path assoluti o ~ espandibile. Tutti devono essere dentro lo scope fs:write autorizzato. Esempio: [\"/tmp/old_dir\", \"~/cache_obsoleta\"]."
+en = "List of directory paths to remove. Absolute paths or ~ expandable. All must be within the authorized fs:write scope. Example: [\"/tmp/old_dir\", \"~/cache_obsoleta\"]."
+
+[args.properties.force]
+type        = "boolean"
+default     = false
+
+[args.properties.force.description]
+it = "Se true, rmtree ricorsivo: rimuove anche directory con contenuti. Default false: rimuove solo directory vuote, salta (in errore) quelle con contenuti."
+en = "If true, recursive rmtree: also removes directories with contents. Default false: removes only empty directories, skips (with error) those with contents."
+
+[args.properties.client]
+type        = "string"
+enum        = ["local"]
+default     = "local"
+
+[args.properties.client.description]
+it = "Implementazione backend (default 'local' = filesystem locale). Plugin esterni futuri (gdrive, dropbox, ecc.) potranno aggiungere altri client."
+en = "Backend implementation (default 'local' = local filesystem). Future external plugins (gdrive, dropbox, etc.) may add other clients."
+
+[[capabilities]]
+name = "fs:write"
+hint = ["~/notes/**", "/tmp/**"]
+
+[[tests]]
+name     = "rimuove_dir_vuota"
+setup    = "mkdir -p /tmp/metnos_test_delete_dirs/empty"
+input    = { paths = ["/tmp/metnos_test_delete_dirs/empty"] }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_delete_dirs"
+
+[[tests]]
+name   = "lista_vuota_ok"
+input  = { paths = [] }
+expect = { ok = true, ok_count_eq = 0, fail_count_eq = 0 }
+
+[[tests]]
+name     = "fallisce_su_dir_non_vuota_default"
+setup    = "mkdir -p /tmp/metnos_test_delete_dirs/full && echo x > /tmp/metnos_test_delete_dirs/full/a.txt"
+input    = { paths = ["/tmp/metnos_test_delete_dirs/full"] }
+expect   = { ok = false, error_contains = "not empty" }
+teardown = "rm -rf /tmp/metnos_test_delete_dirs"
+
+[[tests]]
+name     = "force_true_rmtree"
+setup    = "mkdir -p /tmp/metnos_test_delete_dirs/full/sub && echo x > /tmp/metnos_test_delete_dirs/full/a.txt && echo y > /tmp/metnos_test_delete_dirs/full/sub/b.txt"
+input    = { paths = ["/tmp/metnos_test_delete_dirs/full"], force = true }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_delete_dirs"
+
+[[tests]]
+name     = "best_effort_alcuni_falliscono"
+setup    = "mkdir -p /tmp/metnos_test_delete_dirs/empty && mkdir -p /tmp/metnos_test_delete_dirs/full && echo x > /tmp/metnos_test_delete_dirs/full/a.txt"
+input    = { paths = ["/tmp/metnos_test_delete_dirs/empty", "/tmp/metnos_test_delete_dirs/full"] }
+expect   = { ok = false, ok_count_eq = 1, fail_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_delete_dirs"
+
+[[tests]]
+name   = "path_inesistente_fallisce"
+input  = { paths = ["/tmp/metnos_does_not_exist_xyz"] }
+expect = { ok = false, fail_count_eq = 1, error_contains = "does not exist" }
+
+[[tests]]
+name     = "blocca_path_fuori_scope"
+setup    = "mkdir -p /tmp/metnos_test_delete_dirs"
+input    = { paths = ["/etc"] }
+expect   = { ok = false, error_contains = "outside allowed scope" }
+teardown = "rm -rf /tmp/metnos_test_delete_dirs"
+
+[[tests]]
+name   = "args_invalidi_paths_non_lista"
+input  = { paths = "/tmp/foo" }
+expect = { ok = false, error_contains = "must be a list" }

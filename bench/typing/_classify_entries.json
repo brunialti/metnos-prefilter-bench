@@ -1,0 +1,12 @@
+{
+  "name": "classify_entries",
+  "manifest_mtime": 0,
+  "inputs": {
+    "from_step": {"structural_type": "integer", "required": false, "semantic_type": "count"},
+    "entries": {"structural_type": "array", "required": false, "semantic_type": "entry_list"},
+    "dimension": {"structural_type": "string", "required": true, "semantic_type": "free_text"}
+  },
+  "requires_one_of": [["from_step", "entries"]],
+  "output": {"type": "entry_list", "schema": {}},
+  "_builtin": true
+}

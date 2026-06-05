@@ -1,0 +1,32 @@
+{
+  "name": "get_persons",
+  "manifest_mtime": 1778409488,
+  "inputs": {
+    "name": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "person_name",
+      "role": "filter",
+      "format_hint": "string"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "person_entry[]",
+    "schema": {
+      "ok": "bool",
+      "entries": "person_entry[]",
+      "n_entries": "count",
+      "ambiguous": "bool",
+      "status": "free_text",
+      "final_message_hint": "free_text",
+      "error": "free_text"
+    }
+  },
+  "unresolved_args": [],
+  "consumes": [
+    "filter:person_name"
+  ],
+  "propagates_constraints": false
+}

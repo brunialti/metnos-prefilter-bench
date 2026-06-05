@@ -1,0 +1,107 @@
+# Manifest dell'executor `set_credentials` — Metnos v1.1
+# Naming compositivo: azione_oggetto. 16 OBJECT credentials (10/5/2026).
+# Invariante di sicurezza: metadata-only (capability metnos:credentials_metadata_only).
+# `fields` accetta i valori cleartext in INPUT (li cifra) ma il return e' metadata-only.
+
+manifest_format = "1.0"
+
+name        = "set_credentials"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["salva credenziale", "configura account", "registra token",
+                "memorizza chiave", "imposta credenziali", "save credential",
+                "configure account", "register token", "set credentials",
+                "store key", "api key", "oauth setup"]
+
+[description]
+it = "Cifra e salva una credenziale nello storage di Metnos (Fernet+HKDF). DEVI usarla per 'configura le credenziali di X', 'salva il mio token Y', 'registra l'account Z'. `binding` e' l'identificatore univoco (tipicamente il nome di skill o di servizio: 'google-workspace', 'spaggiari', 'openweather'). `fields` e' il dict di campi da cifrare (es. `{client_secret_json, token_json}` per OAuth, o `{api_key}` per API key, o `{username, password}` per user/pass). I valori NON tornano MAI nel return: solo metadati. Se `binding` esiste gia' e `replace=False`, ritorna `decision='needs_inputs'` con un dialogo yes_no di conferma sovrascrittura. Con `replace=True` la vecchia entry viene cancellata prima della cifratura della nuova. NON DEVI usarla per leggere credenziali (uso `find_credentials` per metadati; gli executor consumer caricano i valori internamente); NON DEVI passare campi vuoti come placeholder (ogni campo deve avere valore non vuoto). USO CORRETTO: `set_credentials(binding='openweather', fields={'api_key':'abc123'})`. ERRORE: `set_credentials(fields={'api_key':'abc'})` senza binding. Output: `{ok, results:[{binding, fingerprint, fields_count, scopes, replaced}], decision?, needs_inputs?}`."
+en = "Encrypts and stores a credential in Metnos storage (Fernet+HKDF). MUST be used for 'configure credentials for X', 'save my Y token', 'register account Z'. `binding` is the unique identifier (typically skill or service name: 'google-workspace', 'spaggiari', 'openweather'). `fields` is the dict of fields to encrypt (e.g. `{client_secret_json, token_json}` for OAuth, or `{api_key}` for API key, or `{username, password}` for user/pass). Values NEVER come back in the return: only metadata. If `binding` already exists and `replace=False`, returns `decision='needs_inputs'` with a yes_no overwrite-confirmation dialog. With `replace=True` the old entry is deleted before encrypting the new one. MUST NOT be used to read credentials (use `find_credentials` for metadata; consumer executors load values internally); MUST NOT pass empty fields as placeholders (each field must have non-empty value). CORRECT USE: `set_credentials(binding='openweather', fields={'api_key':'abc123'})`. ERROR: `set_credentials(fields={'api_key':'abc'})` without binding. Output: `{ok, results:[{binding, fingerprint, fields_count, scopes, replaced}], decision?, needs_inputs?}`."
+
+[code]
+files  = ["set_credentials.py"]
+digest = "sha256:e26dcb831f99713092b1fb195f0073399073f5719bd4744da6458d1834c958f3"
+
+[args]
+type     = "object"
+required = ["binding", "fields"]
+
+[args.properties.binding]
+type        = "string"
+
+[args.properties.binding.description]
+it = "Identificatore univoco della credenziale (es. 'google-workspace', 'spaggiari'). Vieta path-traversal: niente '/', '\\\\', '..', NUL. Conservato as-is come chiave dello storage."
+en = "Unique credential identifier (e.g. 'google-workspace', 'spaggiari'). No path-traversal: '/', '\\\\', '..', NUL forbidden. Stored as-is as the storage key."
+
+[args.properties.fields]
+type        = "object"
+
+[args.properties.fields.description]
+it = "Dict di campi da cifrare. Ogni valore deve essere non-vuoto (string, int, list, dict). I nomi delle chiavi sono liberi (es. `api_key`, `username`, `password`, `client_secret_json`, `token_json`)."
+en = "Dict of fields to encrypt. Each value must be non-empty (string, int, list, dict). Key names are free (e.g. `api_key`, `username`, `password`, `client_secret_json`, `token_json`)."
+
+[args.properties.scopes]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.scopes.description]
+it = "Lista di scopes/autorizzazioni associate (opzionale, es. ['calendar.read','gmail.send']). MATCH ESATTO: ogni scope e' un identificatore canonico OAuth, wildcard `*`/`?` NON supportati. Persistita come metadato cifrato accanto a `fields`."
+en = "List of associated scopes/permissions (optional, e.g. ['calendar.read','gmail.send']). EXACT MATCH: each scope is a canonical OAuth identifier, wildcards `*`/`?` NOT supported. Persisted as encrypted metadata alongside `fields`."
+
+[args.properties.expires_at]
+type        = "string"
+
+[args.properties.expires_at.description]
+it = "Data ISO 8601 di scadenza (opzionale, es. '2027-01-01T00:00:00Z'). `find_credentials` usa questo campo per derivare status='expired'."
+en = "ISO 8601 expiration date (optional, e.g. '2027-01-01T00:00:00Z'). `find_credentials` uses this field to derive status='expired'."
+
+[args.properties.replace]
+type        = "boolean"
+default     = false
+
+[args.properties.replace.description]
+it = "Se `true`, sovrascrive senza chiedere conferma. Se `false` (default) e binding esiste, ritorna `needs_inputs` con dialog yes_no."
+en = "If `true`, overwrites without asking. If `false` (default) and binding exists, returns `needs_inputs` with yes_no dialog."
+
+[args.properties.overwrite_confirmed]
+type        = "boolean"
+
+[args.properties.overwrite_confirmed.description]
+it = "Popolato dal callback di `get_inputs` (yes/no di conferma sovrascrittura). Il caller normale non lo passa direttamente."
+en = "Populated by the `get_inputs` callback (yes/no overwrite confirmation). The normal caller does not pass it directly."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  decision?: 'needs_inputs',
+  needs_inputs?: {title, dialog, fmt, on_complete},
+  results?: Array<{binding, fingerprint, fields_count, scopes, replaced}>,
+  error?: str,
+  final_message_hint?: str
+}
+"""
+
+[[capabilities]]
+name = "metnos:credentials_metadata_only"
+hint = ["~/.local/share/metnos/credentials/"]
+
+[[capabilities]]
+name = "metnos:write"
+hint = ["~/.local/share/metnos/credentials/"]
+
+# Reverse pattern §2.3 (5a famiglia): delete_credentials_by_id. Reversibile
+# nel senso che cancellare ricostruisce lo stato precedente (assenza). I
+# valori precedenti SE replace=True vanno persi; non c'e' blob backup
+# (dati cifrati con master key locale: backup esterno e' compito utente).
+reverse_pattern = "delete_credentials_by_id"
+reversible = true
+
+[[tests]]
+name   = "rejects_empty_binding"
+input  = { binding = "", fields = { api_key = "abc" } }
+expect = { ok = false, error_contains = "binding" }
+
+[[tests]]
+name   = "rejects_empty_fields"
+input  = { binding = "svc", fields = {} }
+expect = { ok = false, error_contains = "fields" }

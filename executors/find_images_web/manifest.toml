@@ -1,0 +1,83 @@
+# Manifest dell'executor `find_images_web` — Metnos (24/5/2026).
+# Reverse image search via Google Cloud Vision Web Detection.
+# Distinto da `find_images` (filesystem locale) e `find_images_indices`
+# (indice CLIP locale): origine = web pubblico.
+
+manifest_format = "1.0"
+
+name        = "find_images_web"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "reverse-image-search", "ricerca-inversa", "trova-fonte",
+    "find-source", "where-from", "da-dove-viene",
+    "immagine-simile-web", "similar-on-web",
+    "google-vision", "web-detection",
+    "immagine", "image", "foto", "photo",
+]
+timeout_s = 60
+
+[description]
+it = """Reverse image search via Google Cloud Vision Web Detection. Riceve immagini gia' note (locali in `paths`, pubbliche in `urls`, o ereditate via `from_step`) e ritorna pagine web contenenti, simili, etichette concettuali.
+
+NON CONFONDERE CON: `find_images` (FS locale) ne' `find_images_indices` (corpus locale CLIP/ArcFace). Questo cerca SUL WEB.
+
+Output: entries=[{source, best_guess_label, matching_pages, similar_images, web_entities}]. Quota: free tier 1000 unit/mese."""
+en = """Reverse image search via Google Cloud Vision Web Detection. Takes known images (local in `paths`, public in `urls`, or inherited via `from_step`) and returns containing web pages, similar images, conceptual labels.
+
+DO NOT CONFUSE WITH: `find_images` (local FS) nor `find_images_indices` (local CLIP/ArcFace corpus). This searches THE WEB.
+
+Output: entries=[{source, best_guess_label, matching_pages, similar_images, web_entities}]. Quota: free tier 1000 units/month."""
+
+[code]
+files  = ["find_images_web.py"]
+digest = "sha256:38bbcff4c18773c6e67041bdd3f3d193873eaa58e237775cdf8c3cc21870ea2a"
+
+[args]
+type = "object"
+required = []
+# Vincolo disgiuntivo §7.3: almeno uno fra paths, urls, from_step deve
+# essere fornito non-vuoto. Validato dal runtime (validate_args), niente
+# teaching ad-hoc nella description. Universale: ogni executor con
+# pattern producer→consumer puo' dichiararlo cosi'.
+requires_one_of = [["paths", "urls", "from_step"]]
+
+[args.properties.paths]
+type = "array"
+items = {type = "string"}
+default = []
+[args.properties.paths.description]
+it = "Lista di path locali a file immagine (jpg/png/gif/bmp/webp). Es: [\"/home/user/foto/x.jpg\"]."
+en = "List of local paths to image files (jpg/png/gif/bmp/webp). E.g.: [\"/home/user/photos/x.jpg\"]."
+
+[args.properties.urls]
+type = "array"
+items = {type = "string"}
+default = []
+[args.properties.urls.description]
+it = "Lista di URL pubblici di immagini. Vision fa fetch diretto. Es: [\"https://example.com/img.jpg\"]."
+en = "List of public image URLs. Vision direct-fetches. E.g.: [\"https://example.com/img.jpg\"]."
+
+[args.properties.face_boxes]
+type = "array"
+items = {type = "array", items = {type = "integer"}}
+default = []
+[args.properties.face_boxes.description]
+it = "Lista di bbox `[x,y,w,h]` PARALLELA a `paths` (stesso ordine). Se presente, ogni foto viene ritagliata sull'area facciale prima dell'invio a Vision (face similarity vs scene). Pattern: `face_boxes=${step1.entries.*.bbox}`."
+en = "List of `[x,y,w,h]` bboxes PARALLEL to `paths` (same order). If present, each photo is cropped to face area before sending to Vision (face similarity vs scene). Pattern: `face_boxes=${step1.entries.*.bbox}`."
+
+[args.properties.max_results]
+type = "integer"
+default = 10
+minimum = 1
+maximum = 50
+[args.properties.max_results.description]
+it = "Cap per ciascun blocco (matching_pages, similar_images, web_entities). Default 10."
+en = "Cap per block (matching_pages, similar_images, web_entities). Default 10."
+
+[[capabilities]]
+name = "net:google_vision"
+hint = ["https://vision.googleapis.com/v1/images:annotate"]
+
+[reversible]
+value = false

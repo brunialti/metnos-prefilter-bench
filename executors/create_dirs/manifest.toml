@@ -1,0 +1,114 @@
+# Manifest dell'executor `create_dirs` — Metnos v1.1
+# Naming compositivo: verbo_oggetto_plurale. Vettoriale per costruzione.
+# Sostituisce `create_dir` (single-item) il 27 aprile 2026.
+
+manifest_format = "1.0"
+
+name        = "create_dirs"
+version     = "0.4.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "create", "crea", "mkdir", "make", "nuova", "directory", "cartella", "subdir", "folder",
+                "batch"
+            ]
+revertible      = true
+reverse_pattern = "delete_created_paths"
+
+[description]
+it = "Crea una o piu' directory ai path indicati. Accetta sempre una lista (anche di un solo path, o vuota). Di default crea anche le cartelle intermedie mancanti (come 'mkdir -p') e non fallisce se la dir esiste gia'. Best-effort: prosegue su tutti i path anche se uno fallisce; il report finale elenca riusciti e falliti. Ogni results entry indica `created: true|false` (false se la dir esisteva gia')."
+en = "Create one or more directories at the indicated paths. Always accept a list (even if it contains only one path, or is empty). By default, also create missing intermediate folders (like 'mkdir -p') and do not fail if the directory already exists. Best-effort: proceed with all paths even if one fails; the final report lists successes and failures. Each results entry indicates `created: true|false` (false if the directory already existed)."
+
+[code]
+files  = ["create_dirs.py"]
+digest = "sha256:4701a81ab772fcd374a4aabee157152bd3c168f4ba2f9f71452895070c069247"
+
+[args]
+type     = "object"
+required = ["paths"]
+
+[args.properties.paths]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.paths.description]
+it = "Lista di path di directory da creare. Path assoluti o ~ espandibile. Tutti devono essere dentro lo scope fs:write autorizzato. Esempio: [\"/home/user/images/2026\", \"/home/user/images/2025\"]."
+en = "List of directory paths to create. Absolute paths or expandable ~. All must be within the authorized fs:write scope. Example: [\"/home/user/images/2026\", \"/home/user/images/2025\"]."
+
+[args.properties.parents]
+type        = "boolean"
+default     = true
+
+[args.properties.parents.description]
+it = "Se true (default), crea le dir intermedie mancanti per ogni path (come `mkdir -p`)."
+en = "If true (default), create the missing intermediate dirs for every path (as `mkdir -p`)."
+
+[args.properties.exist_ok]
+type        = "boolean"
+default     = true
+
+[args.properties.exist_ok.description]
+it = "Se true (default), non fallisce se una dir esiste gia'."
+en = "If true (default), it does not fail if a dir already exists."
+
+[args.properties.mode]
+type        = "integer"
+
+[args.properties.mode.description]
+it = "Permessi delle nuove directory (formato decimale, es. 493 per 0o755). Default: umask del processo."
+en = "Permissions for the new directories (decimal format, e.g., 493 for 0o755). Default: process umask."
+
+[args.properties.client]
+type        = "string"
+enum        = ["local"]
+default     = "local"
+
+[args.properties.client.description]
+it = "Implementazione backend (default 'local' = filesystem locale). Plugin esterni futuri (gdrive, dropbox, ecc.) potranno aggiungere altri client."
+en = "Backend implementation (default 'local' = local filesystem). Future external plugins (gdrive, dropbox, etc.) may add other clients."
+
+[[capabilities]]
+name = "fs:write"
+hint = ["~/notes/**", "/tmp/**"]
+
+[[tests]]
+name     = "crea_lista_di_dirs"
+setup    = "rm -rf /tmp/metnos_test_create_dirs"
+input    = { paths = ["/tmp/metnos_test_create_dirs/a", "/tmp/metnos_test_create_dirs/b/c"] }
+expect   = { ok = true, ok_count_eq = 2, fail_count_eq = 0 }
+teardown = "rm -rf /tmp/metnos_test_create_dirs"
+
+[[tests]]
+name     = "lista_di_uno"
+setup    = "rm -rf /tmp/metnos_test_create_dirs"
+input    = { paths = ["/tmp/metnos_test_create_dirs/solo"] }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_create_dirs"
+
+[[tests]]
+name   = "lista_vuota_ok"
+input  = { paths = [] }
+expect = { ok = true, ok_count_eq = 0, fail_count_eq = 0 }
+
+[[tests]]
+name     = "exist_ok_default_true"
+setup    = "mkdir -p /tmp/metnos_test_create_dirs/already"
+input    = { paths = ["/tmp/metnos_test_create_dirs/already"] }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_create_dirs"
+
+[[tests]]
+name     = "best_effort_alcuni_falliscono"
+setup    = "rm -rf /tmp/metnos_test_create_dirs && mkdir -p /tmp/metnos_test_create_dirs && touch /tmp/metnos_test_create_dirs/file"
+input    = { paths = ["/tmp/metnos_test_create_dirs/ok", "/tmp/metnos_test_create_dirs/file"] }
+expect   = { ok = false, ok_count_eq = 1, fail_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_create_dirs"
+
+[[tests]]
+name   = "blocca_path_fuori_scope"
+input  = { paths = ["/etc/myclaw_test"] }
+expect = { ok = false, error_contains = "outside allowed scope" }
+
+[[tests]]
+name   = "args_invalidi_paths_non_lista"
+input  = { paths = "/tmp/foo" }
+expect = { ok = false, error_contains = "must be a list" }

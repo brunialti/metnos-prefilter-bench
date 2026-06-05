@@ -1,0 +1,47 @@
+{
+  "name": "delete_images_indices",
+  "manifest_mtime": 1778847656,
+  "inputs": {
+    "base_path": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "dir_path",
+      "role": "source",
+      "format_hint": "absolute path or tilde-expandable"
+    },
+    "idx": {
+      "structural_type": "string",
+      "required": false,
+      "default": "all",
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "'scene'|'persons'|'gps'|'all'"
+    },
+    "dry_run": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "ok": "bool",
+      "deleted": "file_path[]",
+      "freed_bytes": "size_bytes",
+      "dry_run": "bool"
+    }
+  },
+  "unresolved_args": [
+    "idx"
+  ],
+  "consumes": [
+    "filter:name"
+  ],
+  "propagates_constraints": false
+}

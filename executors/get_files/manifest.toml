@@ -1,0 +1,86 @@
+# Manifest dell'executor `get_files` — Metnos v1.1
+# Naming compositivo: verbo_oggetto_plurale_qualificatore. Vettoriale per costruzione.
+# Copre anche le date semantiche EXIF/birth (fields=['dates.semantic']).
+
+manifest_format = "1.0"
+
+name        = "get_files"
+version     = "0.4.0"
+author      = "Roberto Brunialti"
+affinity    = ["exif", "foto", "photo", "image", "gps", "geotag", "luogo", "place", "camera", "image_dimensions"]
+
+[description]
+it = "Arricchisce una lista di file foto su filesystem (path locali tipo /home/.../foto.jpg) con dati EXIF: data di scatto, coordinate GPS, luogo, modello fotocamera, dimensioni immagine. SOLO per file foto su disco — NON per email, NON per messaggi IMAP, NON per file generici di testo o codice. Per leggere o cercare mail usa `read_messages`. PASSAGGIO DELLA LISTA — DUE FORME: (a) `from_step=N` dove N e' lo step precedente che ha prodotto la lista (es. find_files al passo 1 → from_step=1); il runtime recupera dallo scratchpad. (b) `paths=[\"/path/a.jpg\", ...]` come literal letterale per il caso atomico (utente cita 1+ path nella query, nessuno step ha gia' prodotto la lista). Esattamente UNA delle due. Vettoriale: una call processa N entries. Selezione tramite `fields`: 'dates.semantic' (data scatto da EXIF, fallback mtime), 'gps', 'place' (reverse-geocode), 'device', 'image_dimensions'. Default fields=['dates.semantic']."
+en = "Enriches a list of photo files on a filesystem (local paths like /home/.../foto.jpg) with EXIF data: capture date, GPS coordinates, place, camera model, image dimensions. ONLY for photo files on disk — NOT for emails, NOT for IMAP messages, NOT for generic text or code files. To read or search emails use `read_messages`. PASSING THE LIST — TWO FORMS: (a) `from_step=N` where N is the previous step that produced the list (e.g., find_files at step 1 → from_step=1); the runtime retrieves it from the scratchpad. (b) `paths=[\"/path/a.jpg\", ...]` as a literal string for the atomic case (user mentions 1+ paths in the query, no step has already produced the list). Exactly ONE of the two. Vectorized: one call processes N entries. Selection via `fields`: 'dates.semantic' (capture date from EXIF, fallback mtime), 'gps', 'place' (reverse-geocode), 'device', 'image_dimensions'. Default fields=['dates.semantic']."
+
+[code]
+files  = ["get_files.py"]
+digest = "sha256:995323975e1192b785871611b06b88612601478b5b441c3d75b4244e5d03b583"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.from_step]
+type        = "integer"
+minimum     = 1
+
+[args.properties.from_step.description]
+it = "Numero dello step precedente (in questo turno) che ha prodotto la lista di file da arricchire. Es. al passo 1 find_files trova le foto, al passo 2 get_files riceve from_step=1. ALTERNATIVA: usa `paths` se l'utente cita path letterali nella query e nessuno step precedente ha prodotto la lista (caso atomico)."
+en = "Number of the previous step (in this turn) that produced the list of files to enrich. E.g., at step 1 find_files finds the photos, at step 2 get_files receives from_step=1. ALTERNATIVE: use `paths` if the user cites literal paths in the query and no previous step produced the list (atomic case)."
+
+[args.properties.paths]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.paths.description]
+it = "Lista di path letterali (es. ['/tmp/foo.jpg', '/home/x/y.png']). Usa questa forma per il caso atomico (utente cita 1+ path nella query e nessuno step ha gia' prodotto la lista). Non combinare con `from_step`."
+en = "List of literal paths (e.g., ['/tmp/foo.jpg', '/home/x/y.png']). Use this form for the atomic case (user mentions 1+ paths in the query and no step has already produced the list). Do not combine with `from_step`."
+
+[args.properties.fields]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.fields.description]
+it = "Lista di metadata da estrarre. Valori validi: 'size' (dimensione file in byte → `size_bytes`, vale per QUALSIASI file), 'dates.semantic', 'dates.created', 'dates.modified', 'gps', 'place', 'device', 'image_dimensions' (ultimi 5 = EXIF, solo foto). In alternativa la stringa 'all'. Default: ['dates.semantic']. Esempio dimensione: ['size']; foto con luogo: ['dates.semantic', 'place']."
+en = "List of metadata to extract. Valid values: 'size' (file size in bytes → `size_bytes`, works for ANY file), 'dates.semantic', 'dates.created', 'dates.modified', 'gps', 'place', 'device', 'image_dimensions' (last 5 = EXIF, photos only). Alternatively the string 'all'. Default: ['dates.semantic']. Example size: ['size']; photo with location: ['dates.semantic', 'place']."
+
+[[capabilities]]
+name = "fs:read"
+hint = ["~/**", "/tmp/**"]
+
+[[capabilities]]
+name = "net:read"
+hint = ["nominatim.openstreetmap.org"]
+
+[[tests]]
+name     = "dates_semantic_default"
+setup    = "mkdir -p /tmp/metnos_test_meta && echo x > /tmp/metnos_test_meta/a.txt && touch -d '2024-06-15 12:00:00' /tmp/metnos_test_meta/a.txt"
+input    = { entries = [{path = "/tmp/metnos_test_meta/a.txt"}] }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_meta"
+
+[[tests]]
+name   = "lista_vuota_ok"
+input  = { entries = [] }
+expect = { ok = true, ok_count_eq = 0 }
+
+[[tests]]
+name   = "fields_invalido_fallisce"
+input  = { entries = [], fields = ["pippo"] }
+expect = { ok = false, error_contains = "deve essere uno fra" }
+
+[[tests]]
+name     = "path_inesistente_fallisce_solo_quella"
+input    = { entries = [{path = "/tmp/metnos_does_not_exist_xyz/foo.txt"}] }
+expect   = { ok = false, fail_count_eq = 1, error_contains = "non trovato" }
+
+[[tests]]
+name   = "args_invalidi_entries_non_lista"
+input  = { entries = "/tmp/foo" }
+expect = { ok = false, error_contains = "obbligatorio" }
+
+[[tests]]
+name   = "fields_all_keyword"
+input  = { entries = [], fields = "all" }
+expect = { ok = true, ok_count_eq = 0 }

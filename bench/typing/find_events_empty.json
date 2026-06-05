@@ -1,0 +1,90 @@
+{
+  "name": "find_events_empty",
+  "manifest_mtime": 1779121543,
+  "inputs": {
+    "time_windows": {
+      "structural_type": "array",
+      "required": false,
+      "default": [
+        "next-week"
+      ],
+      "semantic_type": "time_window[]",
+      "role": "filter",
+      "format_hint": "array of temporal descriptors (e.g., 'today', 'tomorrow')"
+    },
+    "size": {
+      "structural_type": "string",
+      "required": false,
+      "default": "1hour",
+      "semantic_type": "duration_secs",
+      "role": "filter",
+      "format_hint": "unit-aware string (e.g., '1hour', '60min')"
+    },
+    "time_of_day": {
+      "structural_type": "string",
+      "required": false,
+      "default": "",
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "morning|afternoon|evening|any"
+    },
+    "max_results": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 10,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "calendar_id": {
+      "structural_type": "string",
+      "required": false,
+      "default": "primary",
+      "semantic_type": "name",
+      "role": "source",
+      "format_hint": "string identifier"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "local",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "backend implementation name"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "event_entry[]",
+    "schema": {
+      "ok": "bool",
+      "entries": {
+        "kind": "name",
+        "start": "iso_timestamp",
+        "end": "iso_timestamp",
+        "duration_min": "scalar_metric",
+        "calendar_id": "name"
+      },
+      "used": "count",
+      "available_total": "count",
+      "truncated": "bool",
+      "truncated_what": "free_text",
+      "cap_field": "name",
+      "cap_value": "count",
+      "error": "free_text",
+      "error_class": "name"
+    }
+  },
+  "unresolved_args": [
+    "time_windows",
+    "time_of_day",
+    "calendar_id",
+    "client"
+  ],
+  "consumes": [
+    "filter:time_window",
+    "filter:duration_secs",
+    "filter:free_text"
+  ],
+  "propagates_constraints": false
+}

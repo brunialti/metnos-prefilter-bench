@@ -1,0 +1,104 @@
+# Manifest dell'executor `read_persons` — Metnos v1.1 (ADR 0163, 26/5/2026)
+# Aggregator profilo identitario: JOIN persons.sqlite + users.db.
+
+manifest_format = "1.0"
+
+name        = "read_persons"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["io", "me", "chi sono", "mio profilo", "il mio account",
+                "dimmi tutto su", "profilo di", "host", "guest",
+                "who am i", "my profile", "my account", "tell me about",
+                "paired user", "ruolo", "autonomy"]
+
+[description]
+it = """Aggregator profilo identitario di persone Metnos. JOIN persons.sqlite (biometric) + users.db (account paired host/guest, ADR 0083). USA per «chi sono io», «mio profilo», «dimmi tutto su X», «lista guest».
+
+§2.2 distinguo da `get_persons`: get_persons ritorna SCHEDA registro (slug, name, n_examples) — single-store. read_persons ritorna PROFILO completo (role, autonomy, biometric, channels) — multi-store JOIN.
+
+Args: `name="X"` lookup persona specifica (slugify resolution). `role="host"|"guest"` filtra paired. `name="${RUNTIME:actor}"` placeholder magic per actor corrente. `include_examples=false` spegne JOIN biometric. `include_channels=false` spegne JOIN user_channels.
+
+USO CORRETTO: «chi sono io» → read_persons(name="${RUNTIME:actor}"); «dimmi tutto su Lucia» → read_persons(name="Lucia"); «lista guest» → read_persons(role="guest").
+
+NON CONFONDERE CON: `get_persons` (scheda registro, no JOIN); `find_persons_indices` (face match corpus).
+
+Output: entries=[{slug, name, role?, autonomy_level?, n_examples, examples?, channels?, is_self?}]. is_self=true marcato per actor corrente."""
+en = """Identity profile aggregator for Metnos persons. JOIN persons.sqlite (biometric) + users.db (paired account host/guest, ADR 0083). USE for «who am I», «my profile», «tell me about X», «list guests».
+
+§2.2 distinct from `get_persons`: get_persons returns registry CARD (slug, name, n_examples) — single-store. read_persons returns full PROFILE (role, autonomy, biometric, channels) — multi-store JOIN.
+
+Args: `name="X"` lookup specific person (slugify resolution). `role="host"|"guest"` filter paired. `name="${RUNTIME:actor}"` placeholder magic for current actor. `include_examples=false` skips biometric JOIN. `include_channels=false` skips user_channels JOIN.
+
+CORRECT USE: «who am I» → read_persons(name="${RUNTIME:actor}"); «tell me about Lucia» → read_persons(name="Lucia"); «list guests» → read_persons(role="guest").
+
+DO NOT CONFUSE WITH: `get_persons` (registry card, no JOIN); `find_persons_indices` (face match in corpus).
+
+Output: entries=[{slug, name, role?, autonomy_level?, n_examples, examples?, channels?, is_self?}]. is_self=true marks current actor."""
+
+[code]
+files  = ["read_persons.py"]
+digest = "sha256:07b5b2c2debdef98cd8435318d2a0f6608cf65311d4216f7a8d170192bea63ea"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.name]
+type        = "string"
+
+[args.properties.name.description]
+it = "Nome della persona (string libera, slugify case+accent-insensitive). Accetta placeholder ${RUNTIME:actor} per actor corrente. Es. name='Lucia', name='${RUNTIME:actor}'. Mutualmente esclusivo con role."
+en = "Person name (free string, slugify case+accent-insensitive). Accepts placeholder ${RUNTIME:actor} for current actor. E.g. name='Lucia', name='${RUNTIME:actor}'. Mutually exclusive with role."
+
+[args.properties.role]
+type        = "string"
+
+[args.properties.role.description]
+it = "Filtro per ruolo paired: 'host' o 'guest'. Ritorna lista di TUTTI con quel ruolo. Mutualmente esclusivo con name."
+en = "Filter by paired role: 'host' or 'guest'. Returns list of ALL with that role. Mutually exclusive with name."
+
+[args.properties.include_examples]
+type        = "boolean"
+default     = true
+
+[args.properties.include_examples.description]
+it = "Se true (default), include il campo `examples` (foto enrollate) per ogni entry. Disattivare per performance se non servono."
+en = "If true (default), includes `examples` field (enrolled photos) for each entry. Disable for performance if not needed."
+
+[args.properties.include_channels]
+type        = "boolean"
+default     = true
+
+[args.properties.include_channels.description]
+it = "Se true (default), include il campo `channels` (Telegram/HTTP/mail paired) per ogni entry. Disattivare per performance."
+en = "If true (default), includes `channels` field (paired Telegram/HTTP/mail) for each entry. Disable for performance."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  entries: Array<{
+    slug: str,
+    name: str,
+    role?: 'host' | 'guest',
+    autonomy_level?: 'read_only' | 'restricted' | 'full',
+    n_examples: int,
+    examples?: Array<{image_path, face_box, sha256, created_at}>,
+    channels?: Array<{channel, verified, created_at}>,
+    is_self?: bool,
+    email?: str,
+    user_id?: str
+  }>,
+  n_entries?: int,
+  status?: 'unknown_name',
+  final_message_hint?: str,
+  error?: str
+}
+"""
+
+[[capabilities]]
+name = "metnos:read"
+hint = ["~/.local/share/metnos/persons.sqlite",
+         "~/.local/share/metnos/users.db"]
+
+reversible = true

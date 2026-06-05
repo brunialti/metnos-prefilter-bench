@@ -1,0 +1,49 @@
+{
+  "name": "find_images_web",
+  "manifest_mtime": 1779701535,
+  "inputs": {
+    "paths": {
+      "structural_type": "array",
+      "required": false,
+      "default": [],
+      "semantic_type": "image_path[]",
+      "role": "source",
+      "format_hint": "list of local file paths"
+    },
+    "urls": {
+      "structural_type": "array",
+      "required": false,
+      "default": [],
+      "semantic_type": "url[]",
+      "role": "source",
+      "format_hint": "list of public image URLs"
+    },
+    "max_results": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 10,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    }
+  },
+  "requires_one_of": [
+    [
+      "paths",
+      "urls",
+      "from_step"
+    ]
+  ],
+  "output": {
+    "type": "image_entry[]",
+    "schema": {
+      "source": "url",
+      "best_guess_label": "text_path",
+      "matching_pages": "url[]",
+      "similar_images": "url[]",
+      "web_entities": "json_object"
+    }
+  },
+  "unresolved_args": [],
+  "propagates_constraints": false
+}

@@ -1,0 +1,108 @@
+{
+  "name": "find_files",
+  "manifest_mtime": 1779788996,
+  "inputs": {
+    "base_path": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "dir_path",
+      "role": "source",
+      "format_hint": "absolute path or expandable ~"
+    },
+    "pattern": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "glob_pattern",
+      "role": "filter",
+      "format_hint": "single string glob or compound"
+    },
+    "patterns": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "glob_pattern[]",
+      "role": "filter",
+      "format_hint": "array of glob strings"
+    },
+    "case_sensitive": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean"
+    },
+    "recursive": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": true,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean"
+    },
+    "max_results": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 1000,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "max_depth": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 10,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "include_dirs": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "local",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "backend identifier"
+    },
+    "kind": {
+      "structural_type": "string",
+      "required": false,
+      "default": "",
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "string"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "file_entry[]",
+    "schema": {
+      "path": "file_path",
+      "name": "name",
+      "type": "name",
+      "mime": "name",
+      "kind": "name",
+      "size": "size_bytes",
+      "mtime": "iso_timestamp"
+    }
+  },
+  "unresolved_args": [
+    "client",
+    "kind"
+  ],
+  "consumes": [
+    "filter:glob_pattern",
+    "filter:name"
+  ],
+  "propagates_constraints": false
+}

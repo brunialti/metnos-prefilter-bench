@@ -1,0 +1,32 @@
+{
+  "name": "get_now",
+  "manifest_mtime": 1778834932,
+  "inputs": {
+    "timezone": {
+      "structural_type": "string",
+      "required": false,
+      "default": "UTC",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "IANA timezone string (e.g., 'Europe/Rome')"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "ok": "bool",
+      "content": "iso_timestamp",
+      "metadata": {
+        "timezone": "name",
+        "iso8601": "iso_timestamp",
+        "epoch": "scalar_metric"
+      },
+      "error": "free_text"
+    }
+  },
+  "unresolved_args": [
+    "timezone"
+  ],
+  "propagates_constraints": false
+}

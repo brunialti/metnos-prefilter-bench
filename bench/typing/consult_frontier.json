@@ -1,0 +1,112 @@
+{
+  "name": "consult_frontier",
+  "manifest_mtime": 1779121549,
+  "inputs": {
+    "role": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "precise persona description"
+    },
+    "output_spec": {
+      "structural_type": "object",
+      "required": true,
+      "default": null,
+      "semantic_type": "json_object",
+      "role": "filter",
+      "format_hint": "{format, sections, schema, max_words, style}"
+    },
+    "local_context": {
+      "structural_type": "object",
+      "required": false,
+      "default": null,
+      "semantic_type": "json_object",
+      "role": "source",
+      "format_hint": "{files: file_path[], entries: message_entry[], inline: json_object}"
+    },
+    "remote_context": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "url_entry[]",
+      "role": "source",
+      "format_hint": "list of remote resource descriptors"
+    },
+    "tools_allowed": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "name[]",
+      "role": "meta",
+      "format_hint": "whitelist of tool names"
+    },
+    "tier": {
+      "structural_type": "string",
+      "required": false,
+      "default": "wise",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "wise|middle|fast|frontier"
+    },
+    "max_tool_iters": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 30,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "max_remote_bytes": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 500000,
+      "semantic_type": "size_bytes",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "cache_ttl_s": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 0,
+      "semantic_type": "duration_secs",
+      "role": "meta",
+      "format_hint": "integer"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "ok": "bool",
+      "response_text": "free_text",
+      "response_structured": "json_object",
+      "tokens_in": "count",
+      "tokens_out": "count",
+      "cost_usd": "scalar_metric",
+      "tier_used": "name",
+      "provider_used": "name",
+      "model_used": "name",
+      "cached": "bool",
+      "iters_done": "count",
+      "remote_bytes_read": "size_bytes",
+      "files_read": "file_path[]",
+      "mode": "name",
+      "fallback_triggered": "bool"
+    }
+  },
+  "unresolved_args": [
+    "role",
+    "remote_context",
+    "tools_allowed",
+    "tier"
+  ],
+  "consumes": [
+    "filter:name",
+    "filter:json_object",
+    "source:file_path[]",
+    "source:url_entry[]"
+  ],
+  "propagates_constraints": false
+}

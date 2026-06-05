@@ -1,0 +1,54 @@
+{
+  "name": "set_signatures",
+  "manifest_mtime": 1778834947,
+  "inputs": {
+    "kind": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "blacklist | whitelist | unknown"
+    },
+    "signature": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "regex_pattern",
+      "role": "filter",
+      "format_hint": "binary:subcmd:target_kind"
+    },
+    "reason": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "meta",
+      "format_hint": "audit log description"
+    },
+    "severity": {
+      "structural_type": "string",
+      "required": false,
+      "default": "dangerous",
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "dangerous | forbidden"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "bool",
+    "schema": {}
+  },
+  "unresolved_args": [
+    "kind",
+    "signature",
+    "reason",
+    "severity"
+  ],
+  "consumes": [
+    "filter:name",
+    "filter:regex_pattern"
+  ],
+  "propagates_constraints": false
+}

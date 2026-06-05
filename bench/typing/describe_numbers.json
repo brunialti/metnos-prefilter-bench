@@ -1,0 +1,52 @@
+{
+  "name": "describe_numbers",
+  "manifest_mtime": 1778121086,
+  "inputs": {
+    "values": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "scalar_metric[]",
+      "role": "piping",
+      "format_hint": "list of int or float"
+    },
+    "fields": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text[]",
+      "role": "filter",
+      "format_hint": "metric names or 'all'"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "n": "count",
+      "mean": "scalar_metric",
+      "median": "scalar_metric",
+      "stdev": "scalar_metric",
+      "variance": "scalar_metric",
+      "min": "scalar_metric",
+      "max": "scalar_metric",
+      "range": "scalar_metric",
+      "sum": "scalar_metric",
+      "p25": "scalar_metric",
+      "p50": "scalar_metric",
+      "p75": "scalar_metric",
+      "p90": "scalar_metric",
+      "p95": "scalar_metric",
+      "p99": "scalar_metric",
+      "n_missing": "count"
+    }
+  },
+  "unresolved_args": [
+    "values",
+    "fields"
+  ],
+  "consumes": [
+    "filter:free_text"
+  ],
+  "propagates_constraints": false
+}

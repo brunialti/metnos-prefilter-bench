@@ -1,0 +1,165 @@
+# Manifest dell'executor `find_places` — Metnos v1.1
+# Naming compositivo: verbo_oggetto_plurale. Vettoriale per costruzione.
+
+manifest_format = "1.0"
+
+name        = "find_places"
+version     = "0.6.0"
+author      = "Roberto Brunialti"
+# Affinity: verbi + preposizioni di luogo (IT+EN), nessun POI hardcoded.
+# I sostantivi (farmacia/restaurant/...) emergono dalla query utente, non
+# servono enumerati qui (cattura tutto il long-tail di POI).
+affinity    = [
+    "trova", "cerca", "cercami", "trovami", "localizza", "find", "search", "locate", "lookup",
+                "look-for", "luogo", "luoghi", "place", "places", "POI", "indirizzo",
+                "address", "geocoding", "vicino", "vicina", "vicine", "intorno", "dintorni",
+                "zona", "in zona", "nelle vicinanze", "near", "nearby", "around", "close-by",
+                "in the area", "in proximity"
+            ]
+revertible  = false
+lifecycle   = "active"
+
+[description]
+it = "Cerca POI/luoghi/indirizzi per query testuale (search POIs/places/addresses by text query). USA QUESTO TOOL per qualunque query 'trova/cerca' su luoghi reali nel mondo / USE THIS TOOL for any 'find/search' query about real-world places. Copre tre forme: (a) ricerca generica per nome ['<name>', '<address>'] / generic lookup by name; (b) location-relative ['<POI> piu vicino/a/i/e', '<POI> vicino a me', '<POI> in zona/nei dintorni'] / ['nearest <POI>', '<POI> nearby', '<POI> around me', '<POI> in the area']; (c) compound luogo+POI ['<POI> a <city>', '<POI> vicino al <landmark>'] / ['<POI> in <city>', '<POI> near the <landmark>']. Per query location-relative DEVI prima chiamare get_location e passarne il risultato qui via arg `near` (auto-estratto da {location:{lat,lon}}) / For location-relative queries YOU MUST first call get_location and pass the result here via `near` arg. Senza `near` i risultati sono globali, ranking non orientato all'utente / without `near` results are global. Vettoriale: una call processa una lista di queries / vector: one call processes a list of queries. Ogni query restituisce fino a `max_results` match con coordinate, indirizzo, slug normalizzato / each query returns up to `max_results` matches with coordinates, address, normalized slug. BIAS GEOGRAFICO via `near`/`radius_km`/`bounded`: quando attivo aggiunge `distance_km` e ordina per distanza crescente / GEO BIAS via near/radius_km/bounded: when active adds distance_km and sorts ascending. Backend: Nominatim pubblico (rate-limit ~1/s, ~1000/giorno) con cache locale; override via env METNOS_NOMINATIM_URL / public Nominatim with local cache; override via env. NB anti-duplicato / anti-duplicate: NON sintetizzare nomi alternativi tipo `search_places`, `find_<POI>`, `nearby_<POI>` — find_places copre TUTTI i casi POI / DO NOT synthesize alternate names — find_places covers ALL POI cases."
+en = "Search POIs/places/addresses by text query. USE THIS TOOL for any 'find/search' query about real-world places. It covers three forms: (a) generic lookup by name ['<name>', '<address>']; (b) location-relative ['nearest <POI>', '<POI> nearby', '<POI> around me', '<POI> in the area']; (c) compound place+POI ['<POI> in <city>', '<POI> near the <landmark>']. For location-relative queries YOU MUST first call get_location and pass the result here via `near` arg (auto-extracted from {location:{lat,lon}}) / For location-relative queries YOU MUST first call get_location and pass the result here via `near` arg. Without `near` results are global, ranking not user-oriented / without `near` results are global. Vector: one call processes a list of queries / vector: one call processes a list of queries. Each query returns up to `max_results` matches with coordinates, address, normalized slug / each query returns up to `max_results` matches with coordinates, address, normalized slug. GEO BIAS via near/radius_km/bounded: when active adds distance_km and sorts ascending / GEO BIAS via `near`/`radius_km`/`bounded`: when active adds `distance_km` and sorts ascending. Backend: public Nominatim (rate-limit ~1/s, ~1000/day) with local cache; override via env METNOS_NOMINATIM_URL / public Nominatim with local cache; override via env. NB anti-duplicate: DO NOT synthesize alternate names like `search_places`, `find_<POI>`, `nearby_<POI>` — find_places covers ALL POI cases / anti-duplicate: DO NOT synthesize alternate names like `search_places`, `find_<POI>`, `nearby_<POI>` — find_places covers ALL POI cases."
+
+[code]
+files  = ["find_places.py"]
+digest = "sha256:af49750783e23145b6bf6a0968e21fe697a72708cd8a42810eb5432ed8f32758"
+
+[args]
+type     = "object"
+required = ["queries"]
+
+[args.properties.queries]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.queries.description]
+it = "Lista di query testuali (1+). Ogni stringa puo' essere libera (es. 'Roma', 'Via Garibaldi 12 Milano', 'Eiffel Tower')."
+en = "List of textual queries (1+). Each string can be free-form (e.g., 'Rome', 'Via Garibaldi 12 Milan', 'Eiffel Tower')."
+
+[args.properties.max_results]
+type        = "integer"
+default     = 5
+
+[args.properties.max_results.description]
+it = "Numero massimo di match per query. Default 5, range 1..50."
+en = "Maximum number of matches per query. Default 5, range 1..50."
+
+[args.properties.near]
+type        = "object"
+
+[args.properties.near.description]
+it = "Coordinate di centro per bias geografico. Forma: {lat: number, lon: number}. Puoi anche passare DIRETTAMENTE l'output di get_location (viene auto-estratto da .location.lat/lon). Quando presente, i risultati includono distance_km e sono ordinati per distanza."
+en = "Center coordinates for geographic bias. Format: {lat: number, lon: number}. You can also pass the output of get_location DIRECTLY (it is auto-extracted from .location.lat/lon). When present, results include distance_km and are ordered by distance."
+
+[args.properties.radius_km]
+type        = "number"
+minimum     = 0.1
+default     = 3
+
+[args.properties.radius_km.description]
+it = "Raggio di bias in km (usato solo con near). DEFAULT 3 (1/5/2026 v0.2.4): ottimizzato per kNN urbano. Viewbox piu' stretto → Nominatim sceglie i top-50 fra POI low-importance ma piu' vicini, invece di premiare brand globali in area larga. Per query 'in zona X' / 'in raggio di Nkm' aumentare esplicitamente (es. 10/50/100). Determina il viewbox passato a Nominatim."
+en = "Bias radius in km (used only with near). DEFAULT 3 (1/5/2026 v0.2.4): optimized for urban kNN. Narrower viewbox → Nominatim selects the top-50 among low-importance but closer POIs, instead of rewarding global brands in a wide area. For queries 'in area X' / 'within a radius of Nkm' explicitly increase (e.g., 10/50/100). Determines the viewbox passed to Nominatim."
+
+[args.properties.bounded]
+type        = "boolean"
+
+[args.properties.bounded.description]
+it = "Se true E near presente: passa bounded=1 a Nominatim, restringendo STRETTAMENTE ai risultati nel viewbox (no fallback geografico). DEFAULT (1/5/2026 v0.2.3): TRUE quando near e' presente, FALSE altrimenti. Senza bounded il viewbox e' solo bias debole e Nominatim puo' ritornare top match a 150km (caso Correzzola). Per disabilitare lo stretto: passa esplicitamente bounded=false (utile per query 'farmacie nel raggio di 100km' o globali con bias)."
+en = "If true AND near is present: pass bounded=1 to Nominatim, STRICTLY restricting to results within the viewbox (no geographic fallback). DEFAULT (1/5/2026 v0.2.3): TRUE when near is present, FALSE otherwise. Without bounded, the viewbox is only a weak bias and Nominatim may return the top match at 150km (e.g., the Correzzola case). To disable the strict restriction: explicitly pass bounded=false (useful for queries like 'pharmacies within a 100km radius' or global queries with bias)."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  ok_count: int,
+  fail_count: int,
+  entries: Array<{
+    query: str,
+    matches: Array<{
+      name: str | null,
+      lat: float, lon: float,
+      address: str,
+      place_slug: str,
+      osm_type: str | null,
+      osm_id: int | null,
+      distance_km?: float
+    }>
+  }>,
+  failed: Array<{
+    index: int, query: str | null,
+    error: str, error_code?: str
+  }>,
+  backend: str,
+  aborted?: bool
+}
+"""
+
+[[capabilities]]
+name = "net:read"
+hint = ["nominatim.openstreetmap.org", "localhost"]
+
+[[tests]]
+name   = "lista_vuota_ok"
+input  = { queries = [] }
+expect = { ok = true, ok_count_eq = 0 }
+
+[[tests]]
+name   = "args_invalidi_queries_non_lista"
+input  = { queries = "Roma" }
+expect = { ok = false, error_contains = "deve essere una lista di strings" }
+
+[[tests]]
+name   = "max_results_invalido"
+input  = { queries = ["Roma"], max_results = 0 }
+expect = { ok = false, error_contains = "deve essere compreso fra" }
+
+[[tests]]
+name   = "query_non_stringa_fallisce_solo_quella"
+input  = { queries = ["Roma", 42] }
+expect = { ok = false, fail_count_eq = 1 }
+
+# Sample concreto di output (one-shot per synt + fast-path generator).
+# Coordinate plausibili per "farmacia vicino a Brescia" con near.
+[[tests]]
+name        = "happy_path_sample"
+input       = { queries = ["farmacia"], near = { lat = 45.5416, lon = 10.2118 }, max_results = 2 }
+expect      = { ok = true, has_field = "entries" }
+expect_full = """
+{
+  "ok": true,
+  "ok_count": 1,
+  "fail_count": 0,
+  "entries": [
+    {
+      "query": "farmacia",
+      "matches": [
+        {
+          "name": "Farmacia Centrale",
+          "lat": 45.541623,
+          "lon": 10.211845,
+          "address": "Farmacia Centrale, Via Roma 12, 25100, Brescia, Lombardia, Italia",
+          "place_slug": "farmacia-centrale",
+          "osm_type": "node",
+          "osm_id": 123456789,
+          "distance_km": 0.05
+        },
+        {
+          "name": "Farmacia San Marco",
+          "lat": 45.546201,
+          "lon": 10.220334,
+          "address": "Farmacia San Marco, Corso Magenta 45, 25100, Brescia, Lombardia, Italia",
+          "place_slug": "farmacia-san-marco",
+          "osm_type": "node",
+          "osm_id": 987654321,
+          "distance_km": 0.85
+        }
+      ]
+    }
+  ],
+  "failed": [],
+  "backend": "photon"
+}
+"""

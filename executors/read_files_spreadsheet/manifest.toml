@@ -1,0 +1,100 @@
+# Manifest dell'executor `read_files_spreadsheet` — Metnos v1.1
+# Naming compositivo §2.2: azione_oggetto_qualifier.
+# Dispatcher canonical spreadsheet read: default LOCALE, Google opt-in.
+
+manifest_format = "1.0"
+
+name        = "read_files_spreadsheet"
+version     = "0.2.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "spreadsheet", "foglio elettronico", "foglio di calcolo", "xlsx",
+    "leggi celle", "read sheet", "celle", "cells", "range", "tabella",
+    "sheet", "foglio", "workbook"
+]
+revertible  = false
+lifecycle   = "active"
+
+[description]
+it = "SCOPO: legge tutte le righe da un foglio di calcolo LOCALE (.xlsx/.csv). PATTERN: read_files_spreadsheet(spreadsheet_id=\"/path/foglio.xlsx\"). NON: per leggere un foglio Google online passa client=\"google_workspace\" (id Drive + range A1); equivalenti format-espliciti locali: read_files_xlsx, read_files_csv; testo semplice -> read_files. OUT: entries: list[list] (matrice righe x celle) + values stessa shape."
+en = "SCOPO: reads all rows from a LOCAL spreadsheet (.xlsx/.csv). PATTERN: read_files_spreadsheet(spreadsheet_id=\"/path/sheet.xlsx\"). NON: to read an online Google sheet pass client=\"google_workspace\" (Drive id + A1 range); format-explicit local equivalents: read_files_xlsx, read_files_csv; plain text -> read_files. OUT: entries: list[list] (rows x cells matrix) + values same shape."
+
+[code]
+files  = ["read_files_spreadsheet.py"]
+digest = "sha256:d3a1c766128ba9699861c602b7711f08567fd92ccbf6726df11ac825f713a503"
+
+[args]
+type     = "object"
+required = ["spreadsheet_id"]
+
+[args.properties.spreadsheet_id]
+type    = "string"
+
+[args.properties.spreadsheet_id.description]
+it = "LOCAL: PATH del file .xlsx/.csv (es. '/home/.../foglio.xlsx'). google_workspace: ID Drive (es. '1abc...XYZ'). MATCH ESATTO: wildcard NON supportati."
+en = "LOCAL: PATH of the .xlsx/.csv file (e.g. '/home/.../sheet.xlsx'). google_workspace: Drive ID (e.g. '1abc...XYZ'). EXACT MATCH: wildcards NOT supported."
+
+[args.properties.sheet_name]
+type    = "string"
+default = ""
+
+[args.properties.sheet_name.description]
+it = "LOCAL: nome del foglio da leggere (default: primo foglio). google_workspace: usa invece `range`."
+en = "LOCAL: name of the sheet to read (default: first sheet). google_workspace: use `range` instead."
+
+[args.properties.range]
+type    = "string"
+default = ""
+
+[args.properties.range.description]
+it = "Solo google_workspace: range A1 (es. 'Sheet1!A1:C10'). Default '' = intero primo foglio. Ignorato dal backend locale."
+en = "google_workspace only: A1 range (e.g. 'Sheet1!A1:C10'). Default '' = entire first tab. Ignored by the local backend."
+
+[args.properties.client]
+type    = "string"
+enum    = ["local", "google_workspace"]
+default = "local"
+
+[args.properties.client.description]
+it = "Backend: 'local' (default, file .xlsx/.csv) o 'google_workspace' (Google Sheets online, richiede OAuth)."
+en = "Backend: 'local' (default, .xlsx/.csv file) or 'google_workspace' (online Google Sheets, requires OAuth)."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  values: Array<Array<str|num>>,
+  spreadsheet_id: str,
+  entries: Array<Array<str|num>>,
+  used: int,
+  available_total?: int,
+  files_source: 'local' | 'google_workspace',
+  error?: str,
+  error_class?: str,
+  decision?: 'needs_inputs'
+}
+"""
+
+[[capabilities]]
+name = "metnos:read"
+hint = ["spreadsheet:local"]
+
+[[tests]]
+name   = "missing_spreadsheet_id_fails"
+input  = {}
+expect = { ok = false, error_contains = "spreadsheet_id" }
+
+[[tests]]
+name   = "args_invalid_type_fails"
+input  = { spreadsheet_id = 123 }
+expect = { ok = false }
+
+[[tests]]
+name   = "nonexistent_local_file_fails"
+input  = { spreadsheet_id = "/tmp/metnos_does_not_exist_9999.xlsx" }
+expect = { ok = false, error_contains = "trovato" }
+
+[[tests]]
+name   = "unsupported_client_fails"
+input  = { spreadsheet_id = "1abc", client = "dropbox" }
+expect = { ok = false, error_contains = "Operazione non applicabile per questo provider" }

@@ -1,0 +1,77 @@
+{
+  "name": "find_places",
+  "manifest_mtime": 1779121548,
+  "inputs": {
+    "queries": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "free_text[]",
+      "role": "filter",
+      "format_hint": "List of strings representing place names, addresses, or relative queries"
+    },
+    "max_results": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 5,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "Integer between 1 and 50"
+    },
+    "near": {
+      "structural_type": "object",
+      "required": false,
+      "default": null,
+      "semantic_type": "json_object",
+      "role": "source",
+      "format_hint": "{lat: number, lon: number}"
+    },
+    "radius_km": {
+      "structural_type": "number",
+      "required": false,
+      "default": 3,
+      "semantic_type": "scalar_metric",
+      "role": "meta",
+      "format_hint": "Radius in kilometers"
+    },
+    "bounded": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": null,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "Strictness of the geographic bounding box"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "event_entry[]",
+    "schema": {
+      "ok": "bool",
+      "ok_count": "count",
+      "fail_count": "count",
+      "entries": {
+        "query": "free_text",
+        "matches": {
+          "name": "name",
+          "lat": "scalar_metric",
+          "lon": "scalar_metric",
+          "address": "free_text",
+          "place_slug": "slug",
+          "osm_type": "name",
+          "osm_id": "count",
+          "distance_km": "scalar_metric"
+        }
+      }
+    }
+  },
+  "unresolved_args": [
+    "queries",
+    "radius_km"
+  ],
+  "consumes": [
+    "filter:free_text",
+    "filter:json_object"
+  ],
+  "propagates_constraints": false
+}

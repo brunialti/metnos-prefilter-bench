@@ -1,0 +1,99 @@
+# Manifest dell'executor `delete_persons` — Metnos v1.1
+# Naming compositivo: azione_oggetto. PR2 persons registry.
+
+manifest_format = "1.0"
+
+name        = "delete_persons"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["dimentica", "rimuovi persona", "cancella persona", "elimina",
+                "cancella tutte le persone", "purge persone",
+                "remove person", "forget", "delete person", "unenroll",
+                "wipe persons", "delete all persons"]
+# §2.3 reversibile via module.reverse(): il forward esporta riga+esempi+
+# biometria in un blob PRIMA di cancellare; reverse() li reinserisce verbatim
+# (restore_person). Top-level (NON dentro [[capabilities]], altrimenti il
+# loader non lo legge). Il loader usa `revertible` (con la v).
+revertible  = true
+
+[description]
+it = "Rimuove persone dal registro nominale. Vettoriale (§2.1): accetta `names: list` (plurale canonico), `entries: list` (da from_step di get_persons), `name: str` (singolare), o `all=true` (purge totale). Cancella TUTTI gli esempi (foto+embedding+bbox) per ogni persona via CASCADE. Reversibile nel turno via `undo_last_turn` (backup riga+esempi+embedding prima di cancellare, poi restore verbatim). DEVI usarla per 'dimentica X', 'rimuovi X dal registro', 'cancella tutte le persone'. Se almeno un nome e' ambiguo, ritorna `decision='needs_inputs'` con un dialog step per ogni ambiguo (i non-ambigui vengono comunque cancellati). NON DEVI usarla per cancellare le foto dal filesystem (uso `delete_files`); NON DEVI usarla per rimuovere singoli esempi (la granularita' minima e' la persona). USO CORRETTO: `delete_persons(names=['Carol','Anna'])`, `delete_persons(all=true)`, `delete_persons(from_step=N)` dopo `get_persons`. ERRORE: `delete_persons()` senza nessun argomento. Output: `{ok, results:[{slug, name, removed_examples}], n_removed, removed_examples_total, unknown_names?, ambiguous?, decision?, needs_inputs?, final_message_hint?}`."
+en = "Removes persons from the named registry. Vectorial (§2.1): accepts `names: list` (canonical plural), `entries: list` (from get_persons via from_step), `name: str` (singular), or `all=true` (full purge). Deletes ALL examples (photos+embeddings+bboxes) for each person via CASCADE. Reversible within the turn via `undo_last_turn` (backs up row+examples+embeddings before deleting, then restores verbatim). MUST be used for 'forget X', 'remove X from the registry', 'delete all persons'. If at least one name is ambiguous, returns `decision='needs_inputs'` with one dialog step per ambiguous name (non-ambiguous are deleted regardless). MUST NOT be used to delete photos from the filesystem (use `delete_files`); MUST NOT be used to remove single examples (minimal granularity is the person). CORRECT USE: `delete_persons(names=['Carol','Anna'])`, `delete_persons(all=true)`, `delete_persons(from_step=N)` after `get_persons`. ERROR: `delete_persons()` with no argument. Output: `{ok, results:[{slug, name, removed_examples}], n_removed, removed_examples_total, unknown_names?, ambiguous?, decision?, needs_inputs?, final_message_hint?}`."
+
+[code]
+files  = ["delete_persons.py"]
+digest = "sha256:6c69c99c031a3fd25abacbbbcadde5a1a6b0efa85fc59b032282f233b93423ac"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.names]
+type = "array"
+items = { type = "string" }
+
+[args.properties.names.description]
+it = "Lista di nomi da cancellare (plurale canonico §2.1). Per ciascuno: match exact-slug-first, poi token-anywhere. Ambigui → dialog `choice_with_preview` per slug ambiguo."
+en = "List of names to delete (canonical plural §2.1). For each: exact-slug-first match, then token-anywhere. Ambiguous → `choice_with_preview` dialog per ambiguous name."
+
+[args.properties.name]
+type = "string"
+
+[args.properties.name.description]
+it = "Forma singolare (alias di `names=[name]`). Match exact-slug-first, poi token-anywhere."
+en = "Singular form (alias for `names=[name]`). Exact-slug-first match, then token-anywhere."
+
+[args.properties.entries]
+type = "array"
+items = { type = "object" }
+
+[args.properties.entries.description]
+it = "Lista di entries (es. da `from_step: N` dopo `get_persons`). Estrae il campo `name` (o `slug`) di ciascuna."
+en = "List of entries (e.g. from `from_step: N` after `get_persons`). Extracts the `name` (or `slug`) field of each."
+
+[args.properties.all]
+type = "boolean"
+
+[args.properties.all.description]
+it = "Se `true`, cancella TUTTE le persone enrolled (purge totale). Mutuamente esclusivo con `names`/`entries`/`name`."
+en = "If `true`, deletes ALL enrolled persons (full purge). Mutually exclusive with `names`/`entries`/`name`."
+
+[args.properties.chosen_slug]
+type = "string"
+
+[args.properties.chosen_slug.description]
+it = "Slug esatto da cancellare (post-disambig single). Per batch usa `chosen_slugs` o le var multi-step `chosen_slug__<nome>`."
+en = "Exact slug to delete (post-disambig single). For batch use `chosen_slugs` or multi-step vars `chosen_slug__<name>`."
+
+[args.properties.chosen_slugs]
+type = "array"
+items = { type = "string" }
+
+[args.properties.chosen_slugs.description]
+it = "Lista di slug esatti da cancellare (post-disambig batch)."
+en = "List of exact slugs to delete (post-disambig batch)."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  decision?: 'needs_inputs',
+  needs_inputs?: {title, dialog, fmt, on_complete},
+  results: Array<{slug, name, removed_examples}>,
+  n_removed: int,
+  removed_examples_total: int,
+  unknown_names?: Array<str>,
+  ambiguous?: bool,
+  error?: str,
+  final_message_hint?: str
+}
+"""
+
+[[capabilities]]
+name = "metnos:write"
+hint = ["~/.local/share/metnos/persons.sqlite"]
+
+[[tests]]
+name   = "validates_empty_name"
+input  = { name = "" }
+expect = { ok = false, error_contains = "non-empty" }

@@ -1,0 +1,98 @@
+# Manifest dell'executor `read_urls_pdf` — Metnos v1.1
+# Lettura di PDF da URL (ADR 0081, 4/5/2026).
+
+manifest_format = "1.0"
+
+name        = "read_urls_pdf"
+version     = "0.1.0"
+timeout_s   = 300
+author      = "Roberto Brunialti"
+affinity    = [
+    "read", "leggi", "pdf", "documento", "circolare", "report", "fattura", "url", "fetch",
+                "scarica", "extract", "estrai", "testo", "content", "contenuto"
+            ]
+
+[description]
+it = "Scarica una lista di URL che servono PDF e ritorna title, author, body_text e n_pages estratti deterministicamente. Backend: pypdf (preferito) o pdfminer.six come fallback. Skippa Content-Type non-PDF (eccetto se l'URL termina in '.pdf'). Cap pratico: max_bytes 20 MB per documento, max_pages_per_doc 100. body_text trimmato a 200000 char. ocr_fallback=true segnala con `needs_ocr: true` quando il parser estrae 0 testo (PDF scansionato): l'OCR effettivo va via read_files_ocr in step successivo dopo download manuale. Cookie auth tramite 'auth_cookies_file' (Mozilla cookies.txt). User-Agent fisso 'metnos-crawler/1.1 (+contact@metnos.com)'. Esempio dopo find_urls (PDF di circolari scolastiche): read_urls_pdf(from_step=1) → entries=[{url, title, author, body_text, n_pages, used_lib, fetched_at}]."
+en = "Download a list of URLs that serve PDFs and return title, author, body_text, and n_pages extracted deterministically. Backend: pypdf (preferred) or pdfminer.six as fallback. Skip non-PDF Content-Type (except if the URL ends in '.pdf'). Practical cap: max_bytes 20 MB per document, max_pages_per_doc 100. body_text trimmed to 200000 char. ocr_fallback=true signals with `needs_ocr: true` when the parser extracts 0 text (scanned PDF): the actual OCR must be done via read_files_ocr in the next step after manual download. Auth cookies via 'auth_cookies_file' (Mozilla cookies.txt). Fixed User-Agent 'metnos-crawler/1.1 (+contact@metnos.com)'. Example after find_urls (PDFs of school circulars): read_urls_pdf(from_step=1) → entries=[{url, title, author, body_text, n_pages, used_lib, fetched_at}]."
+
+[code]
+files  = ["read_urls_pdf.py"]
+digest = "sha256:1e550e00c22d979ada285fa04cd67d136528e9d9b2977a24aa27c10959a07fd1"
+
+[args]
+type     = "object"
+required = ["urls"]
+
+[args.properties.urls]
+type        = "array"
+
+[args.properties.urls.description]
+it = "Lista di URL HTTP/HTTPS che servono application/pdf (o terminano in '.pdf'). Anche un singolo URL passato come array a 1 elemento."
+en = "List of HTTP/HTTPS URLs that serve application/pdf (or end in '.pdf'). Even a single URL passed as a 1-element array."
+
+[args.properties.auth_cookies_file]
+type        = "string"
+
+[args.properties.auth_cookies_file.description]
+it = "Path a un file Mozilla cookies.txt (formato Netscape) con le credenziali per gli URL che richiedono auth."
+en = "Path to a Mozilla cookies.txt file (Netscape format) containing credentials for URLs requiring auth."
+
+[args.properties.max_pages_per_doc]
+type        = "integer"
+minimum     = 1
+default     = 100
+
+[args.properties.max_pages_per_doc.description]
+it = "Numero massimo di pagine letto per ogni documento. Default 100."
+en = "Maximum number of pages read for each document. Default 100."
+
+[args.properties.max_bytes]
+type        = "integer"
+minimum     = 0
+default     = 20000000
+
+[args.properties.max_bytes.description]
+it = "Tetto sui byte scaricati per documento. Default 20000000 (20 MB)."
+en = "Ceiling on downloaded bytes per document. Default 20000000 (20 MB)."
+
+[args.properties.timeout_s]
+type        = "number"
+default     = 15.0
+minimum     = 1.0
+maximum     = 120.0
+
+[args.properties.timeout_s.description]
+it = "Timeout per singola richiesta HTTP, in secondi. Default 15.0 (PDF spesso lenti)."
+en = "Timeout for single HTTP request, in seconds. Default 15.0 (PDFs often slow)."
+
+[args.properties.ocr_fallback]
+type        = "boolean"
+default     = false
+
+[args.properties.ocr_fallback.description]
+it = "Se true e l'estrazione testo nativa restituisce 0 char, marca l'entry con `needs_ocr: true` per orchestrazione successiva (read_files_ocr). Default false."
+en = "If true and the native text extraction returns 0 chars, mark the entry with `needs_ocr: true` for subsequent orchestration (read_files_ocr). Default false."
+
+[args.properties.client]
+type        = "string"
+enum        = ["httpx", "playwright"]
+default     = "httpx"
+
+[args.properties.client.description]
+it = "Backend di implementazione (default 'httpx' = urllib stdlib + HostThrottle + pypdf). 'playwright' = stub (non ancora attivo). Plugin esterni futuri potranno aggiungere altri client."
+en = "Backend implementation (default 'httpx' = urllib stdlib + HostThrottle + pypdf). 'playwright' = stub (not yet active). Future external plugins may add other clients."
+
+[[capabilities]]
+name = "network.read"
+hint = ["http://*", "https://*"]
+
+[[tests]]
+name   = "lista_vuota_ok"
+input  = { urls = [] }
+expect = { ok = true, metadata_field_eq = { ok_count = 0 } }
+
+[[tests]]
+name   = "errore_se_urls_non_lista"
+input  = { urls = "not_a_list" }
+expect = { ok = true, metadata_field_eq = { ok_count = 1 } }

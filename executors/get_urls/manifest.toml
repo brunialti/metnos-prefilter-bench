@@ -1,0 +1,71 @@
+# Manifest dell'executor `get_urls` — Metnos v1.1
+# Recupera contenuto via HTTP/HTTPS GET o HEAD.
+
+manifest_format = "1.0"
+
+name        = "get_urls"
+version     = "0.2.0"
+timeout_s   = 300
+author      = "Roberto Brunialti"
+affinity    = ["web", "http", "url", "scarica", "leggi", "pagina", "api", "rest", "download"]
+
+[description]
+it = "Esegue una richiesta HTTP/HTTPS (GET o HEAD) verso uno o piu' URL e restituisce il corpo della risposta. Supporta timeout."
+en = "Executes an HTTP/HTTPS request (GET or HEAD) towards one or more URLs and returns the response body. Supports timeouts."
+
+[code]
+files  = ["get_urls.py"]
+digest = "sha256:d8354fdb996a33d875aeb057f817d2c1886edaf703f7ec9be3aefc743027bf49"
+
+[args]
+type     = "object"
+required = ["url"]
+
+[args.properties.url]
+type        = "string"
+
+[args.properties.url.description]
+it = "URL HTTP o HTTPS da chiamare."
+en = "HTTP or HTTPS URL to call."
+
+[args.properties.method]
+type        = "string"
+enum        = ["GET", "HEAD"]
+default     = "GET"
+
+[args.properties.timeout_s]
+type        = "integer"
+default     = 10
+minimum     = 1
+maximum     = 60
+
+[args.properties.timeout_s.description]
+it = "Timeout in secondi. Default 10."
+en = "Timeout in seconds. Default 10."
+
+[[capabilities]]
+name = "network:http"
+hint = ["httpbin.org", "*.httpbin.org", "127.0.0.1"]
+
+[[tests]]
+name   = "get_pagina_pubblica"
+input  = { url = "https://httpbin.org/get" }
+# Schema entries[] post-refactor 18/5/2026 (turn 7 fix).
+# entries[0].status_code, entries[0].body_text contengono i campi.
+expect = { ok = true, entries_field_eq = { "0" = { status_code = 200 } } }
+
+[[tests]]
+name   = "fallisce_su_host_fuori_scope"
+input  = { url = "https://example.com/" }
+expect = { ok = false, error_contains = "outside allowed scope" }
+
+[[tests]]
+name   = "errore_su_404"
+input  = { url = "https://httpbin.org/status/404" }
+# Per failed entries, lo status finisce in failed[0].status_code.
+expect = { ok = false, error_contains = "404" }
+
+[[tests]]
+name   = "head_request"
+input  = { url = "https://httpbin.org/get", method = "HEAD" }
+expect = { ok = true, entries_field_eq = { "0" = { status_code = 200, method = "HEAD" } } }

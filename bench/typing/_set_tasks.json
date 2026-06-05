@@ -1,0 +1,21 @@
+{
+  "name": "set_tasks",
+  "manifest_mtime": 0,
+  "inputs": {
+    "task_id": {"structural_type": "string", "required": true, "default": null, "semantic_type": "slug", "role": "source", "format_hint": "task id"},
+    "state": {"structural_type": "string", "required": false, "default": null, "semantic_type": "name", "role": "filter", "format_hint": "active|paused|cancelled"},
+    "fire_now": {"structural_type": "boolean", "required": false, "default": false, "semantic_type": "bool", "role": "meta", "format_hint": "trigger immediate execution"}
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "scalar_metric",
+    "schema": {"ok": "bool", "id": "name", "new_state": "name"},
+    "may_be_truncated": false,
+    "may_be_empty": false
+  },
+  "consumes": [],
+  "propagates_constraints": false,
+  "preconditions": [],
+  "_builtin": true,
+  "_terminator": false
+}

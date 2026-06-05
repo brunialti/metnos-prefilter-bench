@@ -1,0 +1,73 @@
+{
+  "name": "delete_events",
+  "manifest_mtime": 1779121548,
+  "inputs": {
+    "event_id": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "slug",
+      "role": "filter",
+      "format_hint": "single identifier"
+    },
+    "event_ids": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "slug[]",
+      "role": "filter",
+      "format_hint": "list of identifiers"
+    },
+    "entries": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "event_entry[]",
+      "role": "piping",
+      "format_hint": "upstream event objects"
+    },
+    "calendar_id": {
+      "structural_type": "string",
+      "required": false,
+      "default": "primary",
+      "semantic_type": "name",
+      "role": "source",
+      "format_hint": "calendar identifier"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "local",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "backend implementation name"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "ok": "bool",
+      "results": "json_object[]",
+      "n_deleted": "count",
+      "used": "count",
+      "partial": "bool",
+      "failures": "json_object[]",
+      "error": "free_text",
+      "error_class": "name"
+    }
+  },
+  "unresolved_args": [
+    "event_id",
+    "event_ids",
+    "entries",
+    "calendar_id",
+    "client"
+  ],
+  "consumes": [
+    "filter:slug",
+    "filter:slug[]",
+    "piping:event_entry[]"
+  ],
+  "propagates_constraints": false
+}

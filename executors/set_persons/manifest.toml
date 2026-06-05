@@ -1,0 +1,96 @@
+# Manifest dell'executor `set_persons` — Metnos v1.1
+# Naming compositivo: azione_oggetto. PR2 persons registry.
+
+manifest_format = "1.0"
+
+name        = "set_persons"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["enrolla", "registra", "memorizza", "ricorda persona", "questa è",
+                "questo è", "enroll", "register", "save name", "remember person",
+                "this is", "person", "volto", "viso", "face"]
+
+[description]
+it = "Enrolla una persona nel registro nominale per ricerche per nome con `find_persons_indices(name=...)`. DEVI usarla quando l'utente dice 'questa è X' o 'enrolla X' + foto di riferimento. Modalita': `add` (default) accumula esempi, `replace` sostituisce tutti gli esempi precedenti. Se in una foto vengono rilevati piu' di 1 volto, l'executor ritorna `decision='needs_inputs'` per chiedere quale viso usare. NON DEVI usarla per cercare foto di una persona (uso `find_persons_indices`); NON DEVI usarla per identificare automaticamente persone in foto (l'enroll richiede sempre il nome dato dall'utente). USO CORRETTO: `set_persons(name='Carol', paths=['~/foto/m1.jpg','~/foto/m2.jpg'])`. ERRORE: `set_persons(name='Carol')` senza paths. Output: `{ok, results:[{path, slug, name, face_box, added}], errors:[{path, error}], n_examples_after, warn?, final_message_hint?}`."
+en = "Enrolls a person into the named registry for name-based searches via `find_persons_indices(name=...)`. MUST be used when the user says 'this is X' or 'enroll X' + reference photos. Modes: `add` (default) accumulates examples, `replace` replaces all previous examples. If more than 1 face is detected in a photo, the executor returns `decision='needs_inputs'` to ask which face to use. MUST NOT be used to search photos of a person (use `find_persons_indices`); MUST NOT be used to automatically identify persons in photos (enroll always requires the name given by the user). CORRECT USE: `set_persons(name='Carol', paths=['~/photos/m1.jpg','~/photos/m2.jpg'])`. ERROR: `set_persons(name='Carol')` without paths. Output: `{ok, results:[{path, slug, name, face_box, added}], errors:[{path, error}], n_examples_after, warn?, final_message_hint?}`."
+
+[code]
+files  = ["set_persons.py"]
+digest = "sha256:6bcf5021db07eee1183eb9ba787be305c5b76331539ad105ce1fdaae143e9f94"
+
+[args]
+type     = "object"
+required = ["name", "paths"]
+
+[args.properties.name]
+type        = "string"
+
+[args.properties.name.description]
+it = "Nome visualizzato della persona (es. 'Carol', 'Bob Buffa'). Lo slug interno e' derivato (lowercase, ASCII, separatori normalizzati). Il display name e' preservato dal primo enroll."
+en = "Display name of the person (e.g. 'Carol', 'Bob Buffa'). The internal slug is derived (lowercase, ASCII, normalized separators). The display name is preserved from the first enroll."
+
+[args.properties.paths]
+type        = "array"
+
+[args.properties.paths.description]
+it = "Lista di path a foto di riferimento (anche N=1). Path assoluti o ~ espandibili. Ogni foto deve contenere almeno un volto rilevabile da ArcFace; se ne contiene piu' di 1, l'executor chiede di scegliere via `get_inputs`."
+en = "List of paths to reference photos (also N=1). Absolute paths or expandable ~. Each photo must contain at least one face detectable by ArcFace; if it contains more than 1, the executor asks to choose via `get_inputs`."
+
+[args.properties.mode]
+type        = "string"
+enum        = ["add", "replace"]
+default     = "add"
+
+[args.properties.mode.description]
+it = "`add` (default) aggiunge esempi a quelli esistenti; `replace` cancella tutti gli esempi precedenti per quella persona prima di aggiungere i nuovi."
+en = "`add` (default) appends examples to existing ones; `replace` deletes all previous examples for that person before adding the new ones."
+
+[args.properties.face_choices]
+type        = "object"
+
+[args.properties.face_choices.description]
+it = "Dict {path_or_var: face_idx} popolato dal callback di `get_inputs` quando l'utente sceglie un viso fra multipli. Il caller normale non lo passa direttamente."
+en = "Dict {path_or_var: face_idx} populated by the `get_inputs` callback when the user picks a face among multiples. The normal caller does not pass it directly."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  decision?: 'needs_inputs',
+  needs_inputs?: {title, dialog, fmt, on_complete},
+  results?: Array<{path, slug, name, face_box, added}>,
+  errors?: Array<{path, error, message?}>,
+  n_examples_after?: int,
+  warn?: 'examples_>=50',
+  final_message_hint?: str,
+  error?: str
+}
+"""
+
+[[capabilities]]
+name = "fs:read"
+hint = ["~/**"]
+
+[[capabilities]]
+name = "metnos:write"
+hint = ["~/.local/share/metnos/persons.sqlite"]
+
+# Reverse pattern: enroll e' loggabile (ADR 0079) ma non auto-undoable in PR2.
+# Il blob backup di sha256 sarebbe l'embedding stesso, gia' persistito; per
+# undo l'utente puo' usare delete_persons + re-enroll.
+reversible = false
+
+[[tests]]
+name   = "validates_empty_name"
+input  = { name = "", paths = ["/tmp/x.jpg"] }
+expect = { ok = false, error_contains = "non vuota" }
+
+[[tests]]
+name   = "validates_empty_paths"
+input  = { name = "Carol", paths = [] }
+expect = { ok = false, error_contains = "deve essere una lista" }
+
+[[tests]]
+name   = "validates_bad_mode"
+input  = { name = "Carol", paths = ["/tmp/x.jpg"], mode = "wipe" }
+expect = { ok = false, error_contains = "mode" }

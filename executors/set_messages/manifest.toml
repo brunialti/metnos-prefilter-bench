@@ -1,0 +1,101 @@
+# Manifest dell'executor `set_messages` — Metnos v1.1 (24/5/2026).
+# Naming compositivo §2.2: verbo_oggetto_plurale. Verb `set` = upsert
+# idempotente di stato (qui: labels Gmail).
+
+manifest_format = "1.0"
+
+name        = "set_messages"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity = [
+    "set", "label", "labels", "etichetta", "etichette", "tag",
+    "messages", "messaggi", "mail", "email",
+    "add-label", "remove-label", "mark", "segna",
+]
+
+revertible = false
+lifecycle  = "active"
+
+[description]
+it = "Aggiunge/rimuove labels su uno o piu' messaggi (Gmail). Upsert idempotente di stato (verbo `set` §2.2). USO CORRETTO: 'metti l\\'etichetta Importante su queste mail' -> set_messages(message_ids=..., add=['IMPORTANT']). Senza message_id: ritorna la lista di tutte le labels dell\\'account (entries: [{id, name, type}]). NON CONFONDERE CON `move_messages` (sposta tra cartelle, cambia INBOX/TRASH/SPAM): set_messages aggiunge user-labels SENZA muovere la mail. Backend: solo client='google_workspace' (IMAP flags non implementato in MVP)."
+en = "Add/remove labels on one or more messages (Gmail). Idempotent state upsert (verb `set` §2.2). CORRECT USE: 'add Important label to these mails' -> set_messages(message_ids=..., add=['IMPORTANT']). Without message_id: returns list of all account labels (entries: [{id, name, type}]). DO NOT CONFUSE WITH `move_messages` (moves across folders, changes INBOX/TRASH/SPAM): set_messages adds user-labels WITHOUT moving the mail. Backend: only client='google_workspace' (IMAP flags not implemented in MVP)."
+
+[code]
+files  = ["set_messages.py"]
+digest = "sha256:95f7ea220bf15c78d9ceed76ae90162ad3817c4cd8ad7159b350a8bb30cb7d3e"
+
+[args]
+type = "object"
+
+[args.properties.message_ids]
+type  = "array"
+items = { type = "string" }
+
+[args.properties.message_ids.description]
+it = "Lista di id messaggi Gmail. Vuota o assente: list-all-labels mode. MATCH ESATTO."
+en = "List of Gmail message IDs. Empty or absent: list-all-labels mode. EXACT MATCH."
+
+[args.properties.message_id]
+type = "string"
+
+[args.properties.message_id.description]
+it = "Singolo id messaggio (alternativo a message_ids per N=1)."
+en = "Single message ID (alternative to message_ids for N=1)."
+
+[args.properties.add]
+type  = "array"
+items = { type = "string" }
+
+[args.properties.add.description]
+it = "Labels da aggiungere (id system tipo 'IMPORTANT'/'STARRED' o nomi user-label). MATCH ESATTO."
+en = "Labels to add (system IDs like 'IMPORTANT'/'STARRED' or user-label names). EXACT MATCH."
+
+[args.properties.remove]
+type  = "array"
+items = { type = "string" }
+
+[args.properties.remove.description]
+it = "Labels da rimuovere. MATCH ESATTO."
+en = "Labels to remove. EXACT MATCH."
+
+[args.properties.via_channel]
+type    = "string"
+enum    = ["email", "mail"]
+default = "email"
+
+[args.properties.via_channel.description]
+it = "Canale: 'email' (default). 'mail' alias storico."
+en = "Channel: 'email' (default). 'mail' historical alias."
+
+[args.properties.client]
+type    = "string"
+enum    = ["google_workspace"]
+default = "google_workspace"
+
+[args.properties.client.description]
+it = "Backend: solo 'google_workspace' (Gmail). IMAP set/flags non supportato."
+en = "Backend: only 'google_workspace' (Gmail). IMAP set/flags not supported."
+
+[[capabilities]]
+name = "mail:write"
+hint = ["gmail:labels.modify"]
+
+[[tests]]
+name   = "list_labels_no_ids"
+input  = {}
+expect = { ok = false }
+
+[[tests]]
+name   = "args_invalidi_no_add_no_remove"
+input  = { message_ids = ["x"] }
+expect = { ok = false, error_contains = "add/remove" }
+
+[[tests]]
+name   = "args_invalidi_client_imap"
+input  = { message_ids = ["x"], add = ["IMPORTANT"], client = "metnos" }
+expect = { ok = false, error_contains = "Operazione non applicabile per questo provider" }
+
+[[tests]]
+name   = "args_invalidi_lista_vuota_add"
+input  = { message_ids = ["x"], add = [], remove = [] }
+expect = { ok = false }

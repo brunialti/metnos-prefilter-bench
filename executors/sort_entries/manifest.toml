@@ -1,0 +1,76 @@
+# Manifest dell'executor `sort_entries` — Metnos v1.1
+# Pure compute: ordina una lista di entries per un campo, opzionale top-K.
+
+manifest_format = "1.0"
+
+name        = "sort_entries"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity        = ["sort", "ordina", "ordinare", "sort_by", "rank", "classifica", "top", "primi", "first", "ultimi", "last", "biggest", "piu", "grandi", "popolose", "recenti", "vecchi"]
+revertible      = false
+lifecycle       = "active"
+
+[description]
+it = "Ordina una lista di entries per il valore di una chiave del dizionario. Spec: input deve essere una lista; ogni elemento un dizionario flat (chiavi top-level, niente path dotted); sort fatto sul valore della chiave indicata da `by`. Confronto: numerico (int/float) per max/min, lessicografico per stringhe. Pure compute, no I/O. Tipico uso post-find/read per ottenere top-K: find_files → sort_entries(by='size', desc=true, top=10), find_dirs → sort_entries(by='file_count', desc=true, top=3), read_messages → sort_entries(by='size', desc=true, top=5). Vettoriale: input lista, output lista riordinata. Entries senza il campo richiesto o con valore non int/float/str finiscono in coda (no errore: stable). Output: entries=[...] riordinate + count + total_input + sorted_by + desc. Se top<total_input, dichiarato via truncated:true + cap_field='top'."
+en = "Sort a list of entries by the value of a dictionary key. Spec: input must be a list; each element a flat dictionary (top-level keys, no dotted paths); sort performed on the value of the key indicated by `by`. Comparison: numeric (int/float) for max/min, lexicographical for strings. Pure compute, no I/O. Typical use post-find/read to obtain top-K: find_files → sort_entries(by='size', desc=true, top=10), find_dirs → sort_entries(by='file_count', desc=true, top=3), read_messages → sort_entries(by='size', desc=true, top=5). Vectorial: input list, output reordered list. Entries without the requested field or with a non-int/float/str value end up at the end (no error: stable). Output: reordered entries=[...] + count + total_input + sorted_by + desc. If top<total_input, declared via truncated:true + cap_field='top'."
+
+[code]
+files  = ["sort_entries.py"]
+digest = "sha256:0b31649d83e76f4e4a625b7e4306b69859f62cda77c22e6e3937eb4a6fb0c2df"
+
+[args]
+type     = "object"
+required = ["entries", "by"]
+
+[args.properties.entries]
+type        = "array"
+
+[args.properties.entries.description]
+it = "Lista di dict omogenei da ordinare. Tipicamente passata via from_step=N (il runtime espande dallo scratchpad)."
+en = "List of homogeneous dicts to sort. Typically passed via from_step=N (the runtime expands from the scratchpad)."
+
+[args.properties.by]
+type        = "string"
+
+[args.properties.by.description]
+it = "Nome del campo per cui ordinare. Es. 'size', 'mtime', 'file_count', 'total_bytes', 'date'. Funziona su qualsiasi campo numerico o stringa presente nelle entries."
+en = "Name of the field by which to sort. E.g. 'size', 'mtime', 'file_count', 'total_bytes', 'date'. Works on any numeric field or string present in the entries."
+
+[args.properties.desc]
+type        = "boolean"
+default     = false
+
+[args.properties.desc.description]
+it = "Se true, ordine discendente (piu' grande/recente prima). Default false (ascendente)."
+en = "If true, descending order (larger/more recent first). Default false (ascending)."
+
+[args.properties.top]
+type        = "integer"
+minimum     = 1
+
+[args.properties.top.description]
+it = "Se settato, ritorna solo i primi N elementi dopo il sort. Es. top=3 + desc=true = top-3 piu' grandi. Default null = nessun cap."
+en = "If set, returns only the first N elements after the sort. E.g. top=3 + desc=true = top-3 largest. Default null = no cap."
+
+[[capabilities]]
+name = "compute:pure"
+
+[[tests]]
+name   = "ordina_per_size_desc"
+input  = { entries = [{name = "a", size = 10}, {name = "b", size = 30}, {name = "c", size = 20}], by = "size", desc = true }
+expect = { ok = true, entries_field_eq = { 0 = { name = "b" } } }
+
+[[tests]]
+name   = "top_3_di_5"
+input  = { entries = [{x = 5}, {x = 1}, {x = 4}, {x = 2}, {x = 3}], by = "x", desc = true, top = 3 }
+expect = { ok = true, metadata_field_eq = { count = 3, truncated = true } }
+
+[[tests]]
+name   = "campo_mancante_in_coda"
+input  = { entries = [{a = 1}, {b = 2}, {a = 3}], by = "a", desc = true }
+expect = { ok = true }
+
+[[tests]]
+name   = "missing_by"
+input  = { entries = [{x = 1}] }
+expect = { ok = false, error_contains = "by" }

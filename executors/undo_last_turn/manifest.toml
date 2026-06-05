@@ -1,0 +1,52 @@
+# Manifest dell'executor `undo_last_turn` — Metnos v1.1
+# Annulla le operazioni revertibili dell'ultimo turno utente.
+
+manifest_format = "1.0"
+
+name        = "undo_last_turn"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["undo", "annulla", "ripristina", "revert", "rollback", "torna", "indietro", "ribalta"]
+
+[description]
+it = "Annulla TUTTE le operazioni revertibili dell'ultimo turno utente che ne contiene almeno una. Esempio: se l'ultimo turno e' stato 'sposta foto in cartelle per anno', undo_last_turn riporta i file ai path originali. In ordine inverso di esecuzione: la piu' recente per prima. Best-effort: operazioni irreversibili (mail inviate, op senza reverse) vengono saltate e segnalate; le altre vengono comunque annullate. Idempotente: una seconda chiamata consecutiva non fa nulla. Args vuoti."
+en = "Cancel ALL reversible operations of the last user turn that contains at least one. Example: if the last turn was 'move photos into folders by year', undo_last_turn returns the files to their original paths. In reverse order of execution: the most recent first. Best-effort: irreversible operations (sent emails, operations without reverse) are skipped and reported; the others are still canceled. Idempotent: a second consecutive call does nothing. Empty args."
+
+[code]
+files  = ["undo_last_turn.py"]
+digest = "sha256:6959678457c576a186439e38109f1c1f73fa7320e2904ae2a3bed59901bfd8fa"
+
+[args]
+type     = "object"
+
+[args.properties.log_path]
+type        = "string"
+
+[args.properties.log_path.description]
+it = "Override del path del log undo (default: ~/.local/share/metnos/undo.jsonl). Per uso di test/diagnostica; nell'uso normale non passarlo."
+en = "Override the undo log path (default: ~/.local/share/metnos/undo.jsonl). For test/diagnostic use; do not pass it during normal use."
+
+[[capabilities]]
+name = "fs:write"
+hint = ["~/notes/**", "/tmp/**", "/home/user/**"]
+
+[[tests]]
+name     = "log_inesistente_no_op"
+setup    = "rm -f /tmp/metnos_test_undo_log.jsonl"
+input    = { log_path = "/tmp/metnos_test_undo_log.jsonl" }
+expect   = { ok = true }
+teardown = "rm -f /tmp/metnos_test_undo_log.jsonl"
+
+[[tests]]
+name     = "ribalta_create_dirs_done"
+setup    = """mkdir -p /tmp/metnos_test_undo_dir && rm -f /tmp/metnos_test_undo_log.jsonl && python3 -c "import sys; sys.path.insert(0,'/opt/metnos/runtime'); from undo import UndoLog; from pathlib import Path; log=UndoLog(Path('/tmp/metnos_test_undo_log.jsonl')); log.append_pending('opA','turnX','create_dirs',{'paths':['/tmp/metnos_test_undo_dir']},{}); log.append_done('opA',{'ok':True,'results':[{'path':'/tmp/metnos_test_undo_dir','created':True}],'failed':[]})" """
+input    = { log_path = "/tmp/metnos_test_undo_log.jsonl" }
+expect   = { ok = true }
+teardown = "rm -f /tmp/metnos_test_undo_log.jsonl && rm -rf /tmp/metnos_test_undo_dir"
+
+[[tests]]
+name     = "idempotenza_secondo_undo_no_op"
+setup    = """rm -f /tmp/metnos_test_undo_log.jsonl && python3 -c "import sys; sys.path.insert(0,'/opt/metnos/runtime'); from undo import UndoLog; from pathlib import Path; log=UndoLog(Path('/tmp/metnos_test_undo_log.jsonl')); log.append_pending('opA','turnX','create_dirs',{},{}); log.append_done('opA',{'ok':True,'results':[{'path':'/tmp/metnos_test_undo_idemp_dir','created':True}],'failed':[]}); log.append_undone('opA',{'ok':True})" """
+input    = { log_path = "/tmp/metnos_test_undo_log.jsonl" }
+expect   = { ok = true }
+teardown = "rm -f /tmp/metnos_test_undo_log.jsonl"

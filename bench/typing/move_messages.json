@@ -1,0 +1,89 @@
+{
+  "name": "move_messages",
+  "manifest_mtime": 1779710857,
+  "inputs": {
+    "message_ids": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "message_entry[]",
+      "role": "piping",
+      "format_hint": "list of Gmail IDs or IMAP UIDs"
+    },
+    "message_id": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "slug",
+      "role": "piping",
+      "format_hint": "single Gmail ID or IMAP UID"
+    },
+    "dst_folder": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "folder name or semantic alias (e.g., 'Trash', 'Cestino')"
+    },
+    "src_folder": {
+      "structural_type": "string",
+      "required": false,
+      "default": "INBOX",
+      "semantic_type": "name",
+      "role": "source",
+      "format_hint": "IMAP folder name"
+    },
+    "account": {
+      "structural_type": "string",
+      "required": false,
+      "default": "metnos_system",
+      "semantic_type": "account_name",
+      "role": "source",
+      "format_hint": "IMAP account identifier"
+    },
+    "via_channel": {
+      "structural_type": "string",
+      "required": false,
+      "default": "email",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "communication channel"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "metnos",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "backend provider ('metnos'|'google_workspace')"
+    }
+  },
+  "requires_one_of": [
+    [
+      "message_ids",
+      "message_id",
+      "from_step"
+    ]
+  ],
+  "output": {
+    "type": "message_entry[]",
+    "schema": {
+      "id": "slug",
+      "status": "name"
+    }
+  },
+  "unresolved_args": [
+    "message_ids",
+    "message_id",
+    "dst_folder",
+    "src_folder",
+    "via_channel",
+    "client"
+  ],
+  "consumes": [
+    "filter:name",
+    "filter:account_name"
+  ],
+  "propagates_constraints": false
+}

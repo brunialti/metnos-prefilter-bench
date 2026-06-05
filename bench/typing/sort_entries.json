@@ -1,0 +1,53 @@
+{
+  "name": "sort_entries",
+  "manifest_mtime": 1778121626,
+  "inputs": {
+    "entries": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "file_entry[]",
+      "role": "piping",
+      "format_hint": "list of flat dictionaries"
+    },
+    "by": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "key name"
+    },
+    "desc": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "ascending/descending"
+    },
+    "top": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "limit N"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "file_entry[]",
+    "schema": {
+      "entries": "file_entry[]"
+    }
+  },
+  "unresolved_args": [
+    "entries",
+    "by"
+  ],
+  "consumes": [
+    "sort:any"
+  ],
+  "propagates_constraints": false
+}

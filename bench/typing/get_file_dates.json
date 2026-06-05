@@ -1,0 +1,29 @@
+{
+  "name": "get_file_dates",
+  "manifest_mtime": 1779788996,
+  "inputs": {
+    "entries": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "file_entry[]",
+      "role": "piping",
+      "format_hint": "list of dicts with 'path' or 'src'"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "file_entry[]",
+    "schema": {
+      "path": "file_path",
+      "semantic_date": "iso_timestamp"
+    }
+  },
+  "unresolved_args": [
+    "entries"
+  ],
+  "consumes": [
+    "piping:file_entry[]"
+  ],
+  "propagates_constraints": false
+}

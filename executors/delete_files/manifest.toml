@@ -1,0 +1,78 @@
+# Manifest dell'executor `delete_files` — Metnos v1.1 (19/5/2026 v4).
+# Naming compositivo §2.2: verbo_oggetto_plurale. Vettoriale per costruzione.
+# Reversible §2.3: ogni file ha backup blob → restore_blob_backup.
+
+manifest_format = "1.0"
+
+name        = "delete_files"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "delete", "elimina", "cancella", "rimuovi", "remove",
+    "file", "files", "documento", "documenti", "unlink",
+            ]
+
+revertible = true
+reverse_pattern = "restore_blob_backup"
+
+[description]
+it = "Rimuove uno o piu' file (NON directory: usa `delete_dirs`). Accetta sempre una lista (anche di un solo path, o vuota). Reversibile: ogni file rimosso ha un backup blob in _history (restore via runtime). Safety: rifiuta directory (errore esplicito), system files, path fuori scope. Best-effort: ogni path indipendente. USO CORRETTO: `cancella i file .tmp` → `delete_files(paths=...)`. NON CONFONDERE CON `delete_dirs` (rimuove cartelle vuote/ricorsivo) o `move_files` (sposta senza eliminare)."
+en = "Removes one or more files (NOT directories: use `delete_dirs`). Always accepts a list (even with a single path, or empty). Reversible: each removed file has a blob backup in _history (restore via runtime). Safety: rejects directories (explicit error), system files, paths outside scope. Best-effort: each path independent. CORRECT USE: `delete the .tmp files` → `delete_files(paths=...)`. DO NOT CONFUSE WITH `delete_dirs` (removes empty/recursive dirs) or `move_files` (relocates without erasing)."
+
+[code]
+files  = ["delete_files.py"]
+digest = "sha256:44ecfb481ff08b7b28c60ea4330fa9a8400f43c30e17ea6f94dc0e70f8e1bb99"
+
+[args]
+type     = "object"
+required = ["paths"]
+
+[args.properties.paths]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.paths.description]
+it = "Lista di path di file da rimuovere. Path assoluti o ~ espandibile. Tutti devono essere FILE (non directory) e dentro lo scope fs:write autorizzato. Esempio: [\"/tmp/temp1.txt\", \"~/Downloads/foo.log\"]."
+en = "List of file paths to remove. Absolute paths or ~ expandable. All must be FILES (not directories) and within the authorized fs:write scope. Example: [\"/tmp/temp1.txt\", \"~/Downloads/foo.log\"]."
+
+[args.properties.client]
+type        = "string"
+enum        = ["local"]
+default     = "local"
+
+[args.properties.client.description]
+it = "Implementazione backend (default 'local' = filesystem locale)."
+en = "Backend implementation (default 'local' = local filesystem)."
+
+[[capabilities]]
+name = "fs:write"
+hint = ["~/notes/**", "/tmp/**"]
+
+[[tests]]
+name     = "rimuove_file_singolo"
+setup    = "mkdir -p /tmp/metnos_test_delete_files && echo x > /tmp/metnos_test_delete_files/a.txt"
+input    = { paths = ["/tmp/metnos_test_delete_files/a.txt"] }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_delete_files"
+
+[[tests]]
+name   = "lista_vuota_ok"
+input  = { paths = [] }
+expect = { ok = true, ok_count_eq = 0, fail_count_eq = 0 }
+
+[[tests]]
+name     = "rifiuta_directory"
+setup    = "mkdir -p /tmp/metnos_test_delete_files/subdir"
+input    = { paths = ["/tmp/metnos_test_delete_files/subdir"] }
+expect   = { ok = false, error_contains = "directory" }
+teardown = "rm -rf /tmp/metnos_test_delete_files"
+
+[[tests]]
+name   = "path_inesistente_fallisce"
+input  = { paths = ["/tmp/metnos_does_not_exist_xyz.txt"] }
+expect = { ok = false, fail_count_eq = 1 }
+
+[[tests]]
+name   = "args_invalidi_paths_non_lista"
+input  = { paths = "/tmp/foo" }
+expect = { ok = false, error_contains = "must be a list" }

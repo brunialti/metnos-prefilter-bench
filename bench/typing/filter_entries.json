@@ -1,0 +1,198 @@
+{
+  "name": "filter_entries",
+  "manifest_mtime": 1778855386,
+  "inputs": {
+    "from_step": {
+      "structural_type": "integer",
+      "required": true,
+      "default": null,
+      "semantic_type": "count",
+      "role": "piping",
+      "format_hint": "integer"
+    },
+    "kind": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "image|video|audio|text|document|archive|binary|dir"
+    },
+    "type": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "file|dir|symlink"
+    },
+    "mime_prefix": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "e.g. image/"
+    },
+    "name_glob": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "glob_pattern",
+      "role": "filter"
+    },
+    "name_regex": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "regex_pattern",
+      "role": "filter"
+    },
+    "size_min": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "size_bytes",
+      "role": "filter"
+    },
+    "size_max": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "size_bytes",
+      "role": "filter"
+    },
+    "mtime_after": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "iso_timestamp",
+      "role": "filter"
+    },
+    "mtime_before": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "iso_timestamp",
+      "role": "filter"
+    },
+    "where_field": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter"
+    },
+    "where_in": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text[]",
+      "role": "filter"
+    },
+    "where_not_in": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text[]",
+      "role": "filter"
+    },
+    "where_value": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter"
+    },
+    "where_starts_with": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter"
+    },
+    "where_contains": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter"
+    },
+    "where_glob": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "glob_pattern",
+      "role": "filter"
+    },
+    "where_regex": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "regex_pattern",
+      "role": "filter"
+    },
+    "overlap_step": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "count",
+      "role": "piping"
+    },
+    "overlap_field_start": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "name",
+      "role": "meta"
+    },
+    "overlap_field_end": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "name",
+      "role": "meta"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "file_entry[]",
+    "schema": {
+      "kind": "free_text",
+      "type": "free_text",
+      "name": "name",
+      "size_bytes": "size_bytes",
+      "mtime": "iso_timestamp"
+    }
+  },
+  "unresolved_args": [
+    "kind",
+    "type",
+    "mime_prefix",
+    "name_glob",
+    "name_regex",
+    "mtime_after",
+    "mtime_before",
+    "where_field",
+    "where_in",
+    "where_not_in",
+    "where_value",
+    "where_starts_with",
+    "where_contains",
+    "where_glob",
+    "where_regex",
+    "overlap_field_start",
+    "overlap_field_end"
+  ],
+  "consumes": [
+    "filter:kind",
+    "filter:type",
+    "filter:mime_prefix",
+    "filter:name_glob",
+    "filter:name_regex",
+    "filter:size_bytes",
+    "filter:iso_timestamp",
+    "filter:any"
+  ],
+  "propagates_constraints": false
+}

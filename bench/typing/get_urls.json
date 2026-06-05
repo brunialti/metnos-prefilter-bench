@@ -1,0 +1,41 @@
+{
+  "name": "get_urls",
+  "manifest_mtime": 1779130125,
+  "inputs": {
+    "url": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "url",
+      "role": "source",
+      "format_hint": "http:// or https://"
+    },
+    "method": {
+      "structural_type": "string",
+      "required": false,
+      "default": "GET",
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "GET|HEAD|etc"
+    },
+    "timeout_s": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 10,
+      "semantic_type": "duration_secs",
+      "role": "meta",
+      "format_hint": "integer"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "text_path",
+    "schema": {
+      "body": "free_text"
+    }
+  },
+  "unresolved_args": [
+    "method"
+  ],
+  "propagates_constraints": false
+}

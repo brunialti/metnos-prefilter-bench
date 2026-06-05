@@ -1,0 +1,33 @@
+# Manifest synthesized — Metnos synt multistage 2026-04-30
+
+manifest_format = "1.0"
+
+name        = "find_packages"
+version     = "0.1.0"
+author      = "synt-multistage <synt@metnos.com>"
+affinity    = ["find", "cerca", "package", "pacchetto", "comando", "command", "installato", "installed", "percorso", "path"]
+revertible  = false
+lifecycle   = "active"
+
+[description]
+it = "Verifica se un comando o un pacchetto specifico e installato sul sistema operativo. Restituisce il percorso completo dell'eseguibile se trovato, altrimenti comunica che non e presente. Esempio: package_name='ffmpeg'."
+en = "Check if a specific command or package is installed on the operating system. Returns the full path of the executable if found, otherwise communicates that it is not present. Example: package_name='ffmpeg'."
+
+[code]
+files  = ["find_packages.py"]
+digest = "sha256:9bfa7fb13ac0759b66d12efd2b5690b4d9a58b00cf3d00eaa881c0e34cc10f59"
+
+[args]
+type     = "object"
+required = ["package_name"]
+
+[args.properties.package_name]
+type = "string"
+
+[args.properties.package_name.description]
+it = "Nome del pacchetto o comando da verificare sul sistema operativo (es. 'ffmpeg', 'git')."
+en = "Name of the package or command to check on the operating system (e.g., 'ffmpeg', 'git')."
+
+[[capabilities]]
+name = "code:exec"
+hint = ["*"]

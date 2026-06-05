@@ -1,0 +1,39 @@
+{
+  "name": "read_files_doc",
+  "manifest_mtime": 1779611388,
+  "inputs": {
+    "document_id": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "slug",
+      "role": "filter",
+      "format_hint": "Google Doc unique identifier"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "google_workspace",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "backend provider name"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "message_entry[]",
+    "schema": {
+      "document_id": "slug",
+      "id": "slug",
+      "title": "free_text",
+      "body_text": "free_text",
+      "content_length": "count",
+      "kind": "name"
+    }
+  },
+  "unresolved_args": [
+    "document_id",
+    "client"
+  ],
+  "propagates_constraints": false
+}

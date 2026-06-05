@@ -1,0 +1,35 @@
+{
+  "name": "get_location",
+  "manifest_mtime": 1779121548,
+  "inputs": {
+    "actor": {
+      "structural_type": "string",
+      "required": false,
+      "default": "host",
+      "semantic_type": "account_name",
+      "role": "filter",
+      "format_hint": "string identifier"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "ok": "bool",
+      "location": {
+        "lat": "scalar_metric",
+        "lon": "scalar_metric",
+        "ts": "iso_timestamp",
+        "accuracy": "scalar_metric",
+        "channel": "name"
+      },
+      "age_seconds": "duration_secs",
+      "actor": "account_name",
+      "error": "free_text"
+    }
+  },
+  "unresolved_args": [
+    "actor"
+  ],
+  "propagates_constraints": false
+}

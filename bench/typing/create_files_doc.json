@@ -1,0 +1,43 @@
+{
+  "name": "create_files_doc",
+  "manifest_mtime": 1779611388,
+  "inputs": {
+    "title": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "string"
+    },
+    "body": {
+      "structural_type": "string",
+      "required": false,
+      "default": "",
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "string"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "google_workspace",
+      "semantic_type": "name",
+      "role": "source",
+      "format_hint": "google_workspace"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "file_entry[]",
+    "schema": {
+      "document_id": "slug",
+      "title": "free_text",
+      "web_view_url": "url"
+    }
+  },
+  "unresolved_args": [
+    "client"
+  ],
+  "propagates_constraints": false
+}

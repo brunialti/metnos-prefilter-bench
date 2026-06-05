@@ -1,0 +1,84 @@
+# Manifest dell'executor `delete_credentials` — Metnos v1.1
+# Naming compositivo: azione_oggetto. 16 OBJECT credentials (10/5/2026).
+# Invariante di sicurezza: metadata-only (capability metnos:credentials_metadata_only).
+# Verbo `delete` §2.2: mutazione terminale. Modello delete_persons ADR 0086 PR2.
+
+manifest_format = "1.0"
+
+name        = "delete_credentials"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["dimentica credenziale", "rimuovi token", "cancella credenziali",
+                "revoca account", "elimina chiave", "purge credenziali",
+                "forget credential", "remove token", "delete credential",
+                "revoke account", "wipe credentials", "delete all credentials"]
+
+[description]
+it = "Rimuove credenziali dallo storage cifrato. Vettoriale (§2.1): accetta `bindings: list` (plurale canonico), `binding: str` (singolare), o `all=true` (purge totale). Operazione terminale: per ripristinare bisogna ri-eseguire `set_credentials`. DEVI usarla per 'dimentica l'account X', 'rimuovi le credenziali di Y', 'cancella tutti i token salvati'. I binding non esistenti finiscono in `results` con `deleted=false` (non e' un errore globale: §2.8 no silent failure ma per-item). NON DEVI usarla per leggere o modificare credenziali (uso `find_credentials` o `set_credentials`); NON DEVI passare contemporaneamente `all=true` e `bindings` (mutualmente esclusivi). USO CORRETTO: `delete_credentials(bindings=['google-workspace','spaggiari'])`, `delete_credentials(binding='openweather')`, `delete_credentials(all=true)`. ERRORE: `delete_credentials()` senza nessun argomento. Output: `{ok, results:[{binding, deleted, removed_fields_count}], n_deleted, unknown_bindings?}`."
+en = "Removes credentials from encrypted storage. Vectorial (§2.1): accepts `bindings: list` (canonical plural), `binding: str` (singular), or `all=true` (full purge). Terminal operation: to restore you must re-run `set_credentials`. MUST be used for 'forget account X', 'remove credentials for Y', 'delete all stored tokens'. Non-existent bindings end up in `results` with `deleted=false` (not a global error: §2.8 no silent failure but per-item). MUST NOT be used to read or modify credentials (use `find_credentials` or `set_credentials`); MUST NOT pass both `all=true` and `bindings` (mutually exclusive). CORRECT USE: `delete_credentials(bindings=['google-workspace','spaggiari'])`, `delete_credentials(binding='openweather')`, `delete_credentials(all=true)`. ERROR: `delete_credentials()` with no argument. Output: `{ok, results:[{binding, deleted, removed_fields_count}], n_deleted, unknown_bindings?}`."
+
+[code]
+files  = ["delete_credentials.py"]
+digest = "sha256:5bdf721d83a6a9373e63161c11847c4d8d141de14f87d58d6d03c18a5b01e3df"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.bindings]
+type  = "array"
+items = { type = "string" }
+
+[args.properties.bindings.description]
+it = "Lista di binding da cancellare (plurale canonico §2.1). MATCH ESATTO: ogni binding e' un identificatore opaco, wildcard `*`/`?` NON supportati. Ogni binding non trovato finisce in `unknown_bindings` con `deleted=false` nei `results`."
+en = "List of bindings to delete (canonical plural §2.1). EXACT MATCH: each binding is an opaque identifier, wildcards `*`/`?` NOT supported. Each not-found binding ends up in `unknown_bindings` with `deleted=false` in `results`."
+
+[args.properties.binding]
+type        = "string"
+
+[args.properties.binding.description]
+it = "Forma singolare (alias di `bindings=[binding]`). Pattern §2.4: arg singolare ammesso per N=1."
+en = "Singular form (alias for `bindings=[binding]`). Pattern §2.4: singular arg allowed for N=1."
+
+[args.properties.all]
+type        = "boolean"
+default     = false
+
+[args.properties.all.description]
+it = "Se `true`, cancella TUTTE le credenziali memorizzate (purge totale). Mutualmente esclusivo con `bindings`/`binding`."
+en = "If `true`, deletes ALL stored credentials (full purge). Mutually exclusive with `bindings`/`binding`."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  results: Array<{binding, deleted, removed_fields_count}>,
+  n_deleted: int,
+  unknown_bindings?: Array<str>,
+  error?: str,
+  final_message_hint?: str
+}
+"""
+
+[[capabilities]]
+name = "metnos:credentials_metadata_only"
+hint = ["~/.local/share/metnos/credentials/"]
+
+[[capabilities]]
+name = "metnos:write"
+hint = ["~/.local/share/metnos/credentials/"]
+
+# Reverse pattern §2.3: delete e' terminale (modello delete_persons ADR 0086 PR2).
+# Il catalogo deterministico non copre delete_credentials. Per ripristinare,
+# l'utente esegue set_credentials con gli stessi valori.
+reversible = false
+
+[[tests]]
+name   = "rejects_no_args"
+input  = {}
+expect = { ok = false, error_contains = "binding" }
+
+[[tests]]
+name   = "rejects_all_and_bindings_together"
+input  = { all = true, bindings = ["svc"] }
+expect = { ok = false, error_contains = "mutually exclusive" }

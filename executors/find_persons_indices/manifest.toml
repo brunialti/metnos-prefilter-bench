@@ -1,0 +1,131 @@
+# Manifest dell'executor `find_persons_indices` — Metnos (ADR 0117 v4 thin alias).
+# Forward a `find_images_indices` (engine unificato).
+
+manifest_format = "1.0"
+
+name        = "find_persons_indices"
+version     = "0.2.0"
+author      = "Roberto Brunialti"
+affinity    = ["cerca persona", "trova", "foto di", "find person",
+                "search person", "photos of", "carol", "bob",
+                "volti", "faces", "primo piano", "ritratto", "portrait",
+                "ravvicinata", "close-up", "mezzo busto", "half-bust"]
+
+[description]
+it = """Cerca foto di persona registrata. Alias compositivo di find_images_indices.
+
+Args:
+- `name='carol'`: lookup nel PersonsRegistry.
+- `reference_images=[paths]`: ArcFace detect+match.
+- `min_face_pixels=40000`: ritaglia ai primi piani (single step composizione).
+- Tutti gli altri args di find_images_indices restano accettati.
+
+Pattern:
+- «foto di Bob» → name='bob'.
+- «primo piano di Carol» → name='carol', min_face_pixels=40000.
+- «foto come questa» + foto allegate → reference_images=[paths].
+
+Anti-pattern: `set_persons` (enroll), `get_persons` (lookup).
+
+Output: identico a find_images_indices (entries, score, match_type, ...)."""
+en = """Search photos of registered person. Compositional alias of find_images_indices.
+
+Args:
+- `name='carol'`: PersonsRegistry lookup.
+- `reference_images=[paths]`: ArcFace detect+match.
+- `min_face_pixels=40000`: filter close-ups (single-step composition).
+- All other find_images_indices args accepted.
+
+Patterns:
+- «photos of Bob» → name='bob'.
+- «close-up of Carol» → name='carol', min_face_pixels=40000.
+- «photos like these» + attached photos → reference_images=[paths].
+
+Anti-patterns: `set_persons` (enroll), `get_persons` (lookup).
+
+Output: identical to find_images_indices (entries, score, match_type, ...)."""
+
+[code]
+files  = ["find_persons_indices.py"]
+digest = "sha256:fcc1d4b5e02416e3e9f5d7ace8a46f088d6f3403385173441e1f023c37078653"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.name]
+type        = "string"
+
+[args.properties.name.description]
+it = "Nome della persona enrollata."
+en = "Name of the enrolled person."
+
+[args.properties.reference_images]
+type        = "array"
+
+[args.properties.reference_images.description]
+it = "Lista di foto-query: estrae i volti via ArcFace e cerca match."
+en = "List of query photos: extracts faces via ArcFace and searches for matches."
+
+[args.properties.base_path]
+type        = "string"
+
+[args.properties.base_path.description]
+it = "Directory radice. Forward a find_images_indices."
+en = "Root directory. Forwarded to find_images_indices."
+
+[args.properties.top_k]
+type        = "integer"
+minimum     = 1
+default     = 100
+
+[args.properties.top_k.description]
+it = "Massimo numero foto. Default 100."
+en = "Maximum photos. Default 100."
+
+[args.properties.min_face_pixels]
+type        = "integer"
+minimum     = 0
+
+[args.properties.min_face_pixels.description]
+it = "Filtro composizione bbox area (vedi find_images_indices)."
+en = "bbox area composition filter (see find_images_indices)."
+
+[args.properties.min_face_count]
+type        = "integer"
+minimum     = 0
+
+[args.properties.min_face_count.description]
+it = "Minimo facce per foto."
+en = "Minimum faces per photo."
+
+[args.properties.max_face_count]
+type        = "integer"
+minimum     = 0
+
+[args.properties.max_face_count.description]
+it = "Massimo facce per foto."
+en = "Maximum faces per photo."
+
+[args.properties.time_window]
+type        = "string"
+default     = "all"
+
+[args.properties.time_window.description]
+it = "Filtro temporale (vedi find_images_indices)."
+en = "Time filter (see find_images_indices)."
+
+[[capabilities]]
+name = "fs:read"
+hint = ["~/**", "/mnt/**"]
+
+[[capabilities]]
+name = "metnos:read"
+hint = ["~/.local/share/metnos/persons.sqlite", "~/.local/share/metnos/index/**"]
+
+reversible = true
+
+[[tests]]
+name   = "no_criterion_fails"
+input  = { base_path = "/tmp" }
+expect = { ok = false, error_contains = "name" }

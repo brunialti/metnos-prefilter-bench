@@ -1,0 +1,21 @@
+{
+  "name": "get_inputs",
+  "manifest_mtime": 0,
+  "inputs": {
+    "title": {"structural_type": "string", "required": true, "default": null, "semantic_type": "free_text", "role": "filter", "format_hint": "dialog title"},
+    "dialog": {"structural_type": "array", "required": true, "default": null, "semantic_type": "json_object", "role": "filter", "format_hint": "list of {var,prompt,schema}"},
+    "fmt": {"structural_type": "string", "required": false, "default": "default", "semantic_type": "name", "role": "filter", "format_hint": "form|inline"}
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {"values": "json_object", "submitted": "bool"},
+    "may_be_truncated": false,
+    "may_be_empty": false
+  },
+  "consumes": [],
+  "propagates_constraints": false,
+  "preconditions": [],
+  "_builtin": true,
+  "_terminator": false
+}

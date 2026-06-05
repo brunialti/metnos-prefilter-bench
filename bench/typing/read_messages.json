@@ -1,0 +1,150 @@
+{
+  "name": "read_messages",
+  "manifest_mtime": 1779121548,
+  "inputs": {
+    "account": {
+      "structural_type": "string",
+      "required": false,
+      "default": "metnos_system",
+      "semantic_type": "account_name",
+      "role": "source",
+      "format_hint": "string"
+    },
+    "folder": {
+      "structural_type": "string",
+      "required": false,
+      "default": "INBOX",
+      "semantic_type": "name",
+      "role": "source",
+      "format_hint": "string"
+    },
+    "max_results": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 20,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "unseen_only": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "filter",
+      "format_hint": "boolean"
+    },
+    "time_window": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "time_window",
+      "role": "filter",
+      "format_hint": "string"
+    },
+    "since": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "iso_timestamp",
+      "role": "filter",
+      "format_hint": "DD-Mon-YYYY"
+    },
+    "before": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "iso_timestamp",
+      "role": "filter",
+      "format_hint": "DD-Mon-YYYY"
+    },
+    "from_contains": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "string"
+    },
+    "subject_contains": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "string"
+    },
+    "body_contains": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "string"
+    },
+    "max_total": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 1000,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "page_size": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 50,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "via_channel": {
+      "structural_type": "string",
+      "required": false,
+      "default": "email",
+      "semantic_type": "name",
+      "role": "source",
+      "format_hint": "string"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "string"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "message_entry[]",
+    "schema": {
+      "uid": "name",
+      "account": "account_name",
+      "from": "name",
+      "subject": "free_text",
+      "date": "iso_timestamp",
+      "message_id": "name",
+      "has_attachment": "bool",
+      "body_preview": "free_text",
+      "category_hints": "free_text[]",
+      "size": "size_bytes"
+    }
+  },
+  "unresolved_args": [
+    "folder",
+    "from_contains",
+    "subject_contains",
+    "body_contains",
+    "via_channel",
+    "client"
+  ],
+  "consumes": [
+    "filter:time_window",
+    "filter:iso_timestamp",
+    "filter:free_text",
+    "filter:bool",
+    "filter:account_name"
+  ],
+  "propagates_constraints": false
+}

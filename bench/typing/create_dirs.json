@@ -1,0 +1,58 @@
+{
+  "name": "create_dirs",
+  "manifest_mtime": 1779121548,
+  "inputs": {
+    "paths": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "dir_path[]",
+      "role": "source",
+      "format_hint": "list of absolute or tilde-expandable directory paths"
+    },
+    "parents": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": true,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "mkdir -p behavior"
+    },
+    "exist_ok": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": true,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "ignore error if directory exists"
+    },
+    "mode": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "scalar_metric",
+      "role": "meta",
+      "format_hint": "decimal representation of octal permissions"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "local",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "backend implementation identifier"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "dir_entry[]",
+    "schema": {
+      "path": "dir_path",
+      "created": "bool"
+    }
+  },
+  "unresolved_args": [
+    "client"
+  ],
+  "propagates_constraints": false
+}

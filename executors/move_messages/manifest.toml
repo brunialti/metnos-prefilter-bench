@@ -1,0 +1,125 @@
+# Manifest dell'executor `move_messages` — Metnos v1.1 (24/5/2026).
+# Naming compositivo §2.2: verbo_oggetto_plurale. Vettoriale per costruzione.
+# Reversibile §2.3: swap_src_dst (folder ↔ folder).
+
+manifest_format = "1.0"
+
+name        = "move_messages"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity = [
+    "move", "sposta", "muovi", "trasferisci",
+    "messages", "messaggi", "mail", "email", "posta",
+    "cestino", "trash", "spam", "junk",
+    "indesiderata", "archivio", "archive",
+    "folder", "cartella", "label", "etichetta",
+]
+
+revertible = true
+reverse_pattern = "swap_src_dst"
+
+[description]
+it = "Sposta uno o piu' messaggi fra cartelle (IMAP folder o Gmail label). Vettoriale: accetta lista message_ids/uids. USO CORRETTO: 'cestina queste mail' -> move_messages(message_ids=..., dst_folder='Trash'). Cancellazione = move a Trash/Junk. Mapping IT+EN deterministico: 'Cestino'/'Trash'/'cancella' -> TRASH; 'Posta indesiderata'/'Junk'/'Spam' -> SPAM; 'Archivio'/'Archive' -> rimuove INBOX. Backend: client='metnos' usa IMAP4_SSL (COPY+STORE+EXPUNGE); client='google_workspace' usa Gmail labels (add+remove). NON CONFONDERE CON `set_messages` (cambia labels SENZA spostare la mail di cartella) o `delete_messages` (NON ESISTE: cancellare = spostare in Trash)."
+en = "Move one or more messages between folders (IMAP folder or Gmail label). Vector: accepts message_ids/uids list. CORRECT USE: 'trash these mails' -> move_messages(message_ids=..., dst_folder='Trash'). Deletion = move to Trash/Junk. Deterministic IT+EN mapping: 'Cestino'/'Trash'/'delete' -> TRASH; 'Posta indesiderata'/'Junk'/'Spam' -> SPAM; 'Archivio'/'Archive' -> remove INBOX. Backends: client='metnos' uses IMAP4_SSL (COPY+STORE+EXPUNGE); client='google_workspace' uses Gmail labels (add+remove). DO NOT CONFUSE WITH `set_messages` (changes labels WITHOUT moving the mail across folders) or `delete_messages` (DOES NOT EXIST: deletion = move to Trash)."
+
+[code]
+files  = ["move_messages.py"]
+digest = "sha256:6f661e635cd6b6eee4c3e0638495e3172d1d29e3ab8c33fe160cbff0b0f3719b"
+
+[args]
+type = "object"
+# §7.3 vincolo disgiuntivo (25/5/2026): almeno uno fra message_ids,
+# message_id o from_step deve essere fornito non-vuoto. Senza, il
+# PLANNER tende a inventare ID plausibili (es. "msg_1") che falliscono
+# IMAP COPY. Validato dal runtime (validate_args), niente teaching
+# ad-hoc nella description.
+requires_one_of = [["message_ids", "message_id", "from_step"]]
+
+[args.properties.message_ids]
+type  = "array"
+items = { type = "string" }
+# §7.3 (25/5/2026): rifiuta valori sintetici (msg_1, mail_2, id_3) che
+# il PLANNER inventa quando non passa from_step. IMAP COPY fallisce
+# comunque su UID inventati, ma il check schema fail prima con hint
+# chiaro («usa from_step»).
+forbid_placeholder_values = true
+# §7.3 da_entries_key: quando from_step espande entries → message_ids,
+# usa entries[*].uid (UID IMAP, valido per COPY) invece del singular
+# naive "message_id" (RFC822 header, NON valido per COPY/operations).
+from_entries_key = "uid"
+
+[args.properties.message_ids.description]
+it = "Lista di id messaggi (Gmail) o UID IMAP. Esempio: [\"18b3c4...\"]. MATCH ESATTO, wildcard NON supportati."
+en = "List of message IDs (Gmail) or UIDs (IMAP). Example: [\"18b3c4...\"]. EXACT MATCH, wildcards NOT supported."
+
+[args.properties.message_id]
+type = "string"
+
+[args.properties.message_id.description]
+it = "Singolo id messaggio (alternativo a message_ids per N=1)."
+en = "Single message ID (alternative to message_ids for N=1)."
+
+[args.properties.dst_folder]
+type = "string"
+
+[args.properties.dst_folder.description]
+it = "Cartella di destinazione. Nomi utente: 'Trash', 'Cestino', 'Junk', 'Spam', 'Posta indesiderata', 'Archivio', 'Archive', oppure user-label arbitrario. Mapping interno deterministico verso label system Gmail."
+en = "Destination folder. User names: 'Trash', 'Cestino', 'Junk', 'Spam', 'Posta indesiderata', 'Archivio', 'Archive', or arbitrary user-label. Internal deterministic mapping to Gmail system labels."
+
+[args.properties.src_folder]
+type    = "string"
+default = "INBOX"
+
+[args.properties.src_folder.description]
+it = "Solo IMAP (client='metnos'): cartella sorgente, default 'INBOX'."
+en = "IMAP only (client='metnos'): source folder, default 'INBOX'."
+
+[args.properties.account]
+type    = "string"
+default = "metnos_system"
+
+[args.properties.account.description]
+it = "Account IMAP (client='metnos'). Ignorato per Gmail."
+en = "IMAP account (client='metnos'). Ignored for Gmail."
+
+[args.properties.via_channel]
+type    = "string"
+enum    = ["email", "mail"]
+default = "email"
+
+[args.properties.via_channel.description]
+it = "Canale: 'email' (default). 'mail' alias storico."
+en = "Channel: 'email' (default). 'mail' historical alias."
+
+[args.properties.client]
+type    = "string"
+enum    = ["metnos", "google_workspace"]
+default = "metnos"
+
+[args.properties.client.description]
+it = "Backend: 'metnos' (IMAP), 'google_workspace' (Gmail API). MATCH ESATTO."
+en = "Backend: 'metnos' (IMAP), 'google_workspace' (Gmail API). EXACT MATCH."
+
+[[capabilities]]
+name = "mail:write"
+hint = ["imap:move", "gmail:labels.modify"]
+
+[[tests]]
+name   = "args_invalidi_no_ids"
+input  = { dst_folder = "Trash" }
+expect = { ok = false }
+
+[[tests]]
+name   = "args_invalidi_no_dst"
+input  = { message_ids = ["x"] }
+expect = { ok = false }
+
+[[tests]]
+name   = "args_invalidi_client_sconosciuto"
+input  = { message_ids = ["x"], dst_folder = "Trash", client = "outlook" }
+expect = { ok = false, error_contains = "Operazione non applicabile per questo provider" }
+
+[[tests]]
+name   = "args_invalidi_lista_vuota_ids"
+input  = { message_ids = [], dst_folder = "Trash" }
+expect = { ok = false }

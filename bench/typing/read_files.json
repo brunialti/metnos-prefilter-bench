@@ -1,0 +1,66 @@
+{
+  "name": "read_files",
+  "manifest_mtime": 1779611610,
+  "inputs": {
+    "path": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "file_path",
+      "role": "source",
+      "format_hint": "absolute or relative path"
+    },
+    "encoding": {
+      "structural_type": "string",
+      "required": false,
+      "default": "utf-8",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "text encoding or 'binary'"
+    },
+    "max_bytes": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "size_bytes",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "tail_bytes": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "size_bytes",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "offset": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 0,
+      "semantic_type": "size_bytes",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "local",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "backend identifier"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "free_text",
+    "schema": {
+      "content": "free_text"
+    }
+  },
+  "unresolved_args": [
+    "encoding",
+    "client"
+  ],
+  "propagates_constraints": false
+}

@@ -1,0 +1,58 @@
+{
+  "name": "read_contacts",
+  "manifest_mtime": 1779640654,
+  "inputs": {
+    "contact_id": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "slug",
+      "role": "filter",
+      "format_hint": "deterministic slug"
+    },
+    "email": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "email_address",
+      "role": "filter",
+      "format_hint": "exact match"
+    },
+    "phone": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "phone",
+      "role": "filter",
+      "format_hint": "exact match"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "google_workspace",
+      "semantic_type": "name",
+      "role": "source",
+      "format_hint": "backend identifier"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "person_entry[]",
+    "schema": {
+      "name": "person_name",
+      "emails": "email_address[]",
+      "phones": "phone[]"
+    }
+  },
+  "unresolved_args": [
+    "contact_id",
+    "phone",
+    "client"
+  ],
+  "consumes": [
+    "filter:slug",
+    "filter:email_address",
+    "filter:phone"
+  ],
+  "propagates_constraints": false
+}

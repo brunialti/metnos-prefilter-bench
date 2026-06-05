@@ -1,0 +1,31 @@
+{
+  "name": "delete_files",
+  "manifest_mtime": 1779207882,
+  "inputs": {
+    "paths": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "file_path[]",
+      "role": "piping",
+      "format_hint": "list of absolute or tilde-expandable file paths"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "local",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "backend implementation identifier (e.g., 'local')"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "bool",
+    "schema": {}
+  },
+  "unresolved_args": [
+    "client"
+  ],
+  "propagates_constraints": false
+}

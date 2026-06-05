@@ -1,0 +1,71 @@
+{
+  "name": "send_messages",
+  "manifest_mtime": 1779121548,
+  "inputs": {
+    "to_user": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "person_name",
+      "role": "filter",
+      "format_hint": "string or list of strings"
+    },
+    "via_channel": {
+      "structural_type": "string",
+      "required": false,
+      "default": "auto",
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "email|telegram|auto"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "backend implementation name"
+    },
+    "messages": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "message_entry[]",
+      "role": "piping",
+      "format_hint": "array of objects with to, subject, body, etc."
+    },
+    "attachments": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "file_path[]",
+      "role": "piping",
+      "format_hint": "array of paths"
+    },
+    "account": {
+      "structural_type": "string",
+      "required": false,
+      "default": "metnos_system",
+      "semantic_type": "account_name",
+      "role": "meta",
+      "format_hint": "SMTP account identifier"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "bool",
+    "schema": {}
+  },
+  "unresolved_args": [
+    "to_user",
+    "via_channel",
+    "client",
+    "messages",
+    "attachments"
+  ],
+  "consumes": [
+    "filter:person_name",
+    "filter:name"
+  ],
+  "propagates_constraints": false
+}

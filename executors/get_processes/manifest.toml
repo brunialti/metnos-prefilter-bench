@@ -1,0 +1,196 @@
+# get_processes — snapshot processi + opzionale health (load/memory/
+# thermal/disk/network/services). Handcrafted 3/5/2026 dalla fusione
+# di get_processes+list_processes. Predicati lato ps/proc, no post-filter.
+
+manifest_format = "1.0"
+
+name        = "get_processes"
+version     = "0.2.0"
+author      = "Roberto Brunialti"
+affinity    = ["processi", "ps", "stato server", "server status",
+                "salute sistema", "system health", "uptime",
+                "carico", "load", "cpu", "ram", "situazione",
+                "diagnostica", "temperatura", "temperature",
+                "thermal", "calore", "gpu", "disco", "memoria",
+                "free", "df", "top"]
+revertible  = false
+lifecycle   = "active"
+
+[description]
+it = """Snapshot processi correnti + opzionale dict `health` (load/memory/thermal/disk/network/services).
+
+NON CONFONDERE CON: list_tasks (task Metnos), get_files (file), get_now (ora), get_location (utente).
+
+ARG NAMES esatti:
+DEVI: `top` (int≥1) | `include_health` (bool) | `filters` (list di dict {attribute,op,value}) | `services_extra` (list).
+NON DEVI: `max_results`/`limit`/`n`/`count`/`health`/`with_health`/`status`. NON ESISTONO.
+attribute ∈ {pid,ppid,name,cmd,user,cpu_pct,mem_pct,started_at}. SOLO questi.
+
+OUTPUT: entries=[{pid,ppid,name,cmd,user,cpu_pct,mem_pct,started_at}].
+Con include_health=true aggiunge health.{load,memory,thermal,disk,network,services,collected_at}.
+
+PATTERN (non copiare letteralmente; query non-processo → include_health):
+"processi" / "ps" → `get_processes()`.
+"top 5 cpu" → `get_processes(top=5)`.
+"processi nginx" → `get_processes(filters=[{attribute:"name",op:"contains",value:"nginx"}])`.
+"PID 1234" → `get_processes(filters=[{attribute:"pid",op:"=",value:1234}])`.
+"stato/salute/uptime/carico server" → `get_processes(include_health=true,top=5)`.
+"IP/rete/interfacce server" → `get_processes(include_health=true,top=5)` → leggi `health.network`.
+"temperatura CPU/GPU" → `get_processes(include_health=true,top=5)` → leggi `health.thermal`.
+
+ERRORE pattern: `filters=["ip","network"]` (servono dict, non stringhe) | `filters=[{attribute:"ip"}]` (ip NON e' attributo di processo, sta in health.network) | `filters=[{field:"name"}]` (chiave si chiama `attribute`)."""
+en = """Current processes snapshot + optional `health` dict (load/memory/thermal/disk/network/services).
+
+DO NOT CONFUSE WITH: list_tasks (Metnos tasks), get_files (files), get_now (time), get_location (user).
+
+ARG NAMES (exact):
+MUST: `top` (int≥1) | `include_health` (bool) | `filters` (list of dicts {attribute,op,value}) | `services_extra` (list).
+MUST NOT: `max_results`/`limit`/`n`/`count`/`health`/`with_health`/`status`. THEY DO NOT EXIST.
+attribute ∈ {pid,ppid,name,cmd,user,cpu_pct,mem_pct,started_at}. ONLY these.
+
+OUTPUT: entries=[{pid,ppid,name,cmd,user,cpu_pct,mem_pct,started_at}].
+With include_health=true adds health.{load,memory,thermal,disk,network,services,collected_at}.
+
+PATTERN (do not copy literally; non-process query → include_health):
+"processes" / "ps" → `get_processes()`.
+"top 5 cpu" → `get_processes(top=5)`.
+"nginx processes" → `get_processes(filters=[{attribute:"name",op:"contains",value:"nginx"}])`.
+"PID 1234" → `get_processes(filters=[{attribute:"pid",op:"=",value:1234}])`.
+"server status/health/uptime/load" → `get_processes(include_health=true,top=5)`.
+"server IP/network/interfaces" → `get_processes(include_health=true,top=5)` → read `health.network`.
+"CPU/GPU temperature" → `get_processes(include_health=true,top=5)` → read `health.thermal`.
+
+ERROR pattern: `filters=["ip","network"]` (need dicts, not bare strings) | `filters=[{attribute:"ip"}]` (ip is NOT a process attribute, lives in health.network) | `filters=[{field:"name"}]` (key is `attribute`)."""
+
+[code]
+files  = ["get_processes.py"]
+digest = "sha256:40e648e667f1313a412ca278d507c2eda42cb2f4b208147934f49afff234bacd"
+
+[args]
+type     = "object"
+
+[args.properties.filters]
+type        = "array"
+default     = []
+
+[args.properties.filters.description]
+it = """Predicati `{attribute,op?,value}` in AND. Default [].
+attribute ∈ {pid,ppid,name,cmd,user,cpu_pct,mem_pct,started_at}.
+op ∈ {=,!=,>,>=,<,<=,contains,startswith,endswith,regex,in} (default =).
+OK: [{attribute:"name",op:"contains",value:"python"}]."""
+en = """Predicates `{attribute,op?,value}` in AND. Default [].
+attribute ∈ {pid,ppid,name,cmd,user,cpu_pct,mem_pct,started_at}.
+op ∈ {=,!=,>,>=,<,<=,contains,startswith,endswith,regex,in} (default =).
+OK: [{attribute:"name",op:"contains",value:"python"}]."""
+
+[args.properties.top]
+type        = "integer"
+minimum     = 1
+
+[args.properties.top.description]
+it = """int≥1, ordina per cpu_pct desc. Omesso → tutti.
+NON DEVI usare max_results/limit/n/count."""
+en = """int≥1, ordered by cpu_pct desc. Omitted → all.
+MUST NOT use max_results/limit/n/count."""
+
+[args.properties.include_health]
+type        = "boolean"
+default     = false
+
+[args.properties.include_health.description]
+it = """bool. Se true aggiunge dict health.{load,memory,thermal,disk,network,services}.
+USO: stato/salute/uptime/carico/IP/rete/temperatura del server.
+NON DEVI usare health/with_health/system/status."""
+en = """bool. If true adds dict health.{load,memory,thermal,disk,network,services}.
+USE: status/health/uptime/load/IP/network/temperature of server.
+MUST NOT use health/with_health/system/status."""
+
+[args.properties.services_extra]
+type        = "array"
+default     = []
+
+[args.properties.services_extra.description]
+it = """Lista systemd --user unit aggiuntive in health.services. Default [].
+Solo se include_health=true. OK: ["llama-server","headscaled"]."""
+en = """List of extra systemd --user units in health.services. Default [].
+Only if include_health=true. OK: ["llama-server","headscaled"]."""
+
+[output]
+# Shape del dict ritornato da invoke(). Sintassi TS-like: tipi base
+# {bool,int,float,str}, container Array<...>, opzionali con `?`,
+# unione con `|`, null esplicito. Sorgente di verita' per template
+# fast-path e validatori. Niente prosa.
+schema_inline = """
+{
+  ok: bool, ok_count: int, fail_count: int,
+  entries: Array<{pid:int, ppid:int, name:str, cmd:str, user:str, cpu_pct:float, mem_pct:float, started_at:str}>,
+  failed?: Array<{error:str}>,
+  truncated: bool, truncated_what: str|null, truncated_intentional: bool,
+  used: int, available_total: int, cap_field: str|null, cap_value: int|null,
+  health?: {
+    load: {available:bool, "1m":float, "5m":float, "15m":float, uptime_s:int, reason?:str},
+    memory: {available:bool, total_mb:int, used_mb:int, free_mb:int, pct:float, swap_total_mb:int, swap_used_mb:int, swap_pct:float, reason?:str},
+    thermal: {available:bool, cpu_c?:int, gpu_c?:int, nvme_c?:int},
+    disk: Array<{mount:str, device:str, fstype:str, total_gb:float, used_gb:float, free_gb:float, pct:float}>,
+    network: Array<{iface:str, ipv4:Array<str>, ipv6:Array<str>, up:bool}>,
+    services: Array<{name:str, status:str, active_since_s_mono?:int}>,
+    collected_at: int
+  }
+}
+"""
+
+[[capabilities]]
+name = "code:exec"
+hint = ["ps", "/proc"]
+
+[[tests]]
+name   = "no_filters_returns_all"
+input  = {}
+expect = { ok = true, has_field = "entries", entries_min = 5 }
+
+[[tests]]
+name   = "filter_by_name_contains"
+input  = { filters = [{ attribute = "name", op = "contains", value = "python" }] }
+expect = { ok = true, has_field = "entries" }
+
+[[tests]]
+name   = "top_3_by_cpu"
+input  = { top = 3 }
+expect = { ok = true, has_field = "entries", entries_max = 3 }
+
+[[tests]]
+name   = "single_pid_degenerate"
+input  = { filters = [{ attribute = "pid", op = "=", value = 1 }] }
+expect = { ok = true, has_field = "entries", entries_max = 1 }
+
+[[tests]]
+name   = "include_health_adds_top_level_dict"
+input  = { include_health = true, top = 5 }
+expect = { ok = true, has_field = "health" }
+
+# Sample one-shot per synt + fast-path generator. Tutti i campi
+# health rappresentati (load/memory/thermal/disk/network/services).
+[[tests]]
+name        = "happy_path_with_health_sample"
+input       = { include_health = true, top = 2 }
+expect      = { ok = true, has_field = "health", entries_max = 2 }
+expect_full = """
+{
+  "ok": true, "ok_count": 2, "fail_count": 0,
+  "entries": [
+    {"pid": 1234, "ppid": 1, "name": "python", "cmd": "/usr/bin/python3", "user": "roberto", "cpu_pct": 50.0, "mem_pct": 1.2, "started_at": "01:23:45"},
+    {"pid": 5678, "ppid": 1, "name": "llama-server", "cmd": "/opt/.../llama-server", "user": "roberto", "cpu_pct": 7.7, "mem_pct": 7.6, "started_at": "12-04:55:22"}
+  ],
+  "truncated": true, "truncated_what": "process", "truncated_intentional": true,
+  "used": 2, "available_total": 489, "cap_field": "top", "cap_value": 2,
+  "health": {
+    "load": {"available": true, "1m": 0.43, "5m": 0.32, "15m": 0.25, "uptime_s": 520355},
+    "memory": {"available": true, "total_mb": 124410, "used_mb": 45650, "pct": 36.7, "swap_total_mb": 8192, "swap_used_mb": 0, "swap_pct": 0.0},
+    "thermal": {"available": true, "cpu_c": 49, "gpu_c": 46, "nvme_c": 37},
+    "disk": [{"mount": "/", "device": "/dev/nvme0n1p2", "fstype": "ext4", "total_gb": 850.0, "used_gb": 223.5, "free_gb": 626.5, "pct": 26.3}],
+    "network": [{"iface": "eth0", "ipv4": ["192.0.2.10"], "ipv6": ["2001:db8::1"], "up": true}],
+    "services": [{"name": "metnos-http", "status": "active"}],
+    "collected_at": 1778077408
+  }
+}
+"""

@@ -1,0 +1,74 @@
+{
+  "name": "write_files",
+  "manifest_mtime": 1779121548,
+  "inputs": {
+    "path": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "file_path",
+      "role": "filter",
+      "format_hint": "absolute path"
+    },
+    "content": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "text or base64"
+    },
+    "encoding": {
+      "structural_type": "string",
+      "required": false,
+      "default": "utf-8",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "text|binary"
+    },
+    "mode": {
+      "structural_type": "string",
+      "required": false,
+      "default": "overwrite",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "write|append|overwrite"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "local",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "backend implementation"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "results": {
+        "type": "file_entry[]",
+        "schema": {
+          "path": "file_path",
+          "created": "bool",
+          "bytes_written": "size_bytes",
+          "encoding": "name",
+          "mode": "name"
+        }
+      },
+      "dirs_created": {
+        "type": "dir_entry[]",
+        "schema": {
+          "path": "dir_path"
+        }
+      }
+    }
+  },
+  "unresolved_args": [
+    "encoding",
+    "mode",
+    "client"
+  ],
+  "propagates_constraints": false
+}

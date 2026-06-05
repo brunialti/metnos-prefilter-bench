@@ -1,0 +1,20 @@
+{
+  "name": "delete_tasks",
+  "manifest_mtime": 0,
+  "inputs": {
+    "task_ids": {"structural_type": "array", "required": false, "default": null, "semantic_type": "slug[]", "role": "source", "format_hint": "list of task id/name"},
+    "filter_name": {"structural_type": "string", "required": false, "default": null, "semantic_type": "name", "role": "filter", "format_hint": "task name glob"}
+  },
+  "requires_one_of": [["task_ids", "filter_name"]],
+  "output": {
+    "type": "scalar_metric",
+    "schema": {"ok": "bool", "deleted_count": "count", "deleted_names": "name[]"},
+    "may_be_truncated": false,
+    "may_be_empty": false
+  },
+  "consumes": ["filter:name"],
+  "propagates_constraints": false,
+  "preconditions": [],
+  "_builtin": true,
+  "_terminator": false
+}

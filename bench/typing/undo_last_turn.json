@@ -1,0 +1,23 @@
+{
+  "name": "undo_last_turn",
+  "manifest_mtime": 1779121548,
+  "inputs": {
+    "log_path": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "file_path",
+      "role": "source",
+      "format_hint": "path to undo.jsonl"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "bool",
+    "schema": {}
+  },
+  "unresolved_args": [
+    "log_path"
+  ],
+  "propagates_constraints": false
+}

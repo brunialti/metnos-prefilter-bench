@@ -1,0 +1,53 @@
+manifest_format = "1.0"
+name        = "set_signatures"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["imposta", "autorizza", "vieta", "permetti", "rimuovi",
+                "curatela", "gestione signatures", "configura permessi",
+                "approva comando", "blocca comando"]
+
+revertible       = true
+reverse_pattern  = ["delete_created_paths"]
+
+[description]
+it = "Imposta lo stato di una signature nel DB di sicurezza (curatela utente). Un solo executor che copre sia l'aggiunta sia la rimozione, per simmetria con la natura del DB:\n\n- kind='blacklist': imposta la signature in blacklist (con severity, default 'dangerous'). source='user' (immune ai bootstrap successivi).\n- kind='whitelist': imposta la signature in whitelist permanente. source='user'.\n- kind='unknown': rimuove la signature dal DB. La voce torna allo stato 'unknown' (alla prossima richiesta verra' mostrata la carta utente). NON puo' rimuovere voci severity='forbidden' (Legge 1 non derogabile).\n\nLa graylist NON e' impostabile esplicitamente: nasce automaticamente da una approvazione one-shot dalla carta utente; per spostare in whitelist permanente usare kind='whitelist'."
+en = "Set the state of a signature in the security DB (user curation). A single executor that covers both addition and removal, for symmetry with the nature of the DB:  - kind='blacklist': sets the signature in the blacklist (with severity, default 'dangerous'). source='user' (immune to subsequent bootstraps). - kind='whitelist': sets the signature in the permanent whitelist. source='user'. - kind='unknown': removes the signature from the DB. The entry returns to the 'unknown' state (at the next request, the user card will be shown). MUST NOT remove entries with severity='forbidden' (Law 1 is non-derogable).  The graylist CANNOT be set explicitly: it is created automatically from a one-shot approval from the user card; to move to the permanent whitelist, use kind='whitelist'."
+
+[code]
+files  = ["set_signatures.py"]
+digest = "sha256:d1911c34a85c256e817c0ab6e2fcaaa91c38bd02d2933c3f25b0343545e6d1ba"
+
+[args]
+type     = "object"
+required = ["kind", "signature"]
+
+[args.properties.kind]
+type        = "string"
+enum        = ["blacklist", "whitelist", "unknown"]
+
+[args.properties.kind.description]
+it = "Stato target. 'blacklist'/'whitelist' = aggiungi/sposta. 'unknown' = rimuovi dal DB."
+en = "Target state. 'blacklist'/'whitelist' = add/move. 'unknown' = remove from DB."
+
+[args.properties.signature]
+type        = "string"
+
+[args.properties.signature.description]
+it = "Signature canonicalizzata (binary:subcmd:target_kind). Wildcard ammessi nei campi 2 e 3."
+en = "Canonicalized signature (binary:subcmd:target_kind). Wildcards allowed in fields 2 and 3."
+
+[args.properties.reason]
+type        = "string"
+
+[args.properties.reason.description]
+it = "Motivazione della scelta. Richiesta per kind='blacklist'/'whitelist'. Visibile in audit."
+en = "Reason for choice. Request for kind='blacklist'/'whitelist'. Visible in audit."
+
+[args.properties.severity]
+type        = "string"
+enum        = ["forbidden", "irreversible", "dangerous", "reversible"]
+default     = "dangerous"
+
+[args.properties.severity.description]
+it = "Per kind='blacklist': severity. 'forbidden' = Legge 1 non derogabile (raro). Default 'dangerous'. Ignorato per altri kind."
+en = "For kind='blacklist': severity. 'forbidden' = Non-derogable Law 1 (rare). Default 'dangerous'. Ignored for other kinds."

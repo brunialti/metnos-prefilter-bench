@@ -1,0 +1,82 @@
+{
+  "name": "read_urls_pdf",
+  "manifest_mtime": 1779121549,
+  "inputs": {
+    "urls": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "url_entry[]",
+      "role": "source",
+      "format_hint": "array of strings"
+    },
+    "auth_cookies_file": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "file_path",
+      "role": "source",
+      "format_hint": "Mozilla cookies.txt"
+    },
+    "max_pages_per_doc": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 100,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "max_bytes": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 20000000,
+      "semantic_type": "size_bytes",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "timeout_s": {
+      "structural_type": "number",
+      "required": false,
+      "default": 15.0,
+      "semantic_type": "duration_secs",
+      "role": "meta",
+      "format_hint": "float"
+    },
+    "ocr_fallback": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "httpx",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "string"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "message_entry[]",
+    "schema": {
+      "title": "text_path",
+      "author": "person_name",
+      "body_text": "free_text",
+      "n_pages": "count",
+      "needs_ocr": "bool"
+    }
+  },
+  "unresolved_args": [
+    "auth_cookies_file",
+    "timeout_s",
+    "client"
+  ],
+  "consumes": [
+    "filter:url"
+  ],
+  "propagates_constraints": false
+}

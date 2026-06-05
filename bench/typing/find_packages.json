@@ -1,0 +1,28 @@
+{
+  "name": "find_packages",
+  "manifest_mtime": 1778778294,
+  "inputs": {
+    "package_name": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "string"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "file_path",
+    "schema": {
+      "executable_path": "file_path"
+    }
+  },
+  "unresolved_args": [
+    "package_name"
+  ],
+  "consumes": [
+    "filter:name"
+  ],
+  "propagates_constraints": false
+}

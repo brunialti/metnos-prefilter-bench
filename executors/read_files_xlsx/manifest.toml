@@ -1,0 +1,86 @@
+# Manifest dell'executor `read_files_xlsx` — Metnos v1.1
+
+manifest_format = "1.0"
+
+name        = "read_files_xlsx"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["read", "xlsx", "excel", "leggi", "tabella", "spreadsheet", "foglio", "dati", "import"]
+revertible  = false
+lifecycle   = "active"
+
+[description]
+it = "Legge file Excel (.xlsx) e ritorna le righe come lista di dict (chiave=header) o lista di liste se has_header=false. Vettoriale. Backend: openpyxl in read-only mode (efficiente per file grandi). Default: prima sheet del workbook; usa `sheet` per nome o indice. Per leggere CSV usa read_files_csv. Per analisi statistica passa rows[*][colonna] a describe_numbers; per filtrare righe usa filter_entries dopo."
+en = "Reads Excel files (.xlsx) and returns the rows as a list of dicts (key=header) or a list of lists if has_header=false. Vectorized. Backend: openpyxl in read-only mode (efficient for large files). Default: first sheet of the workbook; use `sheet` for name or index. To read CSV use read_files_csv. For statistical analysis pass rows[*][column] to describe_numbers; to filter rows use filter_entries afterwards."
+
+[code]
+files  = ["read_files_xlsx.py"]
+digest = "sha256:ff81476df7449b9cfde7eb81af45340b9c1f4b592db347fb364ca082d4f6b265"
+
+[args]
+type     = "object"
+required = ["paths"]
+
+[args.properties.paths]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.paths.description]
+it = "Lista di path a file .xlsx. Estensione tipica .xlsx; .xls (legacy) NON supportato (usa una conversione esterna)."
+en = "List of .xlsx file paths. Typical extension .xlsx; .xls (legacy) NOT supported (use an external conversion)."
+
+[args.properties.sheet]
+type        = "string"
+
+[args.properties.sheet.description]
+it = "Nome del foglio (es. 'Dati 2026') o indice numerico (0-based) come stringa. Se omesso, il primo foglio."
+en = "Sheet name (e.g., 'Data 2026') or numerical index (0-based) as a string. If omitted, the first sheet."
+
+[args.properties.has_header]
+type        = "boolean"
+default     = true
+
+[args.properties.has_header.description]
+it = "Se true (default), la prima riga e' header. Se false, ogni riga e' una lista."
+en = "If true (default), the first line is the header. If false, every line is a list."
+
+[args.properties.max_rows]
+type        = "integer"
+default     = 10000
+
+[args.properties.max_rows.description]
+it = "Massimo numero di righe da leggere per file (oltre l'header). Default 10000, range 1..1000000."
+en = "Maximum number of lines to read per file (excluding the header). Default 10000, range 1..1000000."
+
+[[capabilities]]
+name = "fs:read"
+hint = ["~/**", "/tmp/**"]
+
+[[tests]]
+name     = "xlsx_base_con_header"
+setup    = "python3 -c \"import openpyxl; wb=openpyxl.Workbook(); ws=wb.active; ws.append(['name','age']); ws.append(['Alice',30]); ws.append(['Bob',25]); wb.save('/tmp/metnos_test.xlsx')\""
+input    = { paths = ["/tmp/metnos_test.xlsx"] }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -f /tmp/metnos_test.xlsx"
+
+[[tests]]
+name     = "xlsx_sheet_per_nome"
+setup    = "python3 -c \"import openpyxl; wb=openpyxl.Workbook(); wb.active.title='Dati'; ws=wb['Dati']; ws.append(['x','y']); ws.append([1,2]); wb.create_sheet('Other'); wb.save('/tmp/metnos_test.xlsx')\""
+input    = { paths = ["/tmp/metnos_test.xlsx"], sheet = "Dati" }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -f /tmp/metnos_test.xlsx"
+
+[[tests]]
+name   = "lista_vuota_ok"
+input  = { paths = [] }
+expect = { ok = true, ok_count_eq = 0 }
+
+[[tests]]
+name   = "args_invalidi_paths_non_lista"
+input  = { paths = "/tmp/foo.xlsx" }
+expect = { ok = false, error_contains = "deve essere una lista" }
+
+[[tests]]
+name   = "path_inesistente_fallisce_solo_quella"
+input  = { paths = ["/tmp/metnos_does_not_exist.xlsx"] }
+expect = { ok = false, fail_count_eq = 1, error_contains = "does not exist" }

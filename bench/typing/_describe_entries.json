@@ -1,0 +1,12 @@
+{
+  "name": "describe_entries",
+  "manifest_mtime": 0,
+  "inputs": {
+    "from_step": {"structural_type": "integer", "required": false, "semantic_type": "count"},
+    "entries": {"structural_type": "array", "required": false, "semantic_type": "entry_list"},
+    "max_tokens": {"structural_type": "integer", "required": false, "semantic_type": "count"}
+  },
+  "requires_one_of": [["from_step", "entries"]],
+  "output": {"type": "free_text", "schema": {}},
+  "_builtin": true
+}

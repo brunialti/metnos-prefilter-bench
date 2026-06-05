@@ -1,0 +1,82 @@
+{
+  "name": "read_events",
+  "manifest_mtime": 1779121549,
+  "inputs": {
+    "time_window": {
+      "structural_type": "string",
+      "required": false,
+      "default": "next-7d",
+      "semantic_type": "time_window",
+      "role": "filter",
+      "format_hint": "today|tomorrow|next-7d|ISO-range"
+    },
+    "start": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "iso_timestamp",
+      "role": "filter",
+      "format_hint": "ISO 8601 with offset"
+    },
+    "end": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "iso_timestamp",
+      "role": "filter",
+      "format_hint": "ISO 8601 with offset"
+    },
+    "top_k": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 50,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "calendar_id": {
+      "structural_type": "string",
+      "required": false,
+      "default": "primary",
+      "semantic_type": "name",
+      "role": "source",
+      "format_hint": "string"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "local",
+      "semantic_type": "name",
+      "role": "source",
+      "format_hint": "local|gcal|..."
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "event_entry[]",
+    "schema": {
+      "ok": "bool",
+      "entries": "event_entry[]",
+      "used": "count",
+      "available_total": "count",
+      "truncated": "bool",
+      "truncated_what": "free_text",
+      "cap_field": "free_text",
+      "cap_value": "count",
+      "error": "free_text",
+      "error_class": "free_text"
+    }
+  },
+  "unresolved_args": [
+    "start",
+    "end",
+    "calendar_id",
+    "client"
+  ],
+  "consumes": [
+    "filter:time_window",
+    "filter:iso_timestamp",
+    "meta:count"
+  ],
+  "propagates_constraints": false
+}

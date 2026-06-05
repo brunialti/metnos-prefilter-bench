@@ -1,0 +1,46 @@
+{
+  "name": "find_contacts",
+  "manifest_mtime": 1779640650,
+  "inputs": {
+    "query": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "filter",
+      "format_hint": "substring case-insensitive"
+    },
+    "max_results": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 50,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "google_workspace",
+      "semantic_type": "name",
+      "role": "source",
+      "format_hint": "backend identifier"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "person_entry[]",
+    "schema": {
+      "name": "person_name",
+      "emails": "email_address[]",
+      "phones": "phone[]"
+    }
+  },
+  "unresolved_args": [
+    "client"
+  ],
+  "consumes": [
+    "filter:free_text"
+  ],
+  "propagates_constraints": false
+}

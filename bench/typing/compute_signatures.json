@@ -1,0 +1,59 @@
+{
+  "name": "compute_signatures",
+  "manifest_mtime": 1778847253,
+  "inputs": {
+    "op": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "command | reversibility | seed_apply"
+    },
+    "argv": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text[]",
+      "role": "source",
+      "format_hint": "list of command tokens"
+    },
+    "signature": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "text_path",
+      "role": "filter",
+      "format_hint": "canonical signature string"
+    },
+    "seed_path": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "file_path",
+      "role": "source",
+      "format_hint": "path to TOML seed file"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "signature": "text_path",
+      "binary": "name",
+      "subcommand_or_flag": "name",
+      "target_kind": "name",
+      "requires_sudo": "bool",
+      "class": "name",
+      "undo_hint": "free_text",
+      "reason": "free_text"
+    }
+  },
+  "unresolved_args": [
+    "op",
+    "argv",
+    "signature",
+    "seed_path"
+  ],
+  "propagates_constraints": false
+}

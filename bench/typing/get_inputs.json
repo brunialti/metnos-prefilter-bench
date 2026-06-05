@@ -1,0 +1,85 @@
+{
+  "name": "get_inputs",
+  "manifest_mtime": 1778834932,
+  "inputs": {
+    "title": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "meta",
+      "format_hint": "max 80 chars"
+    },
+    "description": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "meta",
+      "format_hint": "1-2 sentences"
+    },
+    "dialog": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "json_object",
+      "role": "meta",
+      "format_hint": "array of {var, prompt, schema, optional, default}"
+    },
+    "fmt": {
+      "structural_type": "string",
+      "required": false,
+      "default": "auto",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "auto|dialogue"
+    },
+    "actor": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "user identifier"
+    },
+    "timeout_s": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "duration_secs",
+      "role": "meta",
+      "format_hint": "max 3600"
+    },
+    "from_step": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "count",
+      "role": "piping",
+      "format_hint": "step index"
+    },
+    "entries": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "json_object",
+      "role": "piping",
+      "format_hint": "array of records"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "values": "json_object"
+    }
+  },
+  "unresolved_args": [
+    "description",
+    "dialog",
+    "fmt",
+    "actor",
+    "entries"
+  ],
+  "propagates_constraints": false
+}

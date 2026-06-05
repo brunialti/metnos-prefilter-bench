@@ -1,0 +1,96 @@
+# Manifest dell'executor `compress_files` — Metnos v1.1 (4/6/2026).
+# Naming compositivo §2.2: verbo_oggetto. Vettoriale per costruzione.
+# Reversible §2.3: l'archivio creato → delete_created_paths.
+
+manifest_format = "1.0"
+
+name        = "compress_files"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "comprimi", "comprimere", "compressione", "archivia", "archiviare",
+    "compress", "archive", "zip", "tar", "gzip", "archivio", "backup",
+]
+
+revertible = true
+reverse_pattern = "delete_created_paths"
+
+[description]
+it = "SCOPO: comprime una lista di file in UN archivio (zip/tar/gz). PATTERN: find_files al passo N -> compress_files(from_step=N, dest=\"/dir/out.zip\"); oppure literal compress_files(paths=[\"/a.txt\",\"/b.txt\"], dest=\"/out.zip\"). Il formato si deduce dall'estensione di dest (.zip/.tar/.tar.gz/.gz) o si forza con format. NON: comprimere directory (solo file); NON decomprimere/estrarre (usa extract_files); NON un archivio per record (questo crea UN solo archivio con tutti i file). OUT: results=[{path,created,file_count,archive_bytes,format}] + ok_count = file inseriti."
+en = "SCOPO: compress a list of files into ONE archive (zip/tar/gz). PATTERN: find_files at step N -> compress_files(from_step=N, dest=\"/dir/out.zip\"); or literal compress_files(paths=[\"/a.txt\",\"/b.txt\"], dest=\"/out.zip\"). Format is inferred from dest extension (.zip/.tar/.tar.gz/.gz) or forced via format. NON: compress directories (files only); NON decompress/extract (use extract_files); NON one archive per record (this makes ONE archive with all files). OUT: results=[{path,created,file_count,archive_bytes,format}] + ok_count = files added."
+
+[code]
+files  = ["compress_files.py"]
+digest = "sha256:e24bf7940c59df52a8fe33cbd11a69538a6cf0bba3147494379437180da96a8c"
+
+[args]
+type     = "object"
+required = ["dest"]
+
+[args.properties.paths]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.paths.description]
+it = "Lista di path di file da comprimere (es. [\"/tmp/a.txt\",\"/tmp/b.txt\"]). Forma literal per il caso atomico. In alternativa usa `from_step` per ricevere la lista da uno step precedente (find_files)."
+en = "List of file paths to compress (e.g., [\"/tmp/a.txt\",\"/tmp/b.txt\"]). Literal form for the atomic case. Alternatively use `from_step` to receive the list from a previous step (find_files)."
+
+[args.properties.from_step]
+type        = "integer"
+minimum     = 1
+
+[args.properties.from_step.description]
+it = "Numero dello step precedente che ha prodotto la lista di file da comprimere (es. find_files al passo 1 -> from_step=1). Alternativa a `paths`."
+en = "Number of the previous step that produced the list of files to compress (e.g., find_files at step 1 -> from_step=1). Alternative to `paths`."
+
+[args.properties.dest]
+type        = "string"
+
+[args.properties.dest.description]
+it = "Path dell'archivio da creare (es. \"/tmp/backup.zip\"). L'estensione determina il formato (.zip/.tar/.tar.gz/.gz) se `format` non e' dato."
+en = "Path of the archive to create (e.g., \"/tmp/backup.zip\"). The extension determines the format (.zip/.tar/.tar.gz/.gz) if `format` is not given."
+
+[args.properties.format]
+type        = "string"
+enum        = ["zip", "tar", "gztar", "gz"]
+
+[args.properties.format.description]
+it = "Formato esplicito: 'zip' (default), 'tar', 'gztar' (.tar.gz), 'gz' (un solo file). Se omesso, dedotto da `dest`."
+en = "Explicit format: 'zip' (default), 'tar', 'gztar' (.tar.gz), 'gz' (single file). If omitted, inferred from `dest`."
+
+[[capabilities]]
+name = "fs:read"
+hint = ["~/**", "/tmp/**"]
+
+[[capabilities]]
+name = "fs:write"
+hint = ["~/**", "/tmp/**"]
+
+[[tests]]
+name     = "zip_due_file"
+setup    = "mkdir -p /tmp/metnos_test_compress && echo a > /tmp/metnos_test_compress/a.txt && echo b > /tmp/metnos_test_compress/b.txt"
+input    = { paths = ["/tmp/metnos_test_compress/a.txt", "/tmp/metnos_test_compress/b.txt"], dest = "/tmp/metnos_test_compress/out.zip" }
+expect   = { ok = true, ok_count_eq = 2 }
+teardown = "rm -rf /tmp/metnos_test_compress"
+
+[[tests]]
+name   = "lista_vuota_ok"
+input  = { paths = [], dest = "/tmp/metnos_empty.zip" }
+expect = { ok = true, ok_count_eq = 0 }
+
+[[tests]]
+name   = "dest_mancante_fallisce"
+input  = { paths = ["/tmp/x.txt"] }
+expect = { ok = false, error_contains = "obbligatorio" }
+
+[[tests]]
+name     = "path_inesistente_in_failed"
+input    = { paths = ["/tmp/metnos_does_not_exist_zzz.txt"], dest = "/tmp/metnos_x.zip" }
+expect   = { ok = false, fail_count_eq = 1 }
+
+[[tests]]
+name     = "tar_gz_formato_da_estensione"
+setup    = "mkdir -p /tmp/metnos_test_tgz && echo x > /tmp/metnos_test_tgz/a.txt"
+input    = { paths = ["/tmp/metnos_test_tgz/a.txt"], dest = "/tmp/metnos_test_tgz/out.tar.gz" }
+expect   = { ok = true, ok_count_eq = 1 }
+teardown = "rm -rf /tmp/metnos_test_tgz"

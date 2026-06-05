@@ -1,0 +1,110 @@
+# Manifest dell'executor `read_events` — Metnos v1.1
+# Naming compositivo §2.2: azione_oggetto[_qualifier].
+# Dispatcher canonical (sequel di read_files/read_messages, 13/5/2026).
+
+manifest_format = "1.0"
+
+name        = "read_events"
+version     = "0.4.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "appuntamento", "agenda", "evento", "calendario", "calendar", "riunione", "riunioni",
+                "incontro", "meeting", "scadenza", "scadenze", "deadline", "appointment",
+                "schedule", "events"
+            ]
+revertible  = false
+lifecycle   = "active"
+
+[description]
+it = "Legge gli appuntamenti del calendario. Dispatcher canonical: backend AUTO-RILEVATO dal runtime (OMETTI `client`). USO CORRETTO: read_events(time_window='today'|'tomorrow'|'next-7d'|range ISO). NON DEVI usarla per LEGGERE mail (usa read_messages) ne' per CREARE eventi (usa create_events). NON CONFONDERE CON: `list_tasks` (task ricorrenti / timer / promemoria Metnos, NON eventi calendar), `read_tasks` (dettaglio task ricorrente), `read_tasks_history` (storico esecuzioni task). Vettoriale §2.1: ritorna `entries: list` con {kind:'calendar_event', id, start, end, summary, location, ...}. Backend auto-rilevato (OMETTI `client`): google_workspace se OAuth presente, altrimenti local ICS — entrambi implementati. OK: read_events(time_window='tomorrow'). ERRORE: passare `client` non richiesto dall'utente."
+en = "Reads calendar appointments. Canonical dispatcher: backend AUTO-DETECTED by the runtime (OMIT `client`). CORRECT USE: read_events(time_window='today'|'tomorrow'|'next-7d'|ISO range). MUST NOT be used to READ mail (use read_messages) nor to CREATE events (use create_events). DO NOT CONFUSE WITH: `list_tasks` (recurring tasks / timers / reminders in Metnos, NOT calendar events), `read_tasks` (detail of one recurring task), `read_tasks_history` (execution history of tasks). Vectorial §2.1: returns `entries: list` with {kind:'calendar_event', id, start, end, summary, location, ...}. Backend auto-detected (OMIT `client`): google_workspace if OAuth present, else local ICS — both implemented. OK: read_events(time_window='tomorrow'). ERROR: passing `client` not requested by the user."
+
+[code]
+files  = ["read_events.py"]
+digest = "sha256:5cc69e7ac5dd9567f2e50dc8d0c5f2c010e7cc4acfcc32c30b58b608ad1662be"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.time_window]
+type    = "string"
+default = "next-7d"
+
+[args.properties.time_window.description]
+it = "Finestra temporale: 'today', 'tomorrow', 'last-Nd', 'next-Nd', 'last-week', 'next-week', range ISO 'YYYY-MM-DD/YYYY-MM-DD'. Default 'next-7d'. Mutuamente esclusivo con `start`/`end`."
+en = "Time window: 'today', 'tomorrow', 'last-Nd', 'next-Nd', 'last-week', 'next-week', ISO range 'YYYY-MM-DD/YYYY-MM-DD'. Default 'next-7d'. Mutually exclusive with `start`/`end`."
+
+[args.properties.start]
+type    = "string"
+format  = "date-time"
+
+[args.properties.start.description]
+it = "Inizio in ISO 8601 con offset esplicito (es. 'Z' o '+01:00'). Es. '2026-03-01T00:00:00Z'."
+en = "Start in ISO 8601 with explicit offset (e.g. 'Z' or '+01:00'). E.g. '2026-03-01T00:00:00Z'."
+
+[args.properties.end]
+type    = "string"
+format  = "date-time"
+
+[args.properties.end.description]
+it = "Fine in ISO 8601 con offset esplicito; deve essere > start."
+en = "End in ISO 8601 with explicit offset; must be > start."
+
+[args.properties.top_k]
+type    = "integer"
+default = 50
+minimum = 0
+
+[args.properties.top_k.description]
+it = "Cap superiore esplicito (§2.7): max entries ritornate. 0 = nessun cap. Default 50."
+en = "Explicit upper cap (§2.7): max entries returned. 0 = no cap. Default 50."
+
+[args.properties.calendar_id]
+type    = "string"
+default = "primary"
+
+[args.properties.calendar_id.description]
+it = "Identificatore del calendario. Default 'primary'. Semantica specifica al backend (per i provider cloud, l'id del calendario remoto)."
+en = "Calendar identifier. Default 'primary'. Backend-specific semantics (for cloud providers, the remote calendar id)."
+
+[args.properties.client]
+type        = "string"
+enum        = ["local", "google_workspace"]
+# backend = configurazione, NON intento → risolto dal runtime, NON esposto
+# all'LLM (lessons A3/B1: l'enum induce bias). L'utente non lo sceglie via LLM.
+runtime_resolved = true
+
+[args.properties.client.description]
+it = "Backend calendario. DEVI OMETTERLO: il runtime auto-rileva (google_workspace se OAuth, altrimenti local ICS). NON DEVI passare 'client' a meno che l'utente non lo chieda esplicitamente."
+en = "Calendar backend. YOU MUST OMIT IT: the runtime auto-detects (google_workspace if OAuth, else local ICS). YOU MUST NOT pass 'client' unless the user explicitly asks."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  entries: Array<{kind: 'calendar_event', id: str, start, end, summary, ...}>,
+  used: int,
+  available_total?: int,
+  truncated?: bool,
+  truncated_what?: str,
+  cap_field?: str,
+  cap_value?: int,
+  error?: str,
+  error_class?: str
+}
+"""
+
+[[capabilities]]
+name = "metnos:read"
+hint = ["~/.local/share/metnos/calendar.ics"]
+
+[[tests]]
+name   = "reads_local_ok"
+input  = { time_window = "today", client = "local" }
+expect = { ok = true }
+
+[[tests]]
+name   = "invalid_client_rejected"
+input  = { client = "gdrive" }
+expect = { ok = false, error_contains = "gdrive" }

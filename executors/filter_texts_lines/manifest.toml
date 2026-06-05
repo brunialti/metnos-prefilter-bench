@@ -1,0 +1,109 @@
+# Manifest dell'executor `filter_texts_lines` — Metnos v1.1
+# Decomposizione testuale: blob -> righe filtrate. Pure in-memory.
+# Rinominato 3/5/2026 a `filter_texts_lines`: la struttura
+# compositiva e' `verbo_OGGETTO_LIVELLO`, dove l'oggetto dell'azione
+# sono i TESTI e il livello di granularita' a cui il filtro opera
+# sono le RIGHE (lines come qualifier-granularita', non come oggetto).
+
+manifest_format = "1.0"
+
+name        = "filter_texts_lines"
+version     = "0.3.0"
+author      = "Roberto Brunialti"
+affinity    = ["filter", "filtra", "righe", "lines", "testi", "texts", "regex", "grep", "match", "log"]
+revertible  = false
+lifecycle   = "active"
+
+[description]
+it = "Filtra un contenuto testuale alla granularita' delle righe, tenendo solo quelle che soddisfano un predicato (regex Python e/o substring letterale). Pure compute, no I/O esterna. Input: `content` come stringa o lista di stringhe (passato tipicamente come {{stepN.content}} dopo read_files o read_files_ocr). Output: lista di righe matchate, opzionalmente con numero di riga. Esempio: filtra tutte le righe contenenti 'ERROR' dal log di sistema, oppure righe con regex '^\\d{4}-\\d{2}-\\d{2}' per tenere date ISO."
+en = "Filter textual content at the line granularity, keeping only those that satisfy a predicate (Python regex and/or literal substring). Pure compute, no external I/O. Input: `content` as a string or list of strings (typically passed as {{stepN.content}} after read_files or read_files_ocr). Output: list of matched lines, optionally with line number. Example: filter all lines containing 'ERROR' from the system log, or lines with regex '^\\d{4}-\\d{2}-\\d{2}' to keep ISO dates."
+
+[code]
+files  = ["filter_texts_lines.py"]
+digest = "sha256:137a4b4cc19878331ed33cb0c05035d802acf096334913f38cadf65e91dc1360"
+
+[args]
+type     = "object"
+required = ["content"]
+
+[args.properties.content]
+type        = "string"
+
+[args.properties.content.description]
+it = "Testo da filtrare. Stringa multilinea (separatore '\\\n') o lista di stringhe (joinate con '\\\n'). Tipicamente passato come {{stepN.content}} dopo read_files."
+en = "Text to filter. Multiline string (separator '\\n') or list of strings (joined with '\\n'). Typically passed as {{stepN.content}} after read_files."
+
+[args.properties.regex]
+type        = "string"
+
+[args.properties.regex.description]
+it = "Pattern regex Python da matchare (re.search). Esempi: '^ERROR', '\\d+', '^\\d{4}-\\d{2}-\\d{2}'. Se omesso, deve essere passato 'substring'."
+en = "Python regex pattern to match (re.search). Examples: '^ERROR', '\\d+', '^\\d{4}-\\d{2}-\\d{2}'. If omitted, 'substring' must be passed."
+
+[args.properties.substring]
+type        = "string"
+
+[args.properties.substring.description]
+it = "Substring letterale da cercare nelle righe (alternativa o aggiuntiva a regex). Esempio: 'TODO', 'WARN'. Se entrambi specificati, AND."
+en = "Literal substring to search for in the lines (alternative or additional to regex). Example: 'TODO', 'WARN'. If both are specified, AND."
+
+[args.properties.case_insensitive]
+type        = "boolean"
+default     = true
+
+[args.properties.case_insensitive.description]
+it = "Se true (default), match case-insensitive."
+en = "If true (default), match case-insensitive."
+
+[args.properties.max_results]
+type        = "integer"
+default     = 1000
+
+[args.properties.max_results.description]
+it = "Numero massimo di righe da restituire. Default 1000, range 1..100000."
+en = "Maximum number of lines to return. Default 1000, range 1..100000."
+
+[args.properties.with_line_numbers]
+type        = "boolean"
+default     = false
+
+# Pure compute: niente capabilities I/O.
+
+[args.properties.with_line_numbers.description]
+it = "Se true, ogni risultato include `line_number` (1-based). Default false: solo `line`."
+en = "If true, every result includes `line_number` (1-based). Default false: only `line`."
+
+[[tests]]
+name   = "regex_basic"
+input  = { content = "alpha\nERROR foo\nbeta\nERROR bar", regex = "^ERROR" }
+expect = { ok = true, ok_count_eq = 2 }
+
+[[tests]]
+name   = "substring_case_insensitive"
+input  = { content = "Hello World\nmondo bello", substring = "MONDO" }
+expect = { ok = true, ok_count_eq = 1 }
+
+[[tests]]
+name   = "regex_e_substring_AND"
+input  = { content = "TODO update\nERROR done\nTODO fix\nERROR todo", regex = "^TODO", substring = "fix" }
+expect = { ok = true, ok_count_eq = 1 }
+
+[[tests]]
+name   = "lista_di_stringhe_input"
+input  = { content = ["riga 1", "riga 2 con MARK", "riga 3"], substring = "MARK" }
+expect = { ok = true, ok_count_eq = 1 }
+
+[[tests]]
+name   = "regex_invalido"
+input  = { content = "x", regex = "[invalido" }
+expect = { ok = false, error_contains = "unterminated character set at position" }
+
+[[tests]]
+name   = "manca_filtro"
+input  = { content = "x" }
+expect = { ok = false, error_contains = "Manca un argomento obbligatorio" }
+
+[[tests]]
+name   = "with_line_numbers"
+input  = { content = "a\nb\nc\nd", regex = "^[bd]$", with_line_numbers = true }
+expect = { ok = true, ok_count_eq = 2 }

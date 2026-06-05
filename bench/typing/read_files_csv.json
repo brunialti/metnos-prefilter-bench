@@ -1,0 +1,58 @@
+{
+  "name": "read_files_csv",
+  "manifest_mtime": 1778121512,
+  "inputs": {
+    "paths": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "file_path[]",
+      "role": "source",
+      "format_hint": "list of strings"
+    },
+    "delimiter": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "meta",
+      "format_hint": "single character string"
+    },
+    "encoding": {
+      "structural_type": "string",
+      "required": false,
+      "default": "utf-8",
+      "semantic_type": "free_text",
+      "role": "meta",
+      "format_hint": "encoding name"
+    },
+    "has_header": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": true,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean"
+    },
+    "max_rows": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 10000,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object[]",
+    "schema": {
+      "row": "json_object"
+    }
+  },
+  "unresolved_args": [
+    "delimiter",
+    "encoding"
+  ],
+  "propagates_constraints": false
+}

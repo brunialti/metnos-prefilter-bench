@@ -1,0 +1,184 @@
+# Manifest dell'executor `fs_write` — Metnos v1.1
+# Critical (default): forza online in mode hybrid. Approval per_target.
+
+manifest_format = "1.0"
+
+name        = "write_files"
+version     = "0.2.0"
+author      = "Roberto Brunialti"
+affinity    = ["write", "scrittura", "file", "salva", "scrivi", "crea"]
+revertible      = true
+reverse_pattern = "delete_created_paths"
+lifecycle       = "active"
+
+[description]
+it = "SCOPO: salva record/testo in file sul filesystem locale (vettoriale §2.1, anche 1 solo). PATTERN: salvare l'output di uno step (record/righe/testo) in UN file → write_files(from_step=N, path=\"/dir/out.txt\") [aggrega tutto in un file, NO path_template]; un file per record → write_files(from_step=N, path_template=\"/dir/issue_{number}.json\"); contenuto letterale → write_files(path=\"/dir/f.txt\", content=\"...\"). ARGS: path_template usa i campi del record fra GRAFFE SINGOLE; content_field=<campo> sceglie il campo, default = JSON del record; set_fields fonde campi costanti; mode=skip_if_exists = dedup idempotente. NON: write_files SENZA from_step NÉ content (non avrebbe nulla da scrivere); files con liste grezze; graffe doppie; ripetere path. OUT: results=[{path,created,skipped,bytes_written}] + created_count + skipped_count."
+en = "SCOPO: persist records/text to files on local fs (vectorial §2.1, single allowed). PATTERN: save a step's output (records/lines/text) into ONE file → write_files(from_step=N, path=\"/dir/out.txt\") [aggregates all into one file, NO path_template]; one file per record → write_files(from_step=N, path_template=\"/dir/issue_{number}.json\"); literal content → write_files(path=\"/dir/f.txt\", content=\"...\"). ARGS: path_template uses record fields in SINGLE BRACES; content_field=<field> picks the field, default = record JSON; set_fields merges constant fields; mode=skip_if_exists = idempotent dedup. NON: write_files WITHOUT from_step NOR content (nothing to write); files with raw lists; double braces; repeating path. OUT: results=[{path,created,skipped,bytes_written}] + created_count + skipped_count."
+
+[code]
+files  = ["write_files.py"]
+digest = "sha256:8498ea5b4042296f5c790cc8a10ab8b180399964e0c04072c6de5aa33f243d62"
+
+[args]
+type     = "object"
+# Niente required hard: la forma valida (scalare/files/entries/paths) e'
+# verificata dall'executor con errore onesto. Evita falsi "missing path"
+# quando si usa entries+path_template o from_step (§2.1/§7.9).
+required = []
+
+[args.properties.path]
+type        = "string"
+
+[args.properties.path.description]
+it = "Forma scalare (UN file): path assoluto del file da scrivere. Per piu' file usa `files` o `entries`+`path_template`, NON ripetere path."
+en = "Scalar form (ONE file): absolute path of the file to write. For many files use `files` or `entries`+`path_template`, do NOT repeat path."
+
+[args.properties.content]
+type        = "string"
+
+[args.properties.content.description]
+it = "Forma scalare: contenuto del file (testo se encoding != 'binary', base64 se 'binary')."
+en = "Scalar form: file content (text if encoding != 'binary', base64 if 'binary')."
+
+[args.properties.files]
+type        = "array"
+
+[args.properties.files.description]
+it = "Lista esplicita di file da scrivere: [{path, content, encoding?, mode?}]. Anche un solo elemento. Usala quando hai path+content gia' noti per ciascun file."
+en = "Explicit list of files to write: [{path, content, encoding?, mode?}]. Even a single element. Use when path+content are already known per file."
+
+[args.properties.entries]
+type        = "array"
+
+[args.properties.entries.description]
+it = "Lista di record da persistere come file, tipicamente passata via `from_step: N`. Va usata con `path_template` (un file per entry)."
+en = "List of records to persist as files, typically piped via `from_step: N`. Use together with `path_template` (one file per entry)."
+
+[args.properties.path_template]
+type        = "string"
+
+[args.properties.path_template.description]
+it = "Con `entries` (tipicamente da from_step): template del path per ciascuna entry, con campi tra graffe. Es. \"/opt/metnos/issues/issue_{number}.json\". Un file per entry."
+en = "With `entries` (typically from from_step): path template per entry, fields in braces. E.g. \"/opt/metnos/issues/issue_{number}.json\". One file per entry."
+
+[args.properties.content_field]
+type        = "string"
+
+[args.properties.content_field.description]
+it = "Con `entries`: nome del campo dell'entry da usare come contenuto del file. Se omesso (e niente content_template), il file contiene l'entry serializzata in JSON."
+en = "With `entries`: entry field name to use as the file content. If omitted (and no content_template), the file holds the entry serialized as JSON."
+
+[args.properties.content_template]
+type        = "string"
+
+[args.properties.content_template.description]
+it = "Con `entries`: template del contenuto per ciascuna entry, con campi tra graffe. Es. \"# {title}\\n\\n{body}\". Alternativa a content_field."
+en = "With `entries`: content template per entry, fields in braces. E.g. \"# {title}\\n\\n{body}\". Alternative to content_field."
+
+[args.properties.set_fields]
+type        = "object"
+
+[args.properties.set_fields.description]
+it = "Con `entries`: campi costanti fusi in OGNI entry prima di serializzarla (read-modify-write). Es. set_fields={\"status\":\"answered\"} per marcare le entry persistite. Universale per aggiornare uno stato."
+en = "With `entries`: constant fields merged into EVERY entry before serializing (read-modify-write). E.g. set_fields={\"status\":\"answered\"} to mark persisted entries. Universal for updating a status."
+
+[args.properties.max_files]
+type        = "integer"
+default     = 500
+
+[args.properties.max_files.description]
+it = "Cap superiore sul numero di file scritti per chiamata (§2.1). Default 500. Oltre il cap: truncated=true."
+en = "Upper cap on files written per call (§2.1). Default 500. Beyond the cap: truncated=true."
+
+[args.properties.encoding]
+type        = "string"
+enum        = ["utf-8", "latin-1", "binary"]
+default     = "utf-8"
+
+[args.properties.mode]
+type        = "string"
+enum        = ["overwrite", "append", "fail_if_exists", "skip_if_exists"]
+default     = "overwrite"
+
+[args.properties.mode.description]
+it = "overwrite (default), append, fail_if_exists (errore se esiste), skip_if_exists (salta se esiste = dedup idempotente, created=false skipped=true, NON e' errore)."
+en = "overwrite (default), append, fail_if_exists (error if present), skip_if_exists (skip if present = idempotent dedup, created=false skipped=true, NOT an error)."
+
+[args.properties.client]
+type        = "string"
+enum        = ["local"]
+default     = "local"
+
+[args.properties.client.description]
+it = "Implementazione backend (default 'local' = filesystem locale). Plugin esterni futuri (gdrive, dropbox, ecc.) potranno aggiungere altri client."
+en = "Backend implementation (default 'local' = local filesystem). Future external plugins (gdrive, dropbox, etc.) may add other clients."
+
+[[capabilities]]
+name = "fs:write"
+hint = ["~/notes/scratch/**", "/tmp/**"]
+
+[[tests]]
+name     = "scrive_file_nuovo_overwrite"
+setup    = "mkdir -p /tmp/metnos_test_write"
+input    = { path = "/tmp/metnos_test_write/hello.txt", content = "ciao mondo" }
+expect   = { ok = true, metadata_field_eq = { bytes_written = 10, mode = "overwrite" } }
+teardown = "rm -rf /tmp/metnos_test_write"
+
+[[tests]]
+name     = "fallisce_su_path_fuori_scope"
+input    = { path = "/etc/dovrei_fallire.txt", content = "x" }
+expect   = { ok = false, field_eq = { error_code = "ERR_PERMISSION_DENIED" } }
+
+[[tests]]
+name     = "fallisce_se_esiste_e_mode_fail"
+setup    = "mkdir -p /tmp/metnos_test_write && echo 'gia presente' > /tmp/metnos_test_write/esiste.txt"
+input    = { path = "/tmp/metnos_test_write/esiste.txt", content = "nuovo", mode = "fail_if_exists" }
+expect   = { ok = false, field_eq = { error_code = "ERR_DST_EXISTS" } }
+teardown = "rm -rf /tmp/metnos_test_write"
+
+[[tests]]
+name     = "append_a_file_esistente"
+setup    = "mkdir -p /tmp/metnos_test_write && printf 'AB' > /tmp/metnos_test_write/append.txt"
+input    = { path = "/tmp/metnos_test_write/append.txt", content = "CD", mode = "append" }
+expect   = { ok = true, metadata_field_eq = { bytes_written = 2, mode = "append" } }
+teardown = "rm -rf /tmp/metnos_test_write"
+
+[[tests]]
+name     = "scrive_binary_da_base64"
+setup    = "mkdir -p /tmp/metnos_test_write"
+input    = { path = "/tmp/metnos_test_write/bin.dat", content = "AAEC", encoding = "binary" }
+expect   = { ok = true, metadata_field_eq = { bytes_written = 3, encoding = "binary" } }
+teardown = "rm -rf /tmp/metnos_test_write"
+
+[[tests]]
+name     = "vettoriale_entries_path_template_json"
+setup    = "mkdir -p /tmp/metnos_test_write"
+input    = { entries = [ { number = 1, title = "uno" }, { number = 2, title = "due" } ], path_template = "/tmp/metnos_test_write/issue_{number}.json" }
+expect   = { ok = true, metadata_field_eq = { ok_count = 2, created_count = 2 } }
+teardown = "rm -rf /tmp/metnos_test_write"
+
+[[tests]]
+name     = "skip_if_exists_e_idempotente"
+setup    = "mkdir -p /tmp/metnos_test_write && printf 'X' > /tmp/metnos_test_write/issue_1.txt"
+input    = { entries = [ { number = 1 } ], path_template = "/tmp/metnos_test_write/issue_{number}.txt", mode = "skip_if_exists" }
+expect   = { ok = true, metadata_field_eq = { skipped_count = 1, created_count = 0 } }
+teardown = "rm -rf /tmp/metnos_test_write"
+
+[[tests]]
+name     = "set_fields_fonde_campo_costante"
+setup    = "mkdir -p /tmp/metnos_test_write"
+input    = { entries = [ { number = 1 } ], path_template = "/tmp/metnos_test_write/i_{number}.json", set_fields = { status = "answered" } }
+expect   = { ok = true, metadata_field_eq = { created_count = 1 } }
+teardown = "rm -rf /tmp/metnos_test_write"
+
+[[tests]]
+name     = "vettoriale_files_lista_esplicita"
+setup    = "mkdir -p /tmp/metnos_test_write"
+input    = { files = [ { path = "/tmp/metnos_test_write/a.txt", content = "A" }, { path = "/tmp/metnos_test_write/b.txt", content = "B" } ] }
+expect   = { ok = true, metadata_field_eq = { ok_count = 2 } }
+teardown = "rm -rf /tmp/metnos_test_write"
+
+[[tests]]
+name     = "lista_vuota_entries_n0_valida"
+input    = { entries = [], path_template = "/tmp/metnos_test_write/x_{number}.json" }
+expect   = { ok = true, metadata_field_eq = { ok_count = 0 } }

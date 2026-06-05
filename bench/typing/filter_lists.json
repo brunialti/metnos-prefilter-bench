@@ -1,0 +1,72 @@
+{
+  "name": "filter_lists",
+  "manifest_mtime": 1778856581,
+  "inputs": {
+    "op": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "free_text",
+      "role": "meta",
+      "format_hint": "intersect|union|difference|symdiff|overlap"
+    },
+    "from_step": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "count",
+      "role": "piping",
+      "format_hint": "step_index"
+    },
+    "with_step": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "count",
+      "role": "piping",
+      "format_hint": "step_index"
+    },
+    "on_keys": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "list_of_field_names"
+    },
+    "entries": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "file_entry[]",
+      "role": "piping",
+      "format_hint": "list_of_objects"
+    },
+    "entries_b": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "file_entry[]",
+      "role": "piping",
+      "format_hint": "list_of_objects"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "file_entry[]",
+    "schema": {
+      "entries": "file_entry[]"
+    }
+  },
+  "unresolved_args": [
+    "op",
+    "on_keys",
+    "entries",
+    "entries_b"
+  ],
+  "consumes": [
+    "filter:any",
+    "sort:any"
+  ],
+  "propagates_constraints": true
+}

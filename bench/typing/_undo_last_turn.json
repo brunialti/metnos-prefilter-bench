@@ -1,0 +1,7 @@
+{
+  "name": "undo_last_turn",
+  "manifest_mtime": 0,
+  "inputs": {},
+  "output": {"type": "scalar_metric"},
+  "_builtin": true
+}

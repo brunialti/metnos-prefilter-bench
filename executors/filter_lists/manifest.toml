@@ -1,0 +1,107 @@
+# Manifest dell'executor `filter_lists` — Metnos (ADR 15/5/2026).
+# Operatori logici set ops fra 2 liste di entries.
+
+manifest_format = "1.0"
+
+name        = "filter_lists"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["intersect", "intersezione", "union", "unione",
+                "differenza", "difference", "overlap", "sovrappone",
+                "sovrapposizione", "in comune", "operazioni liste",
+                "set", "AND tra liste", "filter lists"]
+
+[description]
+it = "SCOPO: operazioni fra DUE liste di entries (A=from_step, B=with_step) abbinate su `on_keys` (§7.3: parametrico via `op`, non un executor per operazione). PATTERN: dedup monitor -> filter_lists(op=\"delta\", from_step=A, with_step=B, on_keys=[\"number\"], delta_field=\"updated_at\") = nuovi + cambiati dal watermark (gestisce le RIAPERTURE: replica utente -> updated_at avanza -> torna nel delta); altri op: intersect (AND su chiave), union, difference (A\\B), symdiff, overlap (AND temporale auto-detect). NON: set ops senza `with_step`/`on_keys`; confondere con filter_entries (filtri MONO-lista) o compute_entries (aggregati SCALARI). OUT: {ok, op, entries, metadata{count_a,count_b,count_out}}."
+en = "SCOPO: operations between TWO lists of entries (A=from_step, B=with_step) matched on `on_keys` (§7.3: parametric via `op`, not one executor per operation). PATTERN: monitor dedup -> filter_lists(op=\"delta\", from_step=A, with_step=B, on_keys=[\"number\"], delta_field=\"updated_at\") = new + changed since watermark (handles RE-OPENS: user reply -> updated_at advances -> back in delta); other ops: intersect (AND on key), union, difference (A\\B), symdiff, overlap (temporal AND auto-detect). NON: set ops without `with_step`/`on_keys`; confuse with filter_entries (MONO-list filters) or compute_entries (SCALAR aggregates). OUT: {ok, op, entries, metadata{count_a,count_b,count_out}}."
+
+[code]
+files  = ["filter_lists.py"]
+digest = "sha256:94030e7ee235fa4e4dfbf7834cdc71862c5e2d410f191fee78a9381ac492bc35"
+
+[args]
+type     = "object"
+required = ["op"]
+
+[args.properties.op]
+type        = "string"
+enum        = ["intersect", "union", "difference", "symdiff", "overlap", "delta"]
+
+[args.properties.op.description]
+it = "Operazione. delta = da A ritorna NUOVI (chiave non in B) + CAMBIATI (con `delta_field`, A>B) — dedup universale dei monitor. Set ops (intersect/union/difference/symdiff) richiedono with_step + on_keys. Overlap = AND temporale auto-detect."
+en = "Operation. delta = from A returns NEW (key not in B) + CHANGED (with `delta_field`, A>B) — universal monitor dedup. Set ops (intersect/union/difference/symdiff) require with_step + on_keys. Overlap = temporal AND auto-detect."
+
+[args.properties.delta_field]
+type        = "string"
+
+[args.properties.delta_field.description]
+it = "Solo op=delta: campo-watermark confrontato fra A e B (es. 'updated_at'). Un'entry abbinata e' CAMBIATA se A[delta_field] > B[delta_field] (ISO/numeri). Omesso = solo nuovi."
+en = "op=delta only: watermark field compared between A and B (e.g. 'updated_at'). A matched entry is CHANGED if A[delta_field] > B[delta_field] (ISO/numbers). Omitted = new only."
+
+[args.properties.from_step]
+type        = "integer"
+minimum     = 1
+
+[args.properties.from_step.description]
+it = "Step della lista PRIMARIA (A). Il runtime espande in entries via scratchpad."
+en = "Step of PRIMARY list (A). Runtime expands to entries via scratchpad."
+
+[args.properties.with_step]
+type        = "integer"
+minimum     = 1
+
+[args.properties.with_step.description]
+it = "Step della lista SECONDARIA (B). Il runtime espande e inietta come `entries_b`."
+en = "Step of SECONDARY list (B). Runtime expands and injects as `entries_b`."
+
+[args.properties.on_keys]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.on_keys.description]
+it = "Lista field name su cui matchare le entries. MATCH ESATTO sui valori. Composite: on_keys=['lat','lon'] matcha la coppia."
+en = "List of field names to match entries on. EXACT MATCH on values. Composite: on_keys=['lat','lon'] matches the pair."
+
+[args.properties.entries]
+type        = "array"
+
+[args.properties.entries.description]
+it = "Lista PRIMARIA inline (alternativa a from_step). Solitamente non passata direttamente dal PLANNER."
+en = "Inline PRIMARY list (alternative to from_step). Usually not passed directly by PLANNER."
+
+[args.properties.entries_b]
+type        = "array"
+
+[args.properties.entries_b.description]
+it = "Lista SECONDARIA inline (alternativa a with_step). Solitamente non passata direttamente."
+en = "Inline SECONDARY list (alternative to with_step). Usually not passed directly."
+
+[[tests]]
+name   = "intersect_path"
+input  = { op = "intersect", entries = [{path="a"},{path="b"},{path="c"}], entries_b = [{path="b"},{path="c"},{path="d"}], on_keys = ["path"] }
+expect = { ok = true, metadata_field_eq = { count_out = 2 } }
+
+[[tests]]
+name   = "delta_nuovi_e_cambiati_dal_watermark"
+input  = { op = "delta", entries = [{number=6, updated_at="2026-06-02T10:00:00Z"},{number=7, updated_at="2026-06-01T08:00:00Z"},{number=9, updated_at="2026-06-02T11:00:00Z"}], entries_b = [{number=6, updated_at="2026-06-01T09:00:00Z"},{number=7, updated_at="2026-06-01T08:00:00Z"}], on_keys = ["number"], delta_field = "updated_at" }
+expect = { ok = true, metadata_field_eq = { count_out = 2 } }
+
+[[tests]]
+name   = "delta_senza_field_solo_nuovi"
+input  = { op = "delta", entries = [{id="a"},{id="b"}], entries_b = [{id="a"}], on_keys = ["id"] }
+expect = { ok = true, metadata_field_eq = { count_out = 1 } }
+
+[[tests]]
+name   = "difference_id"
+input  = { op = "difference", entries = [{id=1},{id=2},{id=3}], entries_b = [{id=2}], on_keys = ["id"] }
+expect = { ok = true, metadata_field_eq = { count_out = 2 } }
+
+[[tests]]
+name   = "union_dedup"
+input  = { op = "union", entries = [{k="a"},{k="b"}], entries_b = [{k="b"},{k="c"}], on_keys = ["k"] }
+expect = { ok = true, metadata_field_eq = { count_out = 3 } }
+
+[[tests]]
+name   = "overlap_temporal"
+input  = { op = "overlap", entries = [{start="2026-01-01T10:00:00", end="2026-01-01T11:00:00"}], entries_b = [{start="2026-01-01T10:30:00", end="2026-01-01T11:30:00"}] }
+expect = { ok = true, metadata_field_eq = { count_out = 1 } }

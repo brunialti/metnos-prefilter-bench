@@ -1,0 +1,118 @@
+# Manifest dell'executor `share_files` — Metnos v1.1 (24/5/2026).
+# Naming compositivo §2.2: verbo_oggetto_plurale. Verb `share` (ADR 0128):
+# OUTBOUND CONSENT grant ACL remoto, distinto da `send` (copy/notify) e
+# `set` (upsert stato interno).
+
+manifest_format = "1.0"
+
+name        = "share_files"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity = [
+    "share", "condividi", "condividere", "grant", "give-access",
+    "permesso", "permission", "permessi",
+    "files", "file", "documento", "drive", "cloud",
+    "invita", "invite",
+]
+
+revertible = false
+lifecycle  = "active"
+
+[description]
+it = "Concede accesso (ACL grant) a uno o piu' file remoti senza spostarli ne' duplicarli (ADR 0128). USO CORRETTO: 'condividi questo file con anna@example.com in sola lettura' -> share_files(file_id='abc', email='anna@example.com', role='reader'). NON CONFONDERE CON `send_messages` (invia una COPIA via mail), `set_messages` (cambia label/metadata) o `write_files` (sovrascrive contenuto). Type: 'user'/'group' richiede email; 'domain' richiede domain; 'anyone' link pubblico. Role: 'reader' (default), 'commenter', 'writer'. Backend: solo client='google_workspace' (filesystem locale non ha ACL standard)."
+en = "Grant access (ACL grant) to one or more remote files without moving or duplicating them (ADR 0128). CORRECT USE: 'share this file with anna@example.com read-only' -> share_files(file_id='abc', email='anna@example.com', role='reader'). DO NOT CONFUSE WITH `send_messages` (sends a COPY via mail), `set_messages` (changes label/metadata) or `write_files` (overwrites content). Type: 'user'/'group' requires email; 'domain' requires domain; 'anyone' public link. Role: 'reader' (default), 'commenter', 'writer'. Backend: only client='google_workspace' (local filesystem has no standard ACL)."
+
+[code]
+files  = ["share_files.py"]
+digest = "sha256:07af8c144e3cc7ffd2b0c4ae4cc363bc2b1ece0d14af96fc0171b02442b6567e"
+
+[args]
+type = "object"
+
+[args.properties.file_ids]
+type  = "array"
+items = { type = "string" }
+
+[args.properties.file_ids.description]
+it = "Lista di file_id Drive. MATCH ESATTO."
+en = "List of Drive file IDs. EXACT MATCH."
+
+[args.properties.file_id]
+type = "string"
+
+[args.properties.file_id.description]
+it = "Singolo file_id (alternativo a file_ids per N=1)."
+en = "Single file ID (alternative to file_ids for N=1)."
+
+[args.properties.email]
+type = "string"
+
+[args.properties.email.description]
+it = "Email del destinatario (required per type='user' o 'group'). MATCH ESATTO."
+en = "Recipient email (required for type='user' or 'group'). EXACT MATCH."
+
+[args.properties.domain]
+type = "string"
+
+[args.properties.domain.description]
+it = "Dominio (required per type='domain', es. 'example.com'). MATCH ESATTO."
+en = "Domain (required for type='domain', e.g., 'example.com'). EXACT MATCH."
+
+[args.properties.role]
+type    = "string"
+enum    = ["reader", "commenter", "writer", "fileOrganizer", "organizer", "owner"]
+default = "reader"
+
+[args.properties.role.description]
+it = "Ruolo concesso. Default 'reader'. MATCH ESATTO."
+en = "Granted role. Default 'reader'. EXACT MATCH."
+
+[args.properties.type]
+type    = "string"
+enum    = ["user", "group", "domain", "anyone"]
+default = "user"
+
+[args.properties.type.description]
+it = "Tipo permesso. 'user'/'group' richiede email; 'domain' richiede domain; 'anyone' link pubblico. Default 'user'. MATCH ESATTO."
+en = "Permission type. 'user'/'group' requires email; 'domain' requires domain; 'anyone' public link. Default 'user'. EXACT MATCH."
+
+[args.properties.notify]
+type    = "boolean"
+default = false
+
+[args.properties.notify.description]
+it = "Se true, invia email di notifica al destinatario. Default false."
+en = "If true, send notification email to recipient. Default false."
+
+[args.properties.client]
+type    = "string"
+enum    = ["google_workspace"]
+default = "google_workspace"
+
+[args.properties.client.description]
+it = "Backend: solo 'google_workspace' (Drive). Local fs non supportato."
+en = "Backend: only 'google_workspace' (Drive). Local fs not supported."
+
+[[capabilities]]
+name = "drive:permissions"
+hint = ["drive:share"]
+
+[[tests]]
+name   = "args_invalidi_no_ids"
+input  = { email = "x@y.z", role = "reader" }
+expect = { ok = false }
+
+[[tests]]
+name   = "args_invalidi_user_no_email"
+input  = { file_id = "abc", role = "reader", type = "user" }
+expect = { ok = false, error_contains = "email" }
+
+[[tests]]
+name   = "args_invalidi_client_local"
+input  = { file_id = "abc", email = "x@y.z", client = "local" }
+expect = { ok = false, error_contains = "Operazione non applicabile per questo provider" }
+
+[[tests]]
+name   = "args_invalidi_lista_vuota_ids"
+input  = { file_ids = [], email = "x@y.z" }
+expect = { ok = false }

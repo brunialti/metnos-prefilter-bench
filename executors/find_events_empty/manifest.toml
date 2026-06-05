@@ -1,0 +1,111 @@
+# Manifest dell'executor `find_events_empty` — Metnos v1.1
+# Naming compositivo §2.2: azione_oggetto_qualifier (qualifier `_empty` ADR 0127).
+# Dispatcher canonical (sequel di delete_events, 13/5/2026).
+
+manifest_format = "1.0"
+
+name        = "find_events_empty"
+version     = "0.4.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "slot libero", "slot liberi", "orari liberi", "finestre libere", "disponibilita",
+                "spazio libero in agenda", "buchi in agenda", "free slots", "availability",
+                "openings", "available times", "morning free", "afternoon free",
+                "trova un orario", "proponi orari", "suggerisci slot", "empty slot",
+                "slot vuoti", "finestre vuote"
+            ]
+revertible  = false
+lifecycle   = "active"
+
+[description]
+it = "Computa le finestre VUOTE/LIBERE del calendario nelle time_windows, sottraendo gli eventi gia' presenti. Dispatcher canonical: instrada al backend giusto in base a `client` (default `local`). Qualifier `_empty` (ADR 0127): ritorna lo stato vuoto/sotto-soglia del dominio. DEVI usarla per query come «orari liberi», «slot vuoti», «finestre libere», «proponi N mattine», «suggerisci uno slot mercoledi». NON DEVI usarla per LEGGERE gli eventi (usa read_events) ne' per CREARE eventi (usa create_events). Vettoriale §2.1: ritorna `entries: list` con {kind:'free_slot', start, end, duration_min, calendar_id}. USO CORRETTO: pipeline propose-and-fire (ADR 0127): get_now -> find_events_empty(time_windows=['next-week'], size='1hour', time_of_day='morning') -> get_inputs(kind='choice', from_step=N, display_template='{start} - {end}', value_field='start') -> create_events(start=<scelta>). Backend `local` (default) e' uno STUB esplicito: ritorna ok=false con error_class='not_implemented' finche' un plugin calendar non viene aggiunto. `size` accetta '1hour'/'60min'/'30 min'/'2 hours'/'90' (bare number = minuti). `time_windows` e' una lista (anche N=1), default ['next-week']. `time_of_day` accetta 'morning'/'afternoon'/'evening'/'any' o range 'HH:MM-HH:MM'."
+en = "Computes the EMPTY/FREE windows of the calendar within time_windows, subtracting events already present. Canonical dispatcher: routes to the right backend based on `client` (default `local`). Qualifier `_empty` (ADR 0127): returns the empty/under-threshold state of the domain. MUST be used for queries like 'free slots', 'empty slots', 'available windows', 'propose N mornings', 'suggest a slot wednesday'. MUST NOT be used to READ calendar events (use read_events) nor to CREATE events (use create_events). Vectorial §2.1: returns `entries: list` with {kind:'free_slot', start, end, duration_min, calendar_id}. CORRECT USE: propose-and-fire pipeline (ADR 0127): get_now -> find_events_empty(time_windows=['next-week'], size='1hour', time_of_day='morning') -> get_inputs(kind='choice', from_step=N, display_template='{start} - {end}', value_field='start') -> create_events(start=<choice>). Backend `local` (default) is an explicit STUB: returns ok=false with error_class='not_implemented' until a calendar plugin is added. `size` accepts '1hour'/'60min'/'30 min'/'2 hours'/'90' (bare number = minutes). `time_windows` is a list (even N=1), default ['next-week']. `time_of_day` accepts 'morning'/'afternoon'/'evening'/'any' or range 'HH:MM-HH:MM'."
+
+[code]
+files  = ["find_events_empty.py"]
+digest = "sha256:84dbcb35ddc434c40d18dc56e5c39d722b7d36dd722fe8c986364adee187e195"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.time_windows]
+type    = "array"
+items   = { type = "string" }
+default = ["next-week"]
+
+[args.properties.time_windows.description]
+it = "Lista di finestre temporali (plurale §2.1, accetta anche N=1). Default ['next-week']. Elementi: 'today', 'tomorrow', 'last-Nd', 'next-Nd', 'last-week', 'next-week', 'this-week', 'next-month', range ISO 'YYYY-MM-DD/YYYY-MM-DD'."
+en = "List of time windows (plural §2.1, also accepts N=1). Default ['next-week']. Elements: 'today', 'tomorrow', 'last-Nd', 'next-Nd', 'last-week', 'next-week', 'this-week', 'next-month', ISO range 'YYYY-MM-DD/YYYY-MM-DD'."
+
+[args.properties.size]
+type    = "string"
+default = "1hour"
+
+[args.properties.size.description]
+it = "Soglia minima dello slot, unit-aware. Default '1hour'. Esempi: '1hour', '60min', '30 min', '2 hours', '90' (bare number = minuti). Slot < size vengono scartati."
+en = "Minimum slot threshold, unit-aware. Default '1hour'. Examples: '1hour', '60min', '30 min', '2 hours', '90' (bare number = minutes). Slots < size are discarded."
+
+[args.properties.time_of_day]
+type    = "string"
+default = ""
+
+[args.properties.time_of_day.description]
+it = "Filtro fascia oraria. Canonical: 'morning' (06:00-12:00), 'afternoon' (12:00-18:00), 'evening' (18:00-22:00), 'any' o '' (default). Range: 'HH:MM-HH:MM' (es. '09:00-13:00')."
+en = "Time-of-day filter. Canonical: 'morning' (06:00-12:00), 'afternoon' (12:00-18:00), 'evening' (18:00-22:00), 'any' or '' (default). Range: 'HH:MM-HH:MM' (e.g. '09:00-13:00')."
+
+[args.properties.max_results]
+type    = "integer"
+default = 10
+minimum = 0
+
+[args.properties.max_results.description]
+it = "Cap superiore (§2.7): max free slot ritornati. 0 = nessun cap. Default 10."
+en = "Upper cap (§2.7): max free slots returned. 0 = no cap. Default 10."
+
+[args.properties.calendar_id]
+type    = "string"
+default = "primary"
+
+[args.properties.calendar_id.description]
+it = "Identificatore del calendario. Default 'primary'."
+en = "Calendar identifier. Default 'primary'."
+
+[args.properties.client]
+type        = "string"
+enum        = ["local"]
+default     = "local"
+
+[args.properties.client.description]
+it = "Implementazione backend (default 'local' = calendar locale via ICS file, attualmente stub). Plugin esterni futuri potranno aggiungere altri client."
+en = "Backend implementation (default 'local' = local calendar via ICS file, currently stub). Future external plugins may add other clients."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  entries: Array<{kind: 'free_slot', start: ISO, end: ISO, duration_min: int, calendar_id: str}>,
+  used: int,
+  available_total?: int,
+  truncated?: bool,
+  truncated_what?: str,
+  cap_field?: str,
+  cap_value?: int,
+  error?: str,
+  error_class?: str
+}
+"""
+
+[[capabilities]]
+name = "metnos:read"
+hint = ["~/.local/share/metnos/calendar.ics"]
+
+[[tests]]
+name   = "ritorna_entries_implementato"
+input  = { time_windows = ["tomorrow"], size = "1hour" }
+expect = { ok = true, has_field = "entries" }
+
+[[tests]]
+name   = "unsupported_client_fails"
+input  = { client = "gdrive" }
+expect = { ok = false, error_contains = "Operazione non applicabile per questo provider" }

@@ -1,0 +1,8 @@
+{
+  "name": "final_answer",
+  "manifest_mtime": 0,
+  "inputs": {},
+  "output": {"type": "any", "schema": {}},
+  "_builtin": true,
+  "_terminator": true
+}

@@ -1,0 +1,84 @@
+# Manifest dell'executor `create_calendars` — Metnos v1.1
+# Naming compositivo §2.2: azione_oggetto. Object `calendars` (3/6/2026).
+# Crea un CALENDARIO-contenitore Google (distinto da create_events = evento).
+
+manifest_format = "1.0"
+
+name        = "create_calendars"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "crea calendario", "nuovo calendario", "create calendar", "new calendar",
+    "aggiungi calendario", "add calendar", "calendario", "calendar"
+]
+revertible       = true
+reverse_pattern  = "delete_calendars_by_id"
+lifecycle        = "active"
+
+[description]
+it = "SCOPO: crea un NUOVO calendario-contenitore Google (non un evento). PATTERN: create_calendars(summary=\"metnos\"). NON: NON per creare un evento/appuntamento -> create_events; NON per elencare i calendari -> list_calendars; NON per cancellarli -> delete_calendars. OUT: results=[{ok, calendar_id, summary}]."
+en = "SCOPO: create a NEW Google calendar container (not an event). PATTERN: create_calendars(summary=\"metnos\"). NON: NOT to create an event/appointment -> create_events; NOT to list calendars -> list_calendars; NOT to delete them -> delete_calendars. OUT: results=[{ok, calendar_id, summary}]."
+
+[code]
+files  = ["create_calendars.py"]
+digest = "sha256:2eb66fc7c3d54012c91d61d6469c867e602ee66627e790143b24726348bb8acc"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.summary]
+type = "string"
+
+[args.properties.summary.description]
+it = "Nome del nuovo calendario. Es. 'metnos', 'Lavoro'. Se omesso, default 'Metnos'."
+en = "Name of the new calendar. E.g. 'metnos', 'Work'. If omitted, default 'Metnos'."
+
+[args.properties.description]
+type = "string"
+
+[args.properties.description.description]
+it = "Descrizione opzionale del calendario (testo libero)."
+en = "Optional calendar description (free text)."
+
+[args.properties.timezone]
+type = "string"
+
+[args.properties.timezone.description]
+it = "Timezone IANA opzionale, es. 'Europe/Rome'. Se omesso, default Google."
+en = "Optional IANA timezone, e.g. 'Europe/Rome'. If omitted, Google default."
+
+[args.properties.client]
+type = "string"
+enum = ["google_workspace"]
+runtime_resolved = true
+
+[args.properties.client.description]
+it = "Backend. DEVI OMETTERLO: i calendari-contenitore esistono solo su Google → il runtime forza google_workspace."
+en = "Backend. YOU MUST OMIT IT: calendar containers exist only on Google → the runtime forces google_workspace."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  results: Array<dict>,
+  n_created: int,
+  used: int,
+  _undo?: {pattern: 'delete_calendars_by_id', ids: [str]},
+  error?: str,
+  error_class?: str
+}
+"""
+
+[[capabilities]]
+name = "metnos:write"
+
+[[tests]]
+name   = "non_dict_args_fails"
+input  = "notadict"
+expect = { ok = false }
+
+[[tests]]
+name   = "wrong_client_rejected"
+input  = { summary = "Test", client = "local" }
+expect = { ok = false, error_contains = "local" }

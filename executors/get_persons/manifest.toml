@@ -1,0 +1,54 @@
+# Manifest dell'executor `get_persons` — Metnos v1.1
+# Naming compositivo: azione_oggetto. PR2 persons registry.
+
+manifest_format = "1.0"
+
+name        = "get_persons"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["chi", "elenca persone", "lista persone", "registro persone",
+                "quante foto", "list persons", "who is registered",
+                "registered persons", "person info", "registry"]
+
+[description]
+it = "Lookup nel registro nominale di persone. Senza argomenti ritorna la lista completa di tutte le persone enrollate. Con `name` ritorna i dettagli di una sola persona (lista vuota + status='unknown_name' se non trovata; piu' candidati con ambiguous=true se il nome matcha piu' persone via token-anywhere). DEVI usarla per 'chi è registrato?', 'quante foto di Carol ho enrollato?', 'mostra il registro persone'. NON DEVI usarla per cercare foto della persona (uso `find_persons_indices(name=...)`); NON DEVI usarla per enrollare (uso `set_persons`). USO CORRETTO: `get_persons()` o `get_persons(name='Carol')`. ERRORE: `get_persons(name='')` (passa null/omitti per lista intera). Output: `{ok, entries:[{slug, name, n_examples, created_at, updated_at, examples?}], n_entries, ambiguous?, status?, final_message_hint?}`."
+en = "Lookup in the named registry of persons. Without arguments returns the full list of all enrolled persons. With `name` returns the details of a single person (empty list + status='unknown_name' if not found; multiple candidates with ambiguous=true if the name matches multiple persons via token-anywhere). MUST be used for 'who is registered?', 'how many photos of Carol have I enrolled?', 'show the persons registry'. MUST NOT be used to search photos of the person (use `find_persons_indices(name=...)`); MUST NOT be used to enroll (use `set_persons`). CORRECT USE: `get_persons()` or `get_persons(name='Carol')`. ERROR: `get_persons(name='')` (pass null/omit for full list). Output: `{ok, entries:[{slug, name, n_examples, created_at, updated_at, examples?}], n_entries, ambiguous?, status?, final_message_hint?}`."
+
+[code]
+files  = ["get_persons.py"]
+digest = "sha256:48c5ac8ff34ec30a7b48c949b44b28cd08ab9c2afcfe608e7b8e452b71dde4d2"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.name]
+type        = "string"
+
+[args.properties.name.description]
+it = "Nome della persona da cercare (opzionale). Se omesso o null, ritorna l'elenco completo. Se passato e introvabile, ritorna lista vuota + status='unknown_name'."
+en = "Name of the person to look up (optional). If omitted or null, returns the full list. If passed and not found, returns empty list + status='unknown_name'."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  entries: Array<{slug, name, n_examples, created_at, updated_at, examples?}>,
+  n_entries?: int,
+  ambiguous?: bool,
+  status?: 'unknown_name',
+  final_message_hint?: str,
+  error?: str
+}
+"""
+
+[[capabilities]]
+name = "metnos:read"
+hint = ["~/.local/share/metnos/persons.sqlite"]
+
+reversible = true
+
+[[tests]]
+name   = "rejects_non_string_name"
+input  = { name = 42 }
+expect = { ok = false, error_contains = "string" }

@@ -1,0 +1,50 @@
+manifest_format = "1.0"
+name        = "compute_signatures"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity = ["compute", "canonicalize", "signature", "reversibility", "seed", "bootstrap"]
+
+revertible       = true
+reverse_pattern  = []
+
+[description]
+it = "Operazioni di calcolo / trasformazione sulle signature. Un solo executor, parametro `op` che seleziona la modalita':\n\n- op='command': canonicalizza un argv in una signature stabile 'binary:subcmd:target_kind'. Argomento richiesto: argv (lista). Output: {signature, binary, subcommand_or_flag, target_kind, requires_sudo}. Algoritmo deterministico, no LLM.\n\n- op='reversibility': classifica un comando per reversibilita'. Argomento richiesto: signature. Output: {class:'reversible'|'irreversible'|'unknown', undo_hint, reason}. Tag informativo per la carta di approvazione.\n\n- op='seed_apply': applica idempotente il seed file v*.toml al DB. Argomento opzionale: seed_path. Output: {applied, skipped, seed_version, upgraded}."
+en = "Calculation / transformation operations on signatures. A single executor, parameter `op` selects the mode:  - op='command': canonicalizes an argv into a stable signature 'binary:subcmd:target_kind'. Required argument: argv (list). Output: {signature, binary, subcommand_or_flag, target_kind, requires_sudo}. Deterministic algorithm, no LLM.  - op='reversibility': classifies a command for reversibility. Required argument: signature. Output: {class:'reversible'|'irreversible'|'unknown', undo_hint, reason}. Informative tag for the approval card.  - op='seed_apply': idempotently applies the seed file v*.toml to the DB. Optional argument: seed_path. Output: {applied, skipped, seed_version, upgraded}."
+
+[code]
+files  = ["compute_signatures.py"]
+digest = "sha256:9fc2a9e9975817b7363e3990dd766b390e540123e3873ddd4aaa15e67f1d6673"
+
+[args]
+type     = "object"
+required = ["op"]
+
+[args.properties.op]
+type        = "string"
+enum        = ["command", "reversibility", "seed_apply"]
+
+[args.properties.op.description]
+it = "Operazione da eseguire."
+en = "Operation to be executed."
+
+[args.properties.argv]
+type        = "array"
+items       = { type = "string" }
+
+[args.properties.argv.description]
+it = "Per op='command': argv da canonicalizzare. MATCH ESATTO sui token (security): wildcard `*`/`?` NON supportati e non interpretati come glob — un token argv = un token shell letterale."
+en = "For op='command': argv to be canonicalized. EXACT MATCH on tokens (security): wildcards `*`/`?` NOT supported and not interpreted as glob — one argv token = one literal shell token."
+
+[args.properties.signature]
+type        = "string"
+
+[args.properties.signature.description]
+it = "Per op='reversibility': signature da classificare."
+en = "For op='reversibility': signature to classify."
+
+[args.properties.seed_path]
+type        = "string"
+
+[args.properties.seed_path.description]
+it = "Per op='seed_apply': path del seed file. Default runtime/safety_seeds/v1.toml."
+en = "For op='seed_apply': path of the seed file. Default runtime/safety_seeds/v1.toml."

@@ -1,0 +1,77 @@
+{
+  "name": "compute_files_loc",
+  "manifest_mtime": 1779107577,
+  "inputs": {
+    "paths": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "file_path[]",
+      "role": "source",
+      "format_hint": "list of strings representing files or directories"
+    },
+    "include_ext": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "text_path[]",
+      "role": "filter",
+      "format_hint": "list of extensions like ['.py', '.js']"
+    },
+    "exclude_path_substrings": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "text_path[]",
+      "role": "filter",
+      "format_hint": "list of substrings to skip in paths"
+    },
+    "count_blank": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean flag"
+    },
+    "count_comments": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": true,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean flag"
+    },
+    "max_files": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 50000,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer limit"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "files": {
+        "file_path": "file_path",
+        "total_lines": "count",
+        "total_blank": "count",
+        "total_comments": "count"
+      },
+      "truncated": "bool",
+      "cap_field": "name"
+    }
+  },
+  "unresolved_args": [
+    "include_ext",
+    "exclude_path_substrings"
+  ],
+  "consumes": [
+    "filter:text_path",
+    "filter:file_path"
+  ],
+  "propagates_constraints": false
+}

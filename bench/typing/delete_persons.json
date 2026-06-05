@@ -1,0 +1,82 @@
+{
+  "name": "delete_persons",
+  "manifest_mtime": 1778422439,
+  "inputs": {
+    "names": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "name[]",
+      "role": "filter",
+      "format_hint": "list of person names"
+    },
+    "name": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "single person name"
+    },
+    "entries": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "person_entry[]",
+      "role": "piping",
+      "format_hint": "list of person objects from upstream"
+    },
+    "all": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": null,
+      "semantic_type": "bool",
+      "role": "filter",
+      "format_hint": "purge all flag"
+    },
+    "chosen_slug": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "slug",
+      "role": "filter",
+      "format_hint": "exact unique identifier"
+    },
+    "chosen_slugs": {
+      "structural_type": "array",
+      "required": false,
+      "default": null,
+      "semantic_type": "slug[]",
+      "role": "filter",
+      "format_hint": "list of exact unique identifiers"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object",
+    "schema": {
+      "ok": "bool",
+      "decision": "free_text",
+      "needs_inputs": "json_object",
+      "results": "person_entry[]",
+      "n_removed": "count",
+      "removed_examples_total": "count",
+      "unknown_names": "name[]",
+      "ambiguous": "bool",
+      "error": "free_text",
+      "final_message_hint": "free_text"
+    }
+  },
+  "unresolved_args": [
+    "names",
+    "entries",
+    "chosen_slug",
+    "chosen_slugs"
+  ],
+  "consumes": [
+    "filter:name",
+    "filter:slug",
+    "piping:person_entry[]"
+  ],
+  "propagates_constraints": false
+}

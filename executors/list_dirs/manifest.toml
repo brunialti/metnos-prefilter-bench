@@ -1,0 +1,109 @@
+# Manifest dell'executor `fs_list` — Metnos v1.1
+# Promosso a seed il 27 aprile 2026.
+
+manifest_format = "1.0"
+
+name        = "list_dirs"
+version     = "0.2.0"
+author      = "Roberto Brunialti"
+
+# Cosa fa: una frase per il LLM. Cosa NON fa: una frase di rinvio al composer.
+affinity    = [
+    "list", "elenca", "lista", "ls", "dir", "directory", "contenuto", "cartella", "metadata"
+            ]
+
+[description]
+it = """Lista TUTTI i contenuti diretti di una directory (file + sub-dir + symlink + sistema come Thumbs.db/.DS_Store). NON filtra.
+
+Output entries=[{name, type=file|dir|symlink, kind=image|video|audio|text|document|archive|binary|dir|symlink, mime, size, mtime}].
+
+DEVI: per categorie ("foto"/"video"/"documenti") pipeline list_dirs→filter_entries(kind=...)→operazione.
+NON DEVI: saltare filter_entries prima di move/delete — toccherebbe dir e sistema.
+
+Alternativa: find_files(patterns=["*.jpg",...]) filtra alla sorgente."""
+en = """List ALL direct contents of a directory (files + sub-dirs + symlinks + system files like Thumbs.db/.DS_Store). DOES NOT filter.
+
+Output entries=[{name, type=file|dir|symlink, kind=image|video|audio|text|document|archive|binary|dir|symlink, mime, size, mtime}].
+
+DO: for categories ("photos"/"videos"/"documents") pipeline list_dirs→filter_entries(kind=...)→operation.
+DO NOT: skip filter_entries before move/delete — it would touch dirs and system files.
+
+Alternative: find_files(patterns=["*.jpg",...]) filters at source."""
+
+[code]
+files  = ["list_dirs.py"]
+digest = "sha256:3db65261bbdd9b559f69ed0a516adffbaf2836db232a502f34fd80dea1a64397"
+
+[args]
+type     = "object"
+required = ["path"]
+
+[args.properties.path]
+type        = "string"
+
+[args.properties.path.description]
+it = "La directory da elencare. Path assoluto, oppure ~ che viene espanso (es. '~/images', '/opt/metnos'). Deve essere dentro lo scope di lettura concesso."
+en = "The directory to list. Absolute path, or ~ which is expanded (e.g., '~/images', '/opt/metnos'). Must be within the granted read scope."
+
+[args.properties.recursive]
+type        = "boolean"
+default     = false
+
+[args.properties.recursive.description]
+it = "Se true, lista anche il contenuto delle sottocartelle. Se false (default), solo gli elementi diretti della directory."
+en = "If true, also list the content of the subdirectories. If false (default), only the direct elements of the directory."
+
+[args.properties.sort]
+type        = "string"
+enum        = ["name", "mtime", "size"]
+default     = "name"
+
+[args.properties.sort.description]
+it = "Come ordinare la lista. 'name' = alfabetico (default), 'mtime' = più recente prima, 'size' = più grande prima."
+en = "How to sort the list. 'name' = alphabetical (default), 'mtime' = most recent first, 'size' = largest first."
+
+[args.properties.max_results]
+type        = "integer"
+minimum     = 1
+default     = 1000
+
+[args.properties.max_results.description]
+it = "Numero massimo di elementi da restituire. Default 1000."
+en = "Maximum number of elements to return. Default 1000."
+
+[args.properties.max_depth]
+type        = "integer"
+minimum     = 0
+default     = 10
+
+[args.properties.max_depth.description]
+it = "Quanti livelli di sottocartelle considerare in modalità ricorsiva. 0 = solo la dir indicata. Default 10."
+en = "How many levels of subdirectories to consider in recursive mode. 0 = only the indicated dir. Default 10."
+
+[[capabilities]]
+name = "fs:read"
+hint = ["~/notes/**", "/tmp/**"]
+
+[[tests]]
+name     = "lista_dir_semplice"
+setup    = "mkdir -p /tmp/metnos_test_fs_list && touch /tmp/metnos_test_fs_list/a.txt /tmp/metnos_test_fs_list/b.txt"
+input    = { path = "/tmp/metnos_test_fs_list" }
+expect   = { ok = true, metadata_field_eq = { count = 2 } }
+teardown = "rm -rf /tmp/metnos_test_fs_list"
+
+[[tests]]
+name     = "ricorsivo_include_subdir"
+setup    = "mkdir -p /tmp/metnos_test_fs_list/sub && touch /tmp/metnos_test_fs_list/a.txt /tmp/metnos_test_fs_list/sub/b.txt"
+input    = { path = "/tmp/metnos_test_fs_list", recursive = true }
+expect   = { ok = true, metadata_field_gte = { count = 3 } }
+teardown = "rm -rf /tmp/metnos_test_fs_list"
+
+[[tests]]
+name   = "fallisce_su_path_inesistente"
+input  = { path = "/tmp/metnos_does_not_exist_xyz" }
+expect = { ok = false, error_contains = "Percorso non trovato" }
+
+[[tests]]
+name   = "blocca_path_fuori_scope"
+input  = { path = "/etc" }
+expect = { ok = false, error_contains = "outside allowed scope" }

@@ -1,0 +1,49 @@
+{
+  "name": "read_files_xlsx",
+  "manifest_mtime": 1778121529,
+  "inputs": {
+    "paths": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "file_path[]",
+      "role": "source",
+      "format_hint": "list of .xlsx file paths"
+    },
+    "sheet": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "sheet name or 0-based index string"
+    },
+    "has_header": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": true,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean"
+    },
+    "max_rows": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 10000,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "integer 1..1000000"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "json_object[]",
+    "schema": {
+      "row": "json_object"
+    }
+  },
+  "unresolved_args": [
+    "sheet"
+  ],
+  "propagates_constraints": false
+}

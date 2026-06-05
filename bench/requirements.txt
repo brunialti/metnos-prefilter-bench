@@ -1,0 +1,12 @@
+# Core benchmark: NO non-stdlib dependencies.
+#
+# The production tool-selection path (token_flat + typed rules) reproduces with
+# a plain Python 3.10+ interpreter — that is the point of the write-up: it runs
+# on a low-power box with nothing to install.
+#
+#   python3 bench/repro_prefilter_bench.py --mode comparison
+#
+# The optional DENSE baseline (BGE-M3) is what a skeptic runs to verify the
+# "it's a tie" claim. It needs the embedding model and is NOT pip-trivial; see
+# README.md ("Reproducing the dense baseline"). Absent it, the bench skips the
+# dense rows honestly instead of mislabelling token-flat's fallback as "dense".

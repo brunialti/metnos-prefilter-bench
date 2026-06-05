@@ -1,0 +1,234 @@
+{"query": "cerca foto con una sola persona e viso in primo piano", "first_tool": "find_images_indices"}
+{"query": "cerca foto di una persona", "first_tool": "find_images_indices"}
+{"query": "cerca su web il file sull'organico di diritto della scuola nella provincia di roma", "first_tool": "find_urls"}
+{"query": "cerca su www.atpromaistruzione.it il file sull'organico di diritto della scuola nella provincia di roma", "first_tool": "find_urls"}
+{"query": "cerca su www.atpromaistruzione.it il file sull'organico di diritto della scuola primaria nella provincia di roma", "first_tool": "find_urls"}
+{"query": "cerca foto con volto in primo piano", "first_tool": "find_images_indices"}
+{"query": "cerca foto con una persona", "first_tool": "find_images_indices"}
+{"query": "cerca su web il file sull'organico di diritto della scuola primaria nella provincia di roma", "first_tool": "find_urls"}
+{"query": "quali sono le persone enrolled", "first_tool": "get_persons"}
+{"query": "quali sono le persone enrolled?", "first_tool": "get_persons"}
+{"query": "cancella tutte le persone enrolled", "first_tool": "get_persons"}
+{"query": "dimentica una persona buffa", "first_tool": "delete_persons"}
+{"query": "quali sono le persone enrollate", "first_tool": "get_persons"}
+{"query": "quali sono l persone enrollate", "first_tool": "get_persons"}
+{"query": "cancella una persona", "first_tool": "find_files"}
+{"query": "FOTO una persona", "first_tool": "find_images_indices"}
+{"query": "cerca su web il file sull'organico di diritto della scuola primaria 2026-27 nella provincia di roma", "first_tool": "find_urls"}
+{"query": "termal situation server", "first_tool": "get_processes"}
+{"query": "FOTO una persona in divisa cout", "first_tool": "find_images_indices"}
+{"query": "una persona o una persona in divisa scout", "first_tool": "find_images_indices"}
+{"query": "cerca foto di persone in divisa scout", "first_tool": "find_images_indices"}
+{"query": "cerca una persona al mare", "first_tool": "find_images_indices"}
+{"query": "cerca foto una persona con sfondo mare a partire dal 2020", "first_tool": "find_images_indices"}
+{"query": "foto una persona con neve", "first_tool": "find_images_indices"}
+{"query": "cerca su web il file sull'organico di diritto della scuola dell'infanzia 2026-27 nella provincia di roma", "first_tool": "find_urls"}
+{"query": "posti organico di diritto 2026-27 scuola infanzia della una scuola", "first_tool": "find_urls"}
+{"query": "posti organico di diritto docenti sostegno 2026-27 scuola infanzia della una scuola", "first_tool": "find_urls"}
+{"query": "stato sistema", "first_tool": "get_processes"}
+{"query": "ci sono novità su amd rocm versione 8?", "first_tool": "find_urls"}
+{"query": "che appuntamenti ho domani", "first_tool": "get_now"}
+{"query": "che appuntamento ho domani", "first_tool": "get_now"}
+{"query": "fissa un appuntamento mercoledi mattina dopo le 9 per un ora se c'è posto", "first_tool": "get_proposals"}
+{"query": "report su mailbox", "first_tool": "read_messages"}
+{"query": "annulla ultimo evento", "first_tool": "read_events"}
+{"query": "fissa un appuntamento mercoledi mattina dopo le 9 per un ora se c'è posto e mandamiun aemail di conferma", "first_tool": "set_events"}
+{"query": "fissa un appuntamento mercoledi mattina dopo le 9 per un ora se c'è posto e mandam iuna email di conferma", "first_tool": "admin"}
+{"query": "fissa un appuntamento mercoledi mattina dopo le 9 per un ora se c'è posto e mandami una email di conferma", "first_tool": "set_events"}
+{"query": "fissa un appuntamento il prossimo mercoledi mattina dopo le 9 per un ora se c'è posto e mandami una email di conferma", "first_tool": "set_events"}
+{"query": "proponi per la prossima settimana 3 possibili orari per un appuntamento di una ora la mattina", "first_tool": "set_events"}
+{"query": "guarda mailbox metnos ultime 24 ore", "first_tool": "read_messages"}
+{"query": "proponi per la prossima settimana 3 possibili orari per un appuntamento di una ora la mattina e mandami una email col la scelta", "first_tool": "find_events_empty"}
+{"query": "proponi per la prossima settimana 3 possibili orari per un appuntamento di una ora la mattina, dopo la scelta mandami una email col la scelta", "first_tool": "find_events_empty"}
+{"query": "proponi 3 orari mercoledi mattina per un appuntamento di 1 ora, poi mandami una mail con la scelta", "first_tool": "find_events_empty"}
+{"query": "riassumi le mail di tutte le caselle di posta delle ultime 24 ore", "first_tool": "read_messages"}
+{"query": "consumo in watt del server", "first_tool": "delete_credentials"}
+{"query": "che mail ho oggi", "first_tool": "read_messages"}
+{"query": "proponi 3 orari mercoledi mattina per un appuntamento di 1 ora, poi mandami mail con la scelta", "first_tool": "find_events_empty"}
+{"query": "proponi 3 orari mercoledi mattina e mandami mail con la scelta", "first_tool": "find_events_empty"}
+{"query": "trova i file .py in /tmp/bf_test", "first_tool": "find_files"}
+{"query": "trova file .py in /tmp/bf_test", "first_tool": "find_files"}
+{"query": "elenca i file di /opt/myclaw/runtime", "first_tool": "list_dirs"}
+{"query": "leggi https://www.python.org/about/", "first_tool": "read_urls_html"}
+{"query": "proponi per la prossima settimana 3 possibili orari per un appuntamento di una ora la mattina, dopo la scelta mandami una email con la scelta", "first_tool": "find_events_empty"}
+{"query": "proponi 3 orari per un appuntamento di due ore il pomeriggio settimana prossima e poi mandami una email con la scelta", "first_tool": "find_events_empty"}
+{"query": "propose 3 morning slots next week for a 1 hour appointment and email me the choice", "first_tool": "find_events_empty"}
+{"query": "trova 3 orari liberi per un meeting di un'ora prossima settimana mattina e mandami via email la scelta", "first_tool": "find_events_empty"}
+{"query": "proponi per la prossima settimana 3 possibili orari per un appuntamento con una persona di una ora la mattina, dopo la scelta mandami una email col la scelta", "first_tool": "find_events_empty"}
+{"query": "proponi per la prossima settimana 3 possibili orari per un appuntamento con una persona di una ora la mattina, dopo la scelta mandami una email con la scelta", "first_tool": "find_events_empty"}
+{"query": "crea la cartella /tmp/metnos_test_e2e_v2", "first_tool": "create_dirs"}
+{"query": "trovami foto al mare", "first_tool": "find_images_indices"}
+{"query": "foto in primo piano di una persona", "first_tool": "find_images_indices"}
+{"query": "trovami foto di una persona del 2024", "first_tool": "find_images_indices"}
+{"query": "foto di una persona al mare", "first_tool": "find_images_indices"}
+{"query": "foto di gruppo con una persona", "first_tool": "find_images_indices"}
+{"query": "foto recenti di una persona", "first_tool": "find_images_indices"}
+{"query": "esegui ora il task ricorrente delle mail", "first_tool": "read_messages"}
+{"query": "mostrami i task ricorrenti che ho schedulato", "first_tool": "read_events"}
+{"query": "lista task schedulati", "first_tool": "list_scheduled_tasks"}
+{"query": "storico esecuzioni del task ricorrente", "first_tool": "list_scheduled_tasks"}
+{"query": "mostrami i task ricorrenti", "first_tool": "list_scheduled_tasks"}
+{"query": "Lista timer", "first_tool": "list_scheduled_tasks"}
+{"query": "cancella il task ricorrente riassunto_mail_quotidiano", "first_tool": "delete_credentials"}
+{"query": "cancella il task ricorrente test_regressione", "first_tool": "delete_tasks_scheduled"}
+{"query": "Controlla se è uscita la versione 8 di AMD ROCm su https://rocm.docs.amd.com/en/latest/release/versions.html", "first_tool": "read_urls_html"}
+{"query": "Situazione server", "first_tool": "get_processes"}
+{"query": "Sutuazione server", "first_tool": "get_processes"}
+{"query": "stato del server", "first_tool": "get_processes"}
+{"query": "Riassumi email ultime 24 ore tutte le mailbox", "first_tool": "read_messages"}
+{"query": "Impegni prossimi 7 giorni", "first_tool": "read_events"}
+{"query": "Cerca foto di una persona al mare", "first_tool": "find_images_indices"}
+{"query": "Trova tutti gli appuntamenti 2026 che i iniziano con HLT", "first_tool": "read_events"}
+{"query": "Quante foto di una persona al mare ho dal 2020 al 2024?", "first_tool": "find_images_indices"}
+{"query": "foto di gruppo con almeno una persona e una persona del 2024", "first_tool": "find_images_indices"}
+{"query": "foto di gruppo con almeno una persona o una persona del 2024", "first_tool": "find_persons_indices"}
+{"query": "Storico esecuzioni dei task ricorrenti degli ultimi 7 giorni", "first_tool": "read_tasks_history"}
+{"query": "Foto con una persona in primo piano", "first_tool": "find_images_indices"}
+{"query": "Quante foto in totale ho di una persona, e quanti GB occupano?", "first_tool": "find_images_indices"}
+{"query": "Vedi se ci sono mail importanti melle mie mailbox delle ultime 24 ore", "first_tool": "read_messages"}
+{"query": "Manda a me via email gli appuntamenti di domani", "first_tool": "find_messages"}
+{"query": "Ristorante piu vicino", "first_tool": "request_location_from_user"}
+{"query": "Lista dei timer", "first_tool": "list_tasks"}
+{"query": "Cancella task 24 ,25 ,33 ,28 ,30", "first_tool": "delete_tasks"}
+{"query": "Cancella task 25", "first_tool": "delete_tasks"}
+{"query": "Cancella task 33", "first_tool": "delete_tasks"}
+{"query": "Cancella task 28", "first_tool": "delete_tasks"}
+{"query": "Cancella task 30", "first_tool": "delete_tasks"}
+{"query": "Quali sono i task", "first_tool": "list_tasks"}
+{"query": "Cancella task 32", "first_tool": "delete_tasks"}
+{"query": "Lista dei task", "first_tool": "list_tasks"}
+{"query": "Cerca foto di scout in divisa", "first_tool": "find_images_indices"}
+{"query": "elenca i miei appuntamenti di domani", "first_tool": "read_events"}
+{"query": "elenca appuntamenti prossimi 20 giorni", "first_tool": "read_events"}
+{"query": "temperatura cpu", "first_tool": "get_processes"}
+{"query": "che eventi ho oggi", "first_tool": "read_events"}
+{"query": "che eventi ho nei prossimi 10 gg", "first_tool": "read_events"}
+{"query": "Scaricami https://it.wikipedia.org/wiki/Sintesi_proteica e dimmi in 4 righe il ruolo del ribosoma nel processo, in italiano semplice", "first_tool": "read_urls_html"}
+{"query": "Mostrami quante email ho ricevuto oggi e quali sono i 3 mittenti più frequenti", "first_tool": "read_messages"}
+{"query": "Dimmi quanta posta è arrivata oggi e raggruppa i 3 mittenti che mi hanno scritto di più", "first_tool": "read_messages"}
+{"query": "Quante email mi sono arrivate oggi e da quali 3 persone mi è arrivata più posta", "first_tool": "read_messages"}
+{"query": "Trova i file Python in /opt/metnos/runtime modificati questa settimana e dimmi i 5 più grandi per dimensione", "first_tool": "find_files"}
+{"query": "Cerca le ultime notizie su Anthropic Claude e fammi un riassunto in 4 righe italiane di cosa è uscito nell'ultima settimana", "first_tool": "find_urls"}
+{"query": "cerca informazioni delle ultime 24 ore sulle tendenze e previsioni riguardo ai bitcoin", "first_tool": "find_urls"}
+{"query": "Conta le email di oggi e dimmi i 3 mittenti principali", "first_tool": "read_messages"}
+{"query": "cerca e riassumi informazioni delle ultime 24 ore sulle tendenze e previsioni riguardo ai bitcoin", "first_tool": "find_urls"}
+{"query": "\"trova 5 notizie su bitcoin oggi e riassumimele\"", "first_tool": "find_urls"}
+{"query": "cerca e riassumi info delle ultime 24 ore sulla guerra in ucraina", "first_tool": "find_urls"}
+{"query": "che ora è?", "first_tool": "get_now"}
+{"query": "che ora e", "first_tool": "get_now"}
+{"query": "Danmi notizie delkw ultime 24 ore su guerra in ucraina", "first_tool": "find_urls"}
+{"query": "dammi notizie delle ultime 24 ore sulla guerra in ucraina", "first_tool": "find_urls"}
+{"query": "Dammi le notizie delle ultime 24 ore sulla guerra in ucraina", "first_tool": "find_urls"}
+{"query": "Che ora é", "first_tool": "get_now"}
+{"query": "Che ora è", "first_tool": "get_now"}
+{"query": "Cerca se ci s9no stati aggiornamenti al modello gemma 4 nefli ultimi 3 giorni", "first_tool": "find_urls"}
+{"query": "Riassumi tutte le novita degli ultimi 7 giorni sull'ambiente llama.cpp", "first_tool": "find_urls"}
+{"query": "Cerca nel sito inps i link e i documenti pdf '", "first_tool": "find_urls"}
+{"query": "Cerca nel sito inps.it i documenti e i link su Soggiorni estivi 2026 presso le Case del Maestro", "first_tool": "find_urls"}
+{"query": "Cerca nel sito inps.it i documenti e i link su Soggiorni estivi 2026 presso le Case del Maestro ✗ errore", "first_tool": "find_urls"}
+{"query": "Controlla la mia mailbox metnos e riassumi le mail degli ultimi 3 giorni", "first_tool": "read_messages"}
+{"query": "monitora temperatura cpu e gpu e invia notifica quando supera 70 gradi", "first_tool": "create_tasks"}
+{"query": "quali sono i timer", "first_tool": "get_processes"}
+{"query": "da quanto tempo il server è avceso", "first_tool": "get_now"}
+{"query": "quali sono gli ip del server", "first_tool": "get_processes"}
+{"query": "conta quanti file ci sono nella cartella Immagini", "first_tool": "find_files"}
+{"query": "Quanti sono i files nella cartella Immagini", "first_tool": "find_dirs"}
+{"query": "Quante solo le cartelle in Immagini", "first_tool": "find_dirs"}
+{"query": ",quante cartelle e quanti file ci sono in Immagini", "first_tool": "find_dirs"}
+{"query": "quanti file e quante cartelle ci sono in Immagini", "first_tool": "find_dirs"}
+{"query": "quanto consuma gpu", "first_tool": "get_processes"}
+{"query": "quanto consuma cpu", "first_tool": "get_processes"}
+{"query": "quali sono i task attivi", "first_tool": "list_tasks"}
+{"query": "quanto spazio su disco è ancora libero", "first_tool": "get_processes"}
+{"query": "quanto spazio su disco è ancora libero in GB", "first_tool": "get_processes"}
+{"query": "temperatura gpu", "first_tool": "get_processes"}
+{"query": "cerca immagini di una persona su web", "first_tool": "find_images_indices"}
+{"query": "manda un ping a questo computer", "first_tool": "send_messages"}
+{"query": "Cerca una foto di una persona sul web s8mile alle foto di enrollement", "first_tool": "find_images_indices"}
+{"query": "Cerca una foto sul web simile alle foto di enrollement di una persona", "first_tool": "find_images_indices"}
+{"query": "Cerca una foto di una persona sul web simile alle foto di enrollment", "first_tool": "find_images_indices"}
+{"query": "Cerca una foto sul web simile alle foto di enrollment di una persona", "first_tool": "find_images_indices"}
+{"query": "cerca le mail di spam o commerciali sulla mia mail e mettili in spam", "first_tool": "read_messages"}
+{"query": "stato server", "first_tool": "get_processes"}
+{"query": "appuntamenti prossimi 30 giorni", "first_tool": "read_events"}
+{"query": "Cerca foto di una persona su web", "first_tool": "find_persons_indices"}
+{"query": "quanti files ci sono in Immagini", "first_tool": "find_files"}
+{"query": "chi sono io", "first_tool": "get_persons"}
+{"query": "quante directory ci sono in Immagini", "first_tool": "find_dirs"}
+{"query": "quanti file ci sono in Immagini", "first_tool": "find_files"}
+{"query": "liusta timer", "first_tool": "list_tasks"}
+{"query": "quli sono i task attivi?", "first_tool": "list_tasks"}
+{"query": "cerca su web notizie su amd rocm 8", "first_tool": "find_urls"}
+{"query": "appuntamenti prossimo mese", "first_tool": "read_events"}
+{"query": "mostrami appuntamenti prossimi 30 gg", "first_tool": "get_now"}
+{"query": "Dimmi gli eventi prossimi 30 gg", "first_tool": "read_events"}
+{"query": "trova gli eventi dei prossimi 30 gg, mettili in uno spredsheet e inviamelo sulla mia email", "first_tool": "read_events"}
+{"query": "leggi le mie mail delle ultime 24, riassumile e mandami una mail con il riassunto", "first_tool": "read_messages"}
+{"query": "Cerca foto sul web simile alle foto di enrollement di una persona", "first_tool": "find_persons_indices"}
+{"query": "posso testare", "first_tool": "get_processes"}
+{"query": "trova le foto del mare", "first_tool": "find_images_indices"}
+{"query": "trova foto del mare", "first_tool": "find_images_indices"}
+{"query": "cerca chi sono alcune persone", "first_tool": "get_persons"}
+{"query": "cerca su web notizie su alcune persone", "first_tool": "find_urls"}
+{"query": "cerca notizie su alcune persone", "first_tool": "find_urls"}
+{"query": "Trova foto di persone con occhiali", "first_tool": "find_images_indices"}
+{"query": "cerca foto con persone in montagna", "first_tool": "find_images_indices"}
+{"query": "leggi le mie mail di oggi", "first_tool": "read_messages"}
+{"query": "verifica le mail importanti delle ultime 24 ore in tutte le mie mailbox", "first_tool": "find_urls"}
+{"query": "Cerca informazioni sulle performance dei fondi ark", "first_tool": "find_urls"}
+{"query": "Trova foto di persone in montagna", "first_tool": "find_images_indices"}
+{"query": "Cerca foto di persone in montagna", "first_tool": "find_images_indices"}
+{"query": "fammi vedere foto di persone in montagna", "first_tool": "find_images_indices"}
+{"query": "quali sono le mie mailbox", "first_tool": "read_messages"}
+{"query": "quali account mail hai?", "first_tool": "read_messages"}
+{"query": "stato sistem", "first_tool": "get_processes"}
+{"query": "elenca i miei appuntamenti di oggi", "first_tool": "read_events"}
+{"query": "cancella l evento i4s97e3o2mcpagmlk9qu87ojsk", "first_tool": "delete_events"}
+{"query": "crea un evento ROUNDTRIP_DELETEME domani alle 11", "first_tool": "create_events"}
+{"query": "cancella l evento 5q8o68simre2u1fpl00emp9lug", "first_tool": "delete_events"}
+{"query": "crea un evento LOCAL_DELETEME domani alle 13 sul calendario locale", "first_tool": "create_events"}
+{"query": "leggi /etc/hostname", "first_tool": "read_files"}
+{"query": "cerca tra i miei contatti una persona di nome una persona", "first_tool": "find_contacts"}
+{"query": "quante mail non lette ho", "first_tool": "read_messages"}
+{"query": "cancella l evento a4d4o2vet7vftnfmf5r1tghmn4", "first_tool": "delete_events"}
+{"query": "cancella l evento 2gtf7ofhlh8vim3i8l7897t1fk", "first_tool": "delete_events"}
+{"query": "cancella l evento mi9i39mooq0akh4c8vs0p66e3o", "first_tool": "delete_events"}
+{"query": "cancella l evento p5eth41un8j99vmru30je8asac", "first_tool": "delete_events"}
+{"query": "cancella l evento h5rtni8q41910ct9r6s5hlunc0", "first_tool": "delete_events"}
+{"query": "Cerca foto dei viaggi del 2016", "first_tool": "find_images_indices"}
+{"query": "Cerca informazioni selle performance dei fondi ark", "first_tool": "find_urls"}
+{"query": "che ore sono", "first_tool": "get_now"}
+{"query": "elenca i file in /tmp", "first_tool": "list_dirs"}
+{"query": "riassumi le mail di oggi piu importanti", "first_tool": "read_messages"}
+{"query": "cerca sul web le ultime notizie sull'intelligenza artificiale", "first_tool": "find_urls"}
+{"query": "Trova le mie foto al mare", "first_tool": "find_images_indices"}
+{"query": "Stato siatema", "first_tool": "get_processes"}
+{"query": "leggi le mail di oggi, tieni solo le più importanti e mandami il riassunto", "first_tool": "read_messages"}
+{"query": "stato del sistema", "first_tool": "get_processes"}
+{"query": "controlla posta metnos ultima settimana", "first_tool": "read_messages"}
+{"query": "spesa ristorante 103", "first_tool": "find_urls"}
+{"query": "cerca foto con persone in montagna , metti in uno spreadsheet il path e la descrizione e invia lo spreadsheet alla mia email", "first_tool": "find_images_indices"}
+{"query": "crea il calendario metnos", "first_tool": "create_calendars"}
+{"query": "cancella calendario metnos", "first_tool": "delete_calendars"}
+{"query": "cerca online le prossime conferenze o eventi su AMD ROCm, prendi i primi tre con la data, crea per ciascuno un evento nel mio calendario lavoro e mandami un riepilogo via email", "first_tool": "find_urls"}
+{"query": "Quali eventi ho in calendario nei prossimi 7 giorni?", "first_tool": "read_events"}
+{"query": "elenca le issue aperte su una persona/metnos", "first_tool": "find_issues_github"}
+{"query": "leggi le issue aperte del repo una persona/metnos", "first_tool": "read_issues_github"}
+{"query": "Trova i 10 processi che consumano più memoria, calcola la memoria totale che occupano insieme, e scrivi un report con la data e ora in /tmp/metnos_livetest/top_mem.txt", "first_tool": "get_processes"}
+{"query": "Prendi le issue chiuse di una persona/metnos, mettile in un foglio /tmp/metnos_livetest/closed.xlsx aggiungendo una colonna con la data di oggi", "first_tool": "find_issues_github"}
+{"query": "Elenca le pull request di una persona/metnos con il loro stato, salvale in un foglio di calcolo /tmp/metnos_livetest/pulls.xlsx e poi manda il foglio via mail a user@example.com", "first_tool": "find_pulls_github"}
+{"query": "Crea una issue di test dal titolo '[livetest] ciclo' su una persona/metnos, poi leggi le issue aperte per confermare che esista, e infine chiudila", "first_tool": "create_issues_github"}
+{"query": "Riassumi le ultime mail ricevute su metnos raggruppate per mittente", "first_tool": "read_messages"}
+{"query": "Trova gli ospedali vicino a Padova, cerca online qual è il numero di emergenza sanitaria in Italia, e salva tutto in /tmp/metnos_livetest/emergenza.txt", "first_tool": "find_places"}
+{"query": "Trova le issue aperte su una persona/metnos, poi cerca online cos'è il progetto Metnos per dare contesto, e salva un riepilogo che unisce le issue e il contesto in /tmp/metnos_livetest/issues_brief.txt", "first_tool": "find_issues_github"}
+{"query": "cerca sul web cos'è AMD ROCm e dammi 3 fonti", "first_tool": "find_urls"}
+{"query": "Trova i 5 processi che usano più memoria e dimmi quanta memoria totale occupano insieme", "first_tool": "get_processes"}
+{"query": "Trova tutti i file .txt in /tmp/metnos_livetest, conta le righe totali e scrivi un report con la data di oggi in /tmp/metnos_livetest/report_prof.txt", "first_tool": "find_files"}
+{"query": "Cerca online cos'è RISC-V, estrai 3 punti chiave e salvali in /tmp/metnos_livetest/riscv_prof.txt", "first_tool": "find_urls"}
+{"query": "Trova le issue su una persona/metnos e dimmi quante sono aperte e quante chiuse", "first_tool": "find_issues_github"}
+{"query": "Che ore sono adesso e trova le farmacie vicino a Padova ordinate per distanza", "first_tool": "get_now"}
+{"query": "Trova tutti i file .txt in /tmp/metnos_livetest, conta le righe totali e scrivi un report con la data di oggi in /tmp/metnos_livetest/report_sub.txt", "first_tool": "find_files"}
+{"query": "Nei file di testo dentro /tmp/metnos_livetest trova le righe che contengono 'todo' e dimmi quante sono", "first_tool": "find_files"}
+{"query": "quali skill ho attive?", "first_tool": "list_skills"}
+{"query": "disattiva la skill geo", "first_tool": "set_skills"}
+{"query": "riattiva la skill geo", "first_tool": "set_skills"}

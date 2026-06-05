@@ -1,0 +1,95 @@
+# Manifest dell'executor `create_files_doc` — Metnos v1.1
+# Naming compositivo §2.2: azione_oggetto_qualifier.
+# Dispatcher canonical Google Docs create (24/5/2026).
+
+manifest_format = "1.0"
+
+name             = "create_files_doc"
+version          = "0.1.0"
+author           = "Roberto Brunialti"
+affinity         = [
+    "doc", "documento", "google doc", "google docs",
+    "crea documento", "nuovo documento", "create doc", "new doc",
+    "draft"
+]
+revertible       = true
+reverse_pattern  = "delete_files_by_id"
+lifecycle        = "active"
+
+[description]
+it = "Crea un nuovo Google Doc (documento online). Dispatcher canonical: instrada al backend `client` (default `google_workspace`). USO CORRETTO: create_files_doc(title='Note riunione', body='## Agenda\\n- punto 1\\n'). NON CONFONDERE CON: `write_files_doc` (appende a doc esistente), `create_files_spreadsheet` (foglio elettronico), `write_files` (file locale). §2.3 reverse_pattern='delete_files_by_id' (Drive trash, reversibile). §2.6 trasformativo: ritorna `results: list[{document_id, title, web_view_url}]`. Se OAuth manca, decision='needs_inputs'."
+en = "Creates a new Google Doc (online document). Canonical dispatcher: routes to backend `client` (default `google_workspace`). CORRECT USE: create_files_doc(title='Meeting notes', body='## Agenda\\n- point 1\\n'). DO NOT CONFUSE WITH: `write_files_doc` (appends to existing doc), `create_files_spreadsheet` (spreadsheet), `write_files` (local file). §2.3 reverse_pattern='delete_files_by_id' (Drive trash, reversible). §2.6 transformative: returns `results: list[{document_id, title, web_view_url}]`. If OAuth missing, decision='needs_inputs'."
+
+[code]
+files  = ["create_files_doc.py"]
+digest = "sha256:c760100c4c7a1ade946a5554d55329200dabf616a9b373bc46962c37875d08dd"
+
+[args]
+type     = "object"
+required = ["title"]
+
+[args.properties.title]
+type    = "string"
+
+[args.properties.title.description]
+it = "Titolo del nuovo Google Doc (es. 'Note riunione', 'Diario 2026'). Testo libero, visibile in Drive."
+en = "Title of the new Google Doc (e.g. 'Meeting notes', 'Journal 2026'). Free text, visible in Drive."
+
+[args.properties.body]
+type    = "string"
+default = ""
+
+[args.properties.body.description]
+it = "Testo iniziale opzionale da inserire nel doc (es. agenda, sommario). Vuoto = doc vuoto. Per appendere testo dopo, usa write_files_doc."
+en = "Optional initial text to insert into the doc (e.g. agenda, summary). Empty = empty doc. To append text later, use write_files_doc."
+
+[args.properties.client]
+type    = "string"
+enum    = ["google_workspace"]
+default = "google_workspace"
+
+[args.properties.client.description]
+it = "Backend (oggi solo 'google_workspace'). Plugin esterni futuri potranno aggiungerne altri."
+en = "Backend (today only 'google_workspace'). Future external plugins may add others."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  n_created: int,
+  document_id: str,
+  web_view_url: str,
+  title: str,
+  results: Array<{file_id, id, document_id, title, web_view_url, kind: 'doc'}>,
+  used: int,
+  files_source: 'google_workspace',
+  _undo?: {reverse_pattern, ids, scope},
+  error?: str,
+  error_class?: str,
+  decision?: 'needs_inputs'
+}
+"""
+
+[[capabilities]]
+name = "metnos:create"
+hint = ["doc:remote"]
+
+[[tests]]
+name   = "missing_title_fails"
+input  = {}
+expect = { ok = false, error_contains = "title" }
+
+[[tests]]
+name   = "empty_title_fails"
+input  = { title = "  " }
+expect = { ok = false, error_contains = "title" }
+
+[[tests]]
+name   = "unsupported_client_fails"
+input  = { title = "Test", client = "dropbox" }
+expect = { ok = false, error_contains = "Operazione non applicabile per questo provider" }
+
+[[tests]]
+name   = "happy_path_with_body"
+input  = { title = "Note", body = "Bozza iniziale" }
+expect = { ok = true }

@@ -1,0 +1,99 @@
+# Manifest dell'executor `write_files_doc` — Metnos v1.1
+# Naming compositivo §2.2: azione_oggetto_qualifier.
+# Dispatcher canonical Google Docs append (24/5/2026).
+
+manifest_format = "1.0"
+
+name        = "write_files_doc"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "doc", "documento", "google doc", "google docs",
+    "appendi a documento", "aggiungi al doc", "append doc",
+    "scrivi nel doc", "aggiorna documento", "update doc"
+]
+# §2.3 reversibile via module.reverse(): l'append registra inserted_at +
+# characters_appended; l'undo elimina quel range (deleteContentRange).
+revertible  = true
+lifecycle   = "active"
+
+[description]
+it = "Appende testo alla fine di un Google Doc esistente. Append e' semantica `write` con tag implicito (§2.2: no verbo separato). USO CORRETTO: write_files_doc(document_id='1abc...', text='Nuovo paragrafo\\n'). NON CONFONDERE CON: `create_files_doc` (crea NUOVO doc, qui appende a uno esistente), `write_files` (file locale). Il backend calcola l'indice end-of-body e inserisce con batchUpdate. Newline trailing garantito. §2.6 trasformativo: ritorna `results: list[{document_id, characters_appended}]`. Reversibile via undo_last_turn: elimina il range appeso (inserted_at + characters_appended). Se OAuth manca, decision='needs_inputs'."
+en = "Appends text to the end of an existing Google Doc. Append is `write` semantics with implicit tag (§2.2: no separate verb). CORRECT USE: write_files_doc(document_id='1abc...', text='New paragraph\\n'). DO NOT CONFUSE WITH: `create_files_doc` (creates NEW doc, here it appends to an existing one), `write_files` (local file). The backend computes the end-of-body index and inserts via batchUpdate. Trailing newline guaranteed. §2.6 transformative: returns `results: list[{document_id, characters_appended}]`. Reversible via undo_last_turn: deletes the appended range (inserted_at + characters_appended). If OAuth missing, decision='needs_inputs'."
+
+[code]
+files  = ["write_files_doc.py"]
+digest = "sha256:81efb3ed739bc4061f10515e5d7cb47c9e92568d9a2757519b96ce221f0684e0"
+
+[args]
+type     = "object"
+required = ["document_id", "text"]
+
+[args.properties.document_id]
+type    = "string"
+
+[args.properties.document_id.description]
+it = "ID del Google Doc esistente (es. '1abc...XYZ', visibile nell'URL). MATCH ESATTO: stringa opaca, wildcard NON supportati."
+en = "Existing Google Doc ID (e.g. '1abc...XYZ', visible in URL). EXACT MATCH: opaque string, wildcards NOT supported."
+
+[args.properties.text]
+type    = "string"
+
+[args.properties.text.description]
+it = "Testo da appendere alla fine del documento. Markdown NON renderizzato (testo flow). Newline trailing aggiunto automaticamente se mancante."
+en = "Text to append at the end of the document. Markdown NOT rendered (text flow). Trailing newline added automatically if missing."
+
+[args.properties.client]
+type    = "string"
+enum    = ["google_workspace"]
+default = "google_workspace"
+
+[args.properties.client.description]
+it = "Backend (oggi solo 'google_workspace'). Plugin esterni futuri potranno aggiungerne altri."
+en = "Backend (today only 'google_workspace'). Future external plugins may add others."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  n_written: int,
+  document_id: str,
+  content_length: int,
+  characters_appended: int,
+  results: Array<{ok, document_id, id, characters_appended, kind: 'doc'}>,
+  used: int,
+  files_source: 'google_workspace',
+  error?: str,
+  error_class?: str,
+  decision?: 'needs_inputs'
+}
+"""
+
+[[capabilities]]
+name = "metnos:write"
+hint = ["doc:remote"]
+
+[[tests]]
+name   = "missing_document_id_fails"
+input  = { text = "abc" }
+expect = { ok = false, error_contains = "document_id" }
+
+[[tests]]
+name   = "missing_text_fails"
+input  = { document_id = "1abc" }
+expect = { ok = false, error_contains = "text" }
+
+[[tests]]
+name   = "empty_text_fails"
+input  = { document_id = "1abc", text = "" }
+expect = { ok = false, error_contains = "text" }
+
+[[tests]]
+name   = "unsupported_client_fails"
+input  = { document_id = "1abc", text = "x", client = "dropbox" }
+expect = { ok = false, error_contains = "Operazione non applicabile per questo provider" }
+
+[[tests]]
+name   = "happy_path_oauth_missing_returns_needs_inputs"
+input  = { document_id = "1abc", text = "Paragrafo aggiunto\n" }
+expect = { ok = true }

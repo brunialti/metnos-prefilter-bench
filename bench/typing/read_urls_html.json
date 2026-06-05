@@ -1,0 +1,77 @@
+{
+  "name": "read_urls_html",
+  "manifest_mtime": 1779121548,
+  "inputs": {
+    "urls": {
+      "structural_type": "array",
+      "required": true,
+      "default": null,
+      "semantic_type": "url_entry[]",
+      "role": "source",
+      "format_hint": "list of http/https strings"
+    },
+    "auth_cookies_file": {
+      "structural_type": "string",
+      "required": false,
+      "default": null,
+      "semantic_type": "file_path",
+      "role": "source",
+      "format_hint": "Mozilla cookies.txt"
+    },
+    "timeout_s": {
+      "structural_type": "number",
+      "required": false,
+      "default": 10.0,
+      "semantic_type": "duration_secs",
+      "role": "meta",
+      "format_hint": "float/int"
+    },
+    "max_bytes": {
+      "structural_type": "integer",
+      "required": false,
+      "default": 2000000,
+      "semantic_type": "size_bytes",
+      "role": "meta",
+      "format_hint": "integer"
+    },
+    "js_render": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "httpx",
+      "semantic_type": "name",
+      "role": "meta",
+      "format_hint": "httpx|playwright"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "message_entry[]",
+    "schema": {
+      "url": "url",
+      "title": "text_path",
+      "body_text": "free_text",
+      "lang": "name",
+      "fetched_at": "iso_timestamp",
+      "meta": {
+        "og_title": "free_text",
+        "og_description": "free_text",
+        "author": "person_name",
+        "publish_date": "iso_timestamp"
+      }
+    }
+  },
+  "unresolved_args": [
+    "auth_cookies_file",
+    "timeout_s",
+    "client"
+  ],
+  "propagates_constraints": false
+}

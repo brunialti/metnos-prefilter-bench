@@ -1,0 +1,47 @@
+{
+  "name": "create_files_spreadsheet",
+  "manifest_mtime": 1779611388,
+  "inputs": {
+    "title": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "Free text title for the spreadsheet"
+    },
+    "sheet_name": {
+      "structural_type": "string",
+      "required": false,
+      "default": "",
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "Name of the first tab"
+    },
+    "client": {
+      "structural_type": "string",
+      "required": false,
+      "default": "google_workspace",
+      "semantic_type": "name",
+      "role": "source",
+      "format_hint": "Backend provider identifier"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "file_entry[]",
+    "schema": {
+      "file_id": "slug",
+      "id": "slug",
+      "spreadsheet_id": "slug",
+      "title": "name",
+      "web_view_url": "url",
+      "kind": "name"
+    }
+  },
+  "unresolved_args": [
+    "sheet_name",
+    "client"
+  ],
+  "propagates_constraints": false
+}

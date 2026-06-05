@@ -1,0 +1,42 @@
+{
+  "name": "get_images_indices",
+  "manifest_mtime": 1778847656,
+  "inputs": {
+    "base_path": {
+      "structural_type": "string",
+      "required": true,
+      "default": null,
+      "semantic_type": "dir_path",
+      "role": "source",
+      "format_hint": "absolute path or expandable tilde"
+    },
+    "idx": {
+      "structural_type": "string",
+      "required": false,
+      "default": "all",
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "one of [scene, persons, gps, all]"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "image_entry[]",
+    "schema": {
+      "idx": "name",
+      "exists": "bool",
+      "n_entries": "count",
+      "last_refresh_at": "iso_timestamp",
+      "size_mb": "scalar_metric",
+      "model": "name",
+      "dim": "json_object"
+    }
+  },
+  "unresolved_args": [
+    "idx"
+  ],
+  "consumes": [
+    "filter:name"
+  ],
+  "propagates_constraints": false
+}

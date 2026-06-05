@@ -1,0 +1,20 @@
+{
+  "name": "admin",
+  "manifest_mtime": 0,
+  "inputs": {
+    "intent": {"structural_type": "string", "required": true, "default": null, "semantic_type": "free_text", "role": "filter", "format_hint": "1 sentence IT/EN describing intent"},
+    "command_proposed": {"structural_type": "string", "required": true, "default": null, "semantic_type": "free_text", "role": "source", "format_hint": "argv linear, 1 cmd, tokens space-separated, no shell metachars"}
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "scalar_metric",
+    "schema": {"ok": "bool", "rc": "scalar_metric", "stdout": "free_text", "stderr": "free_text", "command": "free_text"},
+    "may_be_truncated": false,
+    "may_be_empty": false
+  },
+  "consumes": [],
+  "propagates_constraints": false,
+  "preconditions": [],
+  "_builtin": true,
+  "_terminator": false
+}

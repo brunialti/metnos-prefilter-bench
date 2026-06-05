@@ -1,0 +1,118 @@
+# Manifest dell'executor `create_events` — Metnos v1.1
+# Naming compositivo §2.2: azione_oggetto[_qualifier].
+# Dispatcher canonical (sequel di read_events, 13/5/2026).
+
+manifest_format = "1.0"
+
+name        = "create_events"
+version     = "0.4.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "fissa", "fissa appuntamento", "prenota", "book", "schedule", "crea evento",
+                "create event", "aggiungi appuntamento", "appuntamento", "agenda", "evento",
+                "calendario", "calendar", "riunione", "incontro", "meeting"
+            ]
+revertible       = true
+reverse_pattern  = "delete_events_by_id"
+lifecycle        = "active"
+
+[description]
+it = "SCOPO: crea appuntamenti sul calendario (uno o molti). PATTERN: singolo create_events(summary=\"Standup\", start=\"2026-05-14T09:00:00+02:00\", end=\"2026-05-14T10:00:00+02:00\"); MOLTI da step precedente create_events(from_step=N) con entries=[{summary,start,end}]. NON: eventi da WEB/testo non strutturato -> PRIMA find_urls -> read_urls_html -> extract_entries(fields=[\"summary\",\"start\",\"end\"]) -> POI create_events(from_step=N) (MAI create_events come primo step senza i dati); date relative 'domani'/'mercoledi' -> get_now PRIMA; LEGGERE eventi -> read_events; CANCELLARE -> delete_events; OMETTI `client` (backend auto). OUT: results=[{ok,id,summary,htmlLink}] (§2.6 trasformativo), reverse delete_events_by_id."
+en = "SCOPO: create calendar appointments (one or many). PATTERN: single create_events(summary=\"Standup\", start=\"2026-05-14T09:00:00+02:00\", end=\"2026-05-14T10:00:00+02:00\"); MANY from a previous step create_events(from_step=N) with entries=[{summary,start,end}]. NON: events from WEB/unstructured text -> FIRST find_urls -> read_urls_html -> extract_entries(fields=[\"summary\",\"start\",\"end\"]) -> THEN create_events(from_step=N) (NEVER create_events as first step without the data); relative dates 'tomorrow'/'wednesday' -> get_now FIRST; READ events -> read_events; DELETE -> delete_events; OMIT `client` (auto backend). OUT: results=[{ok,id,summary,htmlLink}] (§2.6 transformative), reverse delete_events_by_id."
+
+[code]
+files  = ["create_events.py"]
+digest = "sha256:03c080d8b1f92392dc5a01dea1ae7014062d76ce74779cee995ec47fea3ab222"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.summary]
+type    = "string"
+
+[args.properties.summary.description]
+it = "Titolo dell'evento (breve, mostrato in agenda). Es. 'Team Standup', 'Pranzo con Marco'."
+en = "Event title (short, displayed in agenda). E.g. 'Team Standup', 'Lunch with Marco'."
+
+[args.properties.start]
+type    = "string"
+format  = "date-time"
+
+[args.properties.start.description]
+it = "Inizio in ISO 8601 con offset esplicito (es. 'Z' o '+01:00'). Es. '2026-05-14T09:00:00+02:00'. Risolvi con get_now se l'utente dice 'domani'/'mercoledi'."
+en = "Start in ISO 8601 with explicit offset (e.g. 'Z' or '+01:00'). E.g. '2026-05-14T09:00:00+02:00'. Resolve with get_now if the user says 'tomorrow'/'wednesday'."
+
+[args.properties.end]
+type    = "string"
+format  = "date-time"
+
+[args.properties.end.description]
+it = "Fine in ISO 8601 con offset esplicito; deve essere > start. Es. '2026-05-14T10:00:00+02:00'."
+en = "End in ISO 8601 with explicit offset; must be > start. E.g. '2026-05-14T10:00:00+02:00'."
+
+[args.properties.location]
+type    = "string"
+
+[args.properties.location.description]
+it = "Luogo dell'evento (testo libero). Es. 'Cafe', 'Sala riunioni B'."
+en = "Event location (free text). E.g. 'Cafe', 'Meeting room B'."
+
+[args.properties.attendees]
+type    = "array"
+items   = { type = "string" }
+
+[args.properties.attendees.description]
+it = "Lista email partecipanti. MATCH ESATTO: ogni voce e' un'email RFC 5322 valida, wildcard `*`/`?` NON supportati. Es. ['alice@co.com', 'bob@co.com']."
+en = "List of attendee emails. EXACT MATCH: each entry is a valid RFC 5322 email, wildcards `*`/`?` NOT supported. E.g. ['alice@co.com', 'bob@co.com']."
+
+[args.properties.calendar_id]
+type    = "string"
+default = "primary"
+
+[args.properties.calendar_id.description]
+it = "Identificatore del calendario di destinazione. Default 'primary'."
+en = "Target calendar identifier. Default 'primary'."
+
+[args.properties.client]
+type        = "string"
+enum        = ["local", "google_workspace"]
+# backend = configurazione, NON intento → risolto dal runtime, NON esposto
+# all'LLM (lessons A3/B1: l'enum induce bias). L'utente non lo sceglie via LLM.
+runtime_resolved = true
+
+[args.properties.client.description]
+it = "Backend calendario. DEVI OMETTERLO: il runtime auto-rileva (google_workspace se OAuth presente, altrimenti local ICS). NON DEVI passare 'client' a meno che l'utente NON chieda esplicitamente un backend (es. 'sul calendario locale'). Coerenza: create e delete devono usare lo STESSO backend → ometti in entrambi."
+en = "Calendar backend. YOU MUST OMIT IT: the runtime auto-detects (google_workspace if OAuth present, else local ICS). YOU MUST NOT pass 'client' unless the user explicitly asks for a backend (e.g. 'on the local calendar'). Consistency: create and delete must use the SAME backend → omit in both."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  results: Array<dict>,
+  n_created: int,
+  used: int,
+  _undo?: {pattern: 'delete_events_by_id', ids: [str]},
+  error?: str,
+  error_class?: str
+}
+"""
+
+[[capabilities]]
+name = "metnos:write"
+hint = ["~/.local/share/metnos/calendar.ics"]
+
+[[tests]]
+name   = "missing_summary_fails"
+input  = { start = "2026-05-14T09:00:00+02:00", end = "2026-05-14T10:00:00+02:00" }
+expect = { ok = false, error_contains = "summary" }
+
+[[tests]]
+name   = "missing_start_fails"
+input  = { summary = "Test", end = "2026-05-14T10:00:00+02:00" }
+expect = { ok = false, error_contains = "start" }
+
+[[tests]]
+name   = "invalid_client_rejected"
+input  = { summary = "Test", start = "2026-05-14T09:00:00+02:00", end = "2026-05-14T10:00:00+02:00", client = "gdrive" }
+expect = { ok = false, error_contains = "gdrive" }

@@ -1,0 +1,80 @@
+# Manifest dell'executor `get_location` — Metnos v1.1
+# Eccezione singolare al naming convention: l'utente ha UNA posizione corrente
+# per actor; il plurale `get_locations` sara' aggiunto se servira' la storia.
+
+manifest_format = "1.0"
+
+name        = "get_location"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["location", "posizione", "dove", "where", "GPS", "qui", "now", "current"]
+revertible  = false
+lifecycle   = "active"
+
+[description]
+it = "Restituisce l'ultima posizione condivisa dall'utente via canale (Telegram 📎 Posizione, oggi). Output: {lat, lon, ts, accuracy, channel} + age_seconds. Se l'utente non ha ancora condiviso una posizione, ritorna ok=false con un messaggio che invita a usare il bottone 📎 su Telegram. Storage append-only in ~/.local/share/metnos/locations.jsonl, popolato dal channel daemon. Singolare per design: una sola posizione corrente per actor."
+en = "Returns the last position shared by the user via channel (Telegram 📎 Location, today). Output: {lat, lon, ts, accuracy, channel} + age_seconds. If the user has not yet shared a location, return ok=false with a message inviting them to use the 📎 button on Telegram. Append-only storage in ~/.local/share/metnos/locations.jsonl, populated by the channel daemon. Singular by design: only one current position per actor."
+
+[code]
+files  = ["get_location.py"]
+digest = "sha256:5b270340315e6a0fe330a935baa26f1c42cd8867f93a0b05aaf2f6bc58db00c6"
+
+[args]
+type     = "object"
+
+[args.properties.actor]
+type        = "string"
+default     = "host"
+
+[args.properties.actor.description]
+it = "Identificativo dell'utente di cui leggere la posizione. Default 'host' (l'utente principale). In multi-user (futuro): 'guest:<id>' per i membri della famiglia pairati."
+en = "Identifier of the user whose location is to be read. Default 'host' (the main user). In multi-user (future): 'guest:<id>' for paired family members."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  location?: {
+    lat: float, lon: float, ts: float,
+    accuracy: float | null, channel: str | null
+  },
+  age_seconds?: int,
+  actor?: str,
+  error?: str
+}
+"""
+
+[[capabilities]]
+name = "fs:read"
+hint = ["~/.local/share/metnos/locations.jsonl"]
+
+[[tests]]
+name   = "no_location_ancora_condivisa"
+setup  = "rm -f /tmp/metnos_loc_test.jsonl"
+input  = { actor = "test_no_data" }
+expect = { ok = false, error_contains = "Nessuna posizione ricevuta per ora. Condividi una posizione su Telegram con il bottone allegati e riprova" }
+
+[[tests]]
+name   = "actor_invalido_non_stringa"
+input  = { actor = 42 }
+expect = { ok = false, error_contains = "deve essere una stringa" }
+
+# Sample concreto di output (one-shot per synt + fast-path generator).
+[[tests]]
+name        = "happy_path_sample"
+input       = { actor = "host" }
+expect      = { ok = true, has_field = "location" }
+expect_full = """
+{
+  "ok": true,
+  "location": {
+    "lat": 45.4642,
+    "lon": 9.1900,
+    "ts": 1778078500.0,
+    "accuracy": 12.5,
+    "channel": "telegram"
+  },
+  "age_seconds": 223,
+  "actor": "host"
+}
+"""

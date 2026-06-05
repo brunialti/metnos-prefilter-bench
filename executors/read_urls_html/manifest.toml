@@ -1,0 +1,90 @@
+# Manifest dell'executor `read_urls_html` — Metnos v1.1
+# Lettura del contenuto principale di pagine HTML (ADR 0081, 4/5/2026).
+
+manifest_format = "1.0"
+
+name        = "read_urls_html"
+version     = "0.1.0"
+timeout_s   = 300
+author      = "Roberto Brunialti"
+affinity    = [
+    "read", "leggi", "html", "pagina", "page", "url", "web", "site", "article", "articolo",
+                "news", "fetch", "scarica", "extract", "estrai", "testo", "content",
+                "contenuto", "readability"
+            ]
+
+[description]
+it = "Scarica una lista di URL HTML e ritorna il contenuto principale come plain text deterministico (no LLM). Strip di <script>, <style>, <nav>, <header>, <footer>, <aside>, <form>, <noscript>; preferenza container <article> > <main> > <body> (heuristica readability-lite). Estrae meta: og:* (open graph), description, author, <time datetime=...>. Ritorna title, body_text trimmato a 50000 char, lang dell'<html>, fetched_at. Skippa Content-Type != 'text/html'. User-Agent fisso 'metnos-crawler/1.1 (+contact@metnos.com)'. Per siti autenticati: passa 'auth_cookies_file' come path a un Mozilla cookies.txt (vedi `login_session`). Esempio dopo find_urls: read_urls_html(from_step=1) → entries=[{url, title, body_text, meta:{...}, lang, fetched_at}]. Output: entries (stesso schema in input + body_text), ok_count, fail_count, failed=[{url, error}]."
+en = "Download a list of HTML URLs and return the main content as deterministic plain text (no LLM). Strip <script>, <style>, <nav>, <header>, <footer>, <aside>, <form>, <noscript>; preference container <article> > <main> > <body> (readability-lite heuristic). Extract meta: og:* (open graph), description, author, <time datetime=...>. Return title, body_text trimmed to 50000 char, lang of <html, fetched_at. Skip Content-Type != 'text/html'. Fixed User-Agent 'metnos-crawler/1.1 (+contact@metnos.com)'. For authenticated sites: pass 'auth_cookies_file' as a path to a Mozilla cookies.txt (see `login_session`). Example after find_urls: read_urls_html(from_step=1) → entries=[{url, title, body_text, meta:{...}, lang, fetched_at}]. Output: entries (same schema as input + body_text), ok_count, fail_count, failed=[{url, error}]."
+
+[code]
+files  = ["read_urls_html.py"]
+digest = "sha256:8d0a760e38ec0c10f2e2d6a6b3dd7c1dc5f194db27c4ae4998e483a184630c8e"
+
+[args]
+type     = "object"
+required = ["urls"]
+
+[args.properties.urls]
+type        = "array"
+
+[args.properties.urls.description]
+it = "Lista di URL HTTP/HTTPS da leggere come HTML. Anche un singolo URL passato come array a 1 elemento. Esempio: ['https://news.example.org/articolo-1']. In pipeline ricevi via from_step dall'output di find_urls."
+en = "List of HTTP/HTTPS URLs to be read as HTML. Even a single URL passed as a 1-element array. Example: ['https://news.example.org/article-1']. In the pipeline, you receive this via from_step from the output of find_urls."
+
+[args.properties.auth_cookies_file]
+type        = "string"
+
+[args.properties.auth_cookies_file.description]
+it = "Path a un file Mozilla cookies.txt (formato Netscape). Tutti i cookie validi per gli URL passati vengono iniettati nelle Request. Esempio: '~/.config/metnos/cookies/web.spaggiari.eu.txt'."
+en = "Path to a Mozilla cookies.txt file (Netscape format). All cookies valid for the passed URLs are injected into the Requests. Example: '~/.config/metnos/cookies/web.spaggiari.eu.txt'."
+
+[args.properties.timeout_s]
+type        = "number"
+default     = 10.0
+minimum     = 1.0
+maximum     = 60.0
+
+[args.properties.timeout_s.description]
+it = "Timeout per singola richiesta HTTP, in secondi. Default 10.0."
+en = "Timeout for single HTTP request, in seconds. Default 10.0."
+
+[args.properties.max_bytes]
+type        = "integer"
+minimum     = 0
+default     = 2000000
+
+[args.properties.max_bytes.description]
+it = "Tetto sui byte letti per pagina. Default 2000000 (2 MB)."
+en = "Cap on bytes read per page. Default 2000000 (2 MB)."
+
+[args.properties.js_render]
+type        = "boolean"
+default     = false
+
+[args.properties.js_render.description]
+it = "Opt-in JS-rendering via sidecar Playwright (ADR 0125). Quando true e il sidecar e' UP (porta 8771), le pagine SPA con error_class=js_rendered vengono re-richieste al sidecar che renderizza JS in Chromium headless e ritorna l'HTML finale. Costo: ~500ms-2s extra per pagina + ~200MB RAM lato sidecar. Default false per non rallentare il throughput dei turn normali. Usa SOLO dopo un primo step che ha rilevato error_class=js_rendered (regola js_rendered_retry del planner)."
+en = "Opt-in JS-rendering via Playwright sidecar (ADR 0125). When true and the sidecar is UP (port 8771), SPA pages with error_class=js_rendered are re-requested to the sidecar which renders JS in headless Chromium and returns the final HTML. Cost: ~500ms-2s extra per page + ~200MB RAM on the sidecar. Default false to avoid slowing normal turn throughput. Use ONLY after a first step that detected error_class=js_rendered (planner rule js_rendered_retry)."
+
+[args.properties.client]
+type        = "string"
+enum        = ["httpx", "playwright"]
+default     = "httpx"
+
+[args.properties.client.description]
+it = "Backend di implementazione (default 'httpx' = urllib stdlib + HostThrottle + HttpCache, no JS). 'playwright' = sidecar Chromium headless come dispatcher esclusivo (stub: non ancora attivo). Per JS-render opt-in selettivo usa il flag `js_render=true` con client='httpx'. Plugin esterni futuri potranno aggiungere altri client."
+en = "Backend implementation (default 'httpx' = urllib stdlib + HostThrottle + HttpCache, no JS). 'playwright' = headless Chromium sidecar as exclusive dispatcher (stub: not yet active). For selective opt-in JS-rendering use the `js_render=true` flag with client='httpx'. Future external plugins may add other clients."
+
+[[capabilities]]
+name = "network.read"
+hint = ["http://*", "https://*"]
+
+[[tests]]
+name   = "errore_se_urls_non_lista"
+input  = { urls = 123 }
+expect = { ok = false, error_contains = "list" }
+
+[[tests]]
+name   = "lista_vuota_ok"
+input  = { urls = [] }
+expect = { ok = true, metadata_field_eq = { ok_count = 0, fail_count = 0 } }

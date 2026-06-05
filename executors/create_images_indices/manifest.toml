@@ -1,0 +1,125 @@
+# Manifest dell'executor `create_images_indices` — Metnos (ADR 0117 v4 unified).
+# Costruisce/aggiorna l'indice unificato (un solo storage per corpus).
+
+manifest_format = "1.0"
+
+name        = "create_images_indices"
+version     = "0.2.0"
+author      = "Roberto Brunialti"
+affinity    = ["indicizza", "indicizza foto", "indicizza cartella",
+                "build index", "rebuild", "vlm", "qwen", "arcface",
+                "embedding", "foto", "image", "photos"]
+# §2.3 reversibile via module.reverse(): undo rimuove l'indice SOLO se questo
+# turno lo crea ex-novo; un update incrementale non e' ribaltabile (ok_count=0
+# onesto §2.8). Nessun reverse_pattern di catalogo → fallback al modulo.
+revertible  = true
+
+# Build VLM+ArcFace su 30k+ foto puo' richiedere ore: timeout esteso.
+timeout_s = 14400
+
+[description]
+it = """Costruisce o aggiorna l'indice unificato immagini (ADR 0117 v4) in `base_path`.
+
+Pipeline per-foto: EXIF + dims + sha256 + ArcFace (RetinaFace+embed) + VLM (Qwen2-VL-7B su :8081, genera description/keywords/location/activity) + text embedding (BGE su description).
+
+Storage: `~/.local/share/metnos/index/image/<sha8>/unified/` con entries.jsonl + embeddings_text.npy + embeddings_face.npy + meta.json (schema_version=4).
+
+Refresh incrementale di default (skip foto mtime/size invariati). `force=true` per rebuild totale.
+
+Pattern:
+- prima volta: `create_images_indices(base_path='~/foto')`.
+- dopo nuove foto: stesso (incrementale).
+- rebuild totale: aggiungi `force=true`.
+
+Anti-pattern: `idx='scene'` deprecato, ignorato. `find_files(kind='image')` e' filesystem search, NO indice.
+
+Output: `{ok, schema_version=4, ok_count, fail_count, base_path, n_entries_total, refreshed_count, last_refresh_at, index_path, model_text, model_vlm, model_face}`. Truncation: `cap_field='max_files'`."""
+en = """Builds or updates unified images index (ADR 0117 v4) in `base_path`.
+
+Per-photo pipeline: EXIF + dims + sha256 + ArcFace (RetinaFace+embed) + VLM (Qwen2-VL-7B on :8081 → description/keywords/location/activity) + text embedding (BGE on description).
+
+Storage: `~/.local/share/metnos/index/image/<sha8>/unified/` with entries.jsonl + embeddings_text.npy + embeddings_face.npy + meta.json (schema_version=4).
+
+Incremental refresh by default (skip photos with unchanged mtime/size). `force=true` for full rebuild.
+
+Patterns:
+- first time: `create_images_indices(base_path='~/photos')`.
+- after adding photos: same (incremental).
+- full rebuild: add `force=true`.
+
+Anti-patterns: `idx='scene'` deprecated, ignored. `find_files(kind='image')` is filesystem search, NO index.
+
+Output: `{ok, schema_version=4, ok_count, fail_count, base_path, n_entries_total, refreshed_count, last_refresh_at, index_path, model_text, model_vlm, model_face}`. Truncation: `cap_field='max_files'`."""
+
+[code]
+files  = ["create_images_indices.py"]
+digest = "sha256:7976c558b2e4a22cf631b382f79902537795d21d98639b2987ef1c1be6ce93af"
+
+[args]
+type     = "object"
+required = ["base_path"]
+
+[args.properties.base_path]
+type        = "string"
+
+[args.properties.base_path.description]
+it = "Directory radice della collezione di foto. Path assoluto o ~ espandibile."
+en = "Root directory of the photo collection. Absolute path or expandable ~."
+
+[args.properties.recursive]
+type        = "boolean"
+default     = true
+
+[args.properties.recursive.description]
+it = "Se true (default), indicizza anche le sottocartelle."
+en = "If true (default), also index subdirectories."
+
+[args.properties.force]
+type        = "boolean"
+default     = false
+
+[args.properties.force.description]
+it = "Se true, rebuild totale (ignora indice esistente). Default false: refresh incrementale (skip foto invariate)."
+en = "If true, total rebuild (ignores existing index). Default false: incremental refresh (skip unchanged photos)."
+
+[args.properties.max_files]
+type        = "integer"
+minimum     = 1
+default     = 50000
+
+[args.properties.max_files.description]
+it = "Tetto massimo di file da indicizzare nella singola call. Default 50000."
+en = "Maximum number of files to index in a single call. Default 50000."
+
+[args.properties.dry_run]
+type        = "boolean"
+default     = false
+
+[args.properties.dry_run.description]
+it = "Se true, conta i file e stima costo/spazio senza scrivere nulla."
+en = "If true, counts files and estimates cost/space without writing anything."
+
+[args.properties.idx]
+type        = "string"
+
+[args.properties.idx.description]
+it = "DEPRECATED post-ADR0117. Ignorato con warn log. NON USARE."
+en = "DEPRECATED post-ADR0117. Ignored with warn log. DO NOT USE."
+
+[[capabilities]]
+name = "fs:read"
+hint = ["~/**", "/mnt/**", "/tmp/**"]
+
+[[capabilities]]
+name = "index.write"
+hint = ["~/.local/share/metnos/index/image/**"]
+
+[[tests]]
+name     = "base_path_inesistente_fallisce"
+input    = { base_path = "/tmp/metnos_does_not_exist_xyz_unified_create" }
+expect   = { ok = false, error_contains = "Percorso non trovato" }
+
+[[tests]]
+name     = "missing_base_path_fallisce"
+input    = { recursive = true }
+expect   = { ok = false, error_contains = "base_path" }

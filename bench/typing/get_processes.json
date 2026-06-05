@@ -1,0 +1,82 @@
+{
+  "name": "get_processes",
+  "manifest_mtime": 1779788996,
+  "inputs": {
+    "filters": {
+      "structural_type": "array",
+      "required": false,
+      "default": [],
+      "semantic_type": "json_object",
+      "role": "filter",
+      "format_hint": "list of {attribute, op, value}"
+    },
+    "top": {
+      "structural_type": "integer",
+      "required": false,
+      "default": null,
+      "semantic_type": "count",
+      "role": "meta",
+      "format_hint": "int >= 1"
+    },
+    "include_health": {
+      "structural_type": "boolean",
+      "required": false,
+      "default": false,
+      "semantic_type": "bool",
+      "role": "meta",
+      "format_hint": "boolean"
+    },
+    "services_extra": {
+      "structural_type": "array",
+      "required": false,
+      "default": [],
+      "semantic_type": "name",
+      "role": "filter",
+      "format_hint": "list of strings"
+    }
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "process_entry[]",
+    "schema": {
+      "ok": "bool",
+      "ok_count": "count",
+      "fail_count": "count",
+      "entries": {
+        "pid": "count",
+        "ppid": "count",
+        "name": "name",
+        "cmd": "free_text",
+        "user": "name",
+        "cpu_pct": "percent",
+        "mem_pct": "percent",
+        "started_at": "iso_timestamp",
+        "health": {
+          "load": "scalar_metric",
+          "memory": "scalar_metric",
+          "thermal": "scalar_metric",
+          "disk": "scalar_metric",
+          "network": "free_text",
+          "services": "name[]"
+        }
+      },
+      "failed": "json_object[]",
+      "truncated": "bool",
+      "truncated_what": "free_text",
+      "truncated_intentional": "bool",
+      "used": "count",
+      "available_total": "count"
+    }
+  },
+  "unresolved_args": [
+    "filters",
+    "services_extra"
+  ],
+  "consumes": [
+    "filter:name",
+    "filter:count",
+    "filter:free_text",
+    "filter:iso_timestamp"
+  ],
+  "propagates_constraints": false
+}

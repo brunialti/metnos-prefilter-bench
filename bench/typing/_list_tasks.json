@@ -1,0 +1,26 @@
+{
+  "name": "list_tasks",
+  "manifest_mtime": 0,
+  "inputs": {
+    "filter_state": {"structural_type": "string", "required": false, "default": null, "semantic_type": "name", "role": "filter", "format_hint": "active|paused|completed"},
+    "filter_name": {"structural_type": "string", "required": false, "default": null, "semantic_type": "name", "role": "filter", "format_hint": "task name glob"},
+    "filter_recurrence": {"structural_type": "boolean", "required": false, "default": null, "semantic_type": "bool", "role": "filter", "format_hint": "true=recurring"},
+    "top_k": {"structural_type": "integer", "required": false, "default": 100, "semantic_type": "count", "role": "meta", "format_hint": "integer"}
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "task_entry[]",
+    "schema": {
+      "id": "name", "name": "name", "trigger": "free_text",
+      "callback": "name", "state": "name", "next_at": "iso_timestamp",
+      "last_run": "iso_timestamp", "recurrence": "bool"
+    },
+    "may_be_truncated": true,
+    "may_be_empty": true
+  },
+  "consumes": ["filter:any", "filter:recurrence", "filter:state", "filter:name", "meta:count"],
+  "propagates_constraints": false,
+  "preconditions": [],
+  "_builtin": true,
+  "_terminator": false
+}

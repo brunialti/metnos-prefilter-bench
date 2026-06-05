@@ -1,0 +1,22 @@
+{
+  "name": "create_tasks",
+  "manifest_mtime": 0,
+  "inputs": {
+    "name": {"structural_type": "string", "required": true, "default": null, "semantic_type": "name", "role": "source", "format_hint": "task slug"},
+    "trigger": {"structural_type": "string", "required": false, "default": "at:tomorrow", "semantic_type": "free_text", "role": "filter", "format_hint": "daily@HH:MM|every_Ns|at:<ISO>|cron:<5-field>"},
+    "callback": {"structural_type": "string", "required": false, "default": "noop", "semantic_type": "name", "role": "meta", "format_hint": "callback id"},
+    "content": {"structural_type": "string", "required": false, "default": null, "semantic_type": "free_text", "role": "filter", "format_hint": "task body"}
+  },
+  "requires_one_of": [],
+  "output": {
+    "type": "scalar_metric",
+    "schema": {"ok": "bool", "id": "name", "error": "free_text"},
+    "may_be_truncated": false,
+    "may_be_empty": false
+  },
+  "consumes": [],
+  "propagates_constraints": false,
+  "preconditions": [],
+  "_builtin": true,
+  "_terminator": false
+}

@@ -1,0 +1,209 @@
+# Manifest dell'executor `find_urls` — Metnos v1.1
+# Crawler BFS multi-tier per scoperta URL su seed (ADR 0081, 4/5/2026).
+
+manifest_format = "1.0"
+
+name        = "find_urls"
+version     = "0.1.0"
+timeout_s   = 900
+author      = "Roberto Brunialti"
+affinity    = [
+    "find", "trova", "cerca", "scopri", "explore", "crawl", "url", "web", "sito", "news",
+                "feed", "rss", "topic"
+            ]
+
+[description]
+it = "Discovery URL e documenti sul web. DUE MODI mutualmente esclusivi.\n\nMODO SEARCH (motore di ricerca):\nDEVI usare `search_query=<query naturale>` SENZA `seed_urls`. SearXNG meta-search produce N URL piu' rilevanti, LLM rerank sceglie i domini istituzionali corretti, BFS depth=1 espande di un hop per scoprire documenti linkati. Caso d'uso: utente chiede informazioni/file SENZA citare un dominio specifico. Se passi anche `seed_urls`, vengono SCARTATE (SearXNG e' la fonte autoritativa).\nUSO CORRETTO: «cerca su web il file dell'organico scuola Roma» -> find_urls(search_query=\"organico scuola primaria Roma\").\nERRORE: aggiungere seed_urls=[\"https://www.usr.lazio.it/\"] indovinato dal training. Gemma sbaglia spesso il dominio; SearXNG sa.\n\nMODO CRAWL (sito noto):\nDEVI usare `seed_urls=[<URL>]` SENZA `search_query` + `topic=[<keyword>]` per ranking. BFS depth=2 default (configurabile fino a 10). Caso d'uso: utente nomina un dominio specifico o vuole esplorare un sito noto.\nUSO CORRETTO: «cerca su www.atpromaistruzione.it l'organico» -> find_urls(seed_urls=[\"https://www.atpromaistruzione.it/\"], topic=[\"organico\",\"primaria\"], mode=\"deep_search\").\nERRORE: passare anche search_query qui — search_query forza il MODO SEARCH e i seed vengono droppati.\n\nDiscovery deterministica (modo crawl): sitemap.xml -> RSS/Atom -> BFS link <a href>. Discovery documenti (PDF/DOCX/XLSX/CSV/ZIP): anchor text del link diventa pseudo-titolo per BM25; output dedicato `discovered_documents=[{url,ext,anchor_text,score,parent_url}]`. Ranking BM25 su title+snippet + bonus 5.0 topic-in-path + bonus 1.0 is-document.\n\nDefault: max_depth=2 (modo crawl) o 1 (modo search), max_pages=1000 tier1, max 5000 cap-expand, same_origin_only=true (modo crawl) salvo documenti cross-domain (sempre permessi), include_subdomains=true, respect_robots=true, rate 200ms.\n\nNON CONFONDERE CON: `get_urls` (HTTP GET su URL noti, no discovery), `read_urls_html` (lettura body di URL specifici, no discovery).\n\nOutput: `entries=[{url,title,snippet,score,depth,content_type,fetched_at,lastmod,is_document?,doc_ext?,parent_url?}]` desc by score; `discovered_documents` subset doc-only; `discovery_strategy` (sitemap|rss|bfs|searxng|mixed); `metadata.search_engine_seeds_dropped` (true in modo SEARCH se PLANNER aveva passato seed scartati); `robots_skipped`. Truncation §2.7: `truncated:true` + `truncated_what=\"URL\"` + `used` + `available_total` + `cap_field=\"max_pages\"`. Soft fail SearXNG zero risultati: `error_class=\"search_no_results\"` + entries=[]."
+en = "URL and document discovery on the web. TWO mutually exclusive modes.\n\nSEARCH MODE (search engine):\nMUST use `search_query=<natural query>` WITHOUT `seed_urls`. SearXNG meta-search produces top-N most relevant URLs, LLM rerank picks institutional domains, BFS depth=1 expands one hop to discover linked documents. Use case: user asks for info/files WITHOUT naming a specific domain. If you also pass `seed_urls`, they are DROPPED (SearXNG is authoritative).\nCORRECT USE: «search the web for the school organic file Rome» -> find_urls(search_query=\"school primary organic Rome\").\nERROR: adding seed_urls=[\"https://www.usr.lazio.it/\"] guessed from training. Gemma often gets the domain wrong; SearXNG knows.\n\nCRAWL MODE (known site):\nMUST use `seed_urls=[<URL>]` WITHOUT `search_query` + `topic=[<keywords>]` for ranking. BFS depth=2 default (up to 10). Use case: user names a specific domain or wants to explore a known site.\nCORRECT USE: «search on www.atpromaistruzione.it for the organic» -> find_urls(seed_urls=[\"https://www.atpromaistruzione.it/\"], topic=[\"organic\",\"primary\"], mode=\"deep_search\").\nERROR: also passing search_query here — search_query forces SEARCH MODE and the seeds are dropped.\n\nDeterministic discovery (crawl mode): sitemap.xml -> RSS/Atom -> BFS <a href> links. Document discovery (PDF/DOCX/XLSX/CSV/ZIP): link anchor text becomes pseudo-title for BM25; dedicated output `discovered_documents=[{url,ext,anchor_text,score,parent_url}]`. BM25 ranking on title+snippet + 5.0 topic-in-path bonus + 1.0 is-document bonus.\n\nDefault: max_depth=2 (crawl mode) or 1 (search mode), max_pages=1000 tier1, max 5000 cap-expand, same_origin_only=true (crawl mode) except cross-domain documents (always allowed), include_subdomains=true, respect_robots=true, rate 200ms.\n\nDO NOT CONFUSE WITH: `get_urls` (HTTP GET on known URLs, no discovery), `read_urls_html` (body read of specific URLs, no discovery).\n\nOutput: `entries=[{url,title,snippet,score,depth,content_type,fetched_at,lastmod,is_document?,doc_ext?,parent_url?}]` desc by score; `discovered_documents` doc-only subset; `discovery_strategy` (sitemap|rss|bfs|searxng|mixed); `metadata.search_engine_seeds_dropped` (true in SEARCH mode if PLANNER had passed dropped seeds); `robots_skipped`. Truncation §2.7: `truncated:true` + `truncated_what=\"URL\"` + `used` + `available_total` + `cap_field=\"max_pages\"`. Soft fail SearXNG zero results: `error_class=\"search_no_results\"` + entries=[]."
+
+[code]
+files  = ["find_urls.py"]
+digest = "sha256:e37f0fab2b92decd309ccd35fbeb4b67d9a722da2cd6988ccf77f30e8276320f"
+
+[args]
+type     = "object"
+# UNO TRA `search_query` e `seed_urls` e' richiesto. Validazione runtime:
+# se mancano entrambi -> error_class=invalid_args. Required nel JSONSchema
+# resta vuoto perche' la regola e' "oneOf"; il PLANNER guidato dalla
+# description sceglie quale modo usare.
+required = []
+
+[args.properties.search_query]
+type        = "string"
+
+[args.properties.search_query.description]
+it = "MODO SEARCH: query in linguaggio naturale per SearXNG meta-search + LLM rerank. Usa questa quando l'utente NON nomina un dominio specifico ('cerca su web X', 'trova X', 'informazioni su Y'). Mutuamente esclusivo con `seed_urls`: se passi entrambi, `seed_urls` viene SCARTATO (SearXNG e' la fonte autoritativa). Default max_depth=1 (SearXNG roots + 1 hop documenti). Esempio: 'organico scuola primaria Roma {{ current_year }}'."
+en = "SEARCH MODE: natural language query for SearXNG meta-search + LLM rerank. Use when user does NOT name a specific domain ('search the web for X', 'find X', 'info on Y'). Mutually exclusive with `seed_urls`: passing both DROPS `seed_urls` (SearXNG is authoritative). Default max_depth=1 (SearXNG roots + 1 hop documents). Example: 'school primary organic Rome {{ current_year }}'."
+
+[args.properties.seed_urls]
+type        = "array"
+
+[args.properties.seed_urls.description]
+it = "MODO CRAWL: lista di URL di partenza (HTTP/HTTPS) per BFS su sito noto. Usa questa quando l'utente nomina un dominio specifico ('cerca su www.X.it', 'esplora il sito Y'). Mutuamente esclusivo con `search_query`. Anche un solo URL passato come array a 1 elemento. Esempio: ['https://www.atpromaistruzione.it/']. Default max_depth=2."
+en = "CRAWL MODE: list of starting URLs (HTTP/HTTPS) for BFS on known site. Use when user names a specific domain ('search on www.X.it', 'explore site Y'). Mutually exclusive with `search_query`. Even a single URL passed as a 1-element array. Example: ['https://www.atpromaistruzione.it/']. Default max_depth=2."
+
+[args.properties.topic]
+type        = ["string", "array"]
+
+[args.properties.topic.description]
+it = "Argomento per il ranking BM25 su title+snippet. Stringa libera (es. 'economia politica') OR array di keyword (es. ['economia','politica']). Vuoto = nessun ranking, ordina per lastmod desc. NOTA (8/5/2026): topic e' RANKING, NON filtering — entries con score=0 restano nel risultato in fondo. Per filtrare, passa `min_score` esplicito."
+en = "Topic for BM25 ranking on title+snippet. Free string (e.g., 'political economy') OR array of keywords (e.g., ['economy','politics']). Empty = no ranking, sort by lastmod desc. NOTE (8/5/2026): topic is RANKING, NOT filtering — entries with score=0 remain in the result at the bottom. To filter, pass explicit `min_score`."
+
+[args.properties.min_score]
+type        = "number"
+minimum     = 0.0
+
+[args.properties.min_score.description]
+it = "Soglia minima di score BM25 per filtrare le entries. Default None (nessun filtro: anche score=0 restano in lista). Esempi: 0.01 = elimina solo i veri zeri (cross-link irrelevanti); 1.0 = solo match di topic forti. Solo applicabile quando `topic` e' valorizzato."
+en = "Minimum BM25 score threshold to filter entries. Default None (no filter: even score=0 entries remain). Examples: 0.01 = drops only true zeros (irrelevant cross-links); 1.0 = only strong topic matches. Only applicable when `topic` is set."
+
+[args.properties.max_per_domain]
+type        = "integer"
+minimum     = 0
+default     = 3
+
+[args.properties.max_per_domain.description]
+it = "Cap diversita': massimo N entries per registered-domain (eTLD+1) nella top-K finale. Default 3, evita che una singola source domini i risultati (es. 15 listing pages dello stesso aggregator). Override 0 = disabilita (back-compat)."
+en = "Diversity cap: max N entries per registered-domain (eTLD+1) in the final top-K. Default 3, prevents a single source from dominating results (e.g. 15 listing pages from the same aggregator). Override 0 = disable (back-compat)."
+
+[args.properties.mode]
+type        = "string"
+enum        = ["default", "research", "archive", "deep_search"]
+default     = "default"
+
+[args.properties.mode.description]
+it = """Asse: intento utente.
+
+DISCOVERY (esplora/riassumi/descrive cosa c'e' su un sito senza un target preciso):
+- 'default' (depth 2, cap_pages tier-based) — uso 95% dei casi: lista pagine + titoli + snippet, ordinabile per topic ma SENZA leggere il body.
+- 'research' (depth >= 4, richiede capability crawl.recursive) — discovery piu' aggressiva su siti grandi.
+- 'archive' (depth >= 6, time_window forzato a 'all') — snapshot esaustivo per audit/archiviazione.
+
+TARGETED SEARCH (so cosa cerco, voglio l'informazione):
+- 'deep_search' — pipeline content-aware (BFS + pre-rank ibrido BM25+embedding + lettura full-body top-K + ranking content). Aggiunge content_score, content_snippet, hit_terms alle entries top. RICHIEDE topic.
+
+USO CORRETTO: query 'cosa c'e' su X' / 'elenca articoli su X' → default. Query 'trova X su Y' / 'qual e' il numero X su Y' → deep_search.
+
+DEVI usare 'default' per 'cerca/trova informazioni|notizie su <tema>' senza un sito specifico.
+NON DEVI usare 'research'/'archive' salvo richiesta ESPLICITA di esplorare o archiviare un INTERO sito: fanno crawl profondo (minuti, fino a 900s) e bloccano il turno.
+OK: 'cerca informazioni sulle performance dei fondi ARK' → default.
+ERRORE: 'cerca informazioni sui fondi ARK' → research."""
+en = "Axis: user intent.  DISCOVERY (explore/summarize/describe what is on a site without a precise target): - 'default' (depth 2, cap_pages tier-based) — used in 95% of cases: lists pages + titles + snippets, sortable by topic but WITHOUT reading the body. - 'research' (depth >= 4, requires crawl.recursive capability) — more aggressive discovery on large sites. - 'archive' (depth >= 6, time_window forced to 'all') — exhaustive snapshot for audit/archiving.  TARGETED SEARCH (I know what I am looking for, I want the information): - 'deep_search' — content-aware pipeline (BFS + hybrid BM25+embedding pre-rank + top-K full-body reading + content ranking). Adds content_score, content_snippet, hit_terms to top entries. REQUIRES topic.  CORRECT USE: query 'what is on X' / 'list articles on X' → default. Query 'find X on Y' / 'what is the number X on Y' → deep_search.  MUST use 'default' for 'search/find information|news about <topic>' without a specific site. MUST NOT use 'research'/'archive' unless EXPLICITLY asked to explore or archive an ENTIRE site: they do deep crawls (minutes, up to 900s) and block the turn. OK: 'search information about ARK funds performance' → default. ERROR: 'search information about ARK funds' → research."
+
+[args.properties.trust]
+type        = "string"
+default     = "auto"
+
+[args.properties.trust.description]
+it = "Risoluzione tier: 'auto' (consulta owned_domains.json + trusted_origins.json), 'owned' (forza tier 3), 'cookie:<dominio>' (tier 2 se host == dominio o suffix). Esempio: 'cookie:web.spaggiari.eu'."
+en = "Resolution tier: 'auto' (consult owned_domains.json + trusted_origins.json), 'owned' (force tier 3), 'cookie:<domain>' (tier 2 if host == domain or suffix). Example: 'cookie:web.spaggiari.eu'."
+
+[args.properties.max_depth]
+type        = "integer"
+minimum     = 0
+maximum     = 10
+default     = 2
+
+[args.properties.max_depth.description]
+it = "Profondita' massima della BFS in numero di hop dal seed. Default 2, cap 10. Per ricerche documento (PDF nidificati in 'trasparenza/personale/...') alza a 4-6; per crawl esaustivo 8-10. Combinato con max_pages: la BFS si ferma al primo dei due limiti."
+en = "Maximum BFS depth in number of hops from the seed. Default 2, cap 10. For document searches (PDFs nested in 'trasparenza/personale/...') increase to 4-6; for exhaustive crawl 8-10. Combined with max_pages: the BFS stops at the first of the two limits."
+
+[args.properties.max_pages]
+type        = "integer"
+minimum     = 0
+default     = 1000
+
+[args.properties.max_pages.description]
+it = "Tetto massimo di URL nel risultato. Tier 1 (default) max 5000, tier 2 max 10000, tier 3 (owned) max 50000. Se omesso usa il default di tier (1000 per tier 1, 2000 per tier 2). La cap-expand del runtime offre crescita 1000 → 2000 → 5000 progressiva su 'sì' utente."
+en = "Maximum number of URLs in the result. Tier 1 (default) max 5000, tier 2 max 10000, tier 3 (owned) max 50000. If omitted, use the tier default (1000 for tier 1, 2000 for tier 2). The runtime cap-expand offers progressive growth 1000 → 2000 → 5000 upon user 'yes'."
+
+[args.properties.same_origin_only]
+type        = "boolean"
+default     = true
+
+[args.properties.same_origin_only.description]
+it = "Se true (default), scarta link che escono dall'origin del seed (schema://host:port). Per crawl multi-host = false, ma il rate limit resta per-host."
+en = "If true (default), discard links that exit the origin of the seed (schema://host:port). For multi-host crawl = false, but the rate limit remains per-host."
+
+[args.properties.path_include]
+type        = "array"
+
+[args.properties.path_include.description]
+it = "Lista di regex/glob su URL.path. Se non vuota, l'URL e' incluso solo se almeno una pattern matcha. Esempio: ['/blog/*', '/news/{{ current_year }}/*']."
+en = "List of regex/glob on URL.path. If not empty, the URL is included only if at least one pattern matches. Example: ['/blog/*', '/news/{{ current_year }}/*']."
+
+[args.properties.path_exclude]
+type        = "array"
+
+[args.properties.path_exclude.description]
+it = "Lista di regex/glob su URL.path che escludono l'URL. Default: ['/login','/logout','/feed','/tag/','/search','#']. Per disabilitare = []."
+en = "List of regex/glob on URL.path that exclude the URL. Default: ['/login','/logout','/feed','/tag/','/search','#']. To disable set = []."
+
+[args.properties.respect_robots]
+type        = "boolean"
+default     = true
+
+[args.properties.respect_robots.description]
+it = "Se true (default), legge /robots.txt una volta per origin e rispetta Disallow per User-agent: *. Tier 3 owned ignora sempre robots."
+en = "If true (default), reads /robots.txt once per origin and respects Disallow for User-agent: *. Tier 3 owned always ignores robots."
+
+[args.properties.auth_cookies_file]
+type        = "string"
+
+[args.properties.auth_cookies_file.description]
+it = "OPZIONALE. OMETTERE per ricerche pubbliche (notizie, wikipedia, blog, web search generica). USARE SOLO quando l'utente cita esplicitamente un sito che richiede login (es. 'spaggiari', 'gmail web', 'portale aziendale'). Path a un file Mozilla cookies.txt da iniettare nelle Request: prima `login_session(domain=...)` produce il file, poi find_urls lo usa. Esempio: '~/.config/metnos/cookies/web.spaggiari.eu.txt'. Se passato ma il file non esiste, il crawl prosegue pubblico (degradazione silenziosa)."
+en = "OPTIONAL. OMIT for public searches (news, wikipedia, blogs, generic web search). USE ONLY when the user explicitly cites a site that requires login (e.g. 'spaggiari', 'gmail web', 'company portal'). Path to a Mozilla cookies.txt file to be injected into Requests: first `login_session(domain=...)` produces the file, then find_urls uses it. Example: '~/.config/metnos/cookies/web.spaggiari.eu.txt'. If passed but the file does not exist, the crawl continues publicly (silent degradation)."
+
+[args.properties.time_window]
+type        = "string"
+default     = "all"
+
+[args.properties.time_window.description]
+it = "Filtra per data di pubblicazione/lastmod: 'today' (oggi UTC), 'last-24h', 'last-7d', 'last-Nd' (es. 'last-30d'), 'all'. URL senza data noti non sono esclusi."
+en = "Filter by publication date/lastmod: 'today' (today UTC), 'last-24h', 'last-7d', 'last-Nd' (e.g., 'last-30d'), 'all'. URLs without known dates are not excluded."
+
+[args.properties.rate_limit_ms]
+type        = "integer"
+minimum     = 50
+default     = 500
+
+[args.properties.rate_limit_ms.description]
+it = "Pausa minima fra fetch verso lo stesso origin, in ms. Floor hardcoded 200 (tier 1/2) o 50 (tier 3 owned). Default 500."
+en = "Minimum pause between fetch to the same origin, in ms. Hardcoded floor 200 (tier 1/2) or 50 (tier 3 owned). Default 500."
+
+[args.properties.timeout_s]
+type        = "number"
+default     = 10.0
+minimum     = 1.0
+maximum     = 60.0
+
+[args.properties.timeout_s.description]
+it = "Timeout per singola richiesta HTTP, in secondi. Default 10.0."
+en = "Timeout for single HTTP request, in seconds. Default 10.0."
+
+[args.properties.client]
+type        = "string"
+enum        = ["httpx", "playwright"]
+default     = "httpx"
+
+[args.properties.client.description]
+it = "Backend di implementazione (default 'httpx' = urllib stdlib + SearXNG + HostThrottle). 'playwright' = stub (non ancora attivo). Plugin esterni futuri potranno aggiungere altri client."
+en = "Backend implementation (default 'httpx' = urllib stdlib + SearXNG + HostThrottle). 'playwright' = stub (not yet active). Future external plugins may add other clients."
+
+[[capabilities]]
+name = "network.read"
+hint = ["http://*", "https://*"]
+
+[[capabilities]]
+name = "crawl.recursive"
+hint = ["mode=research", "mode=archive"]
+
+[[tests]]
+name   = "errore_se_search_query_e_seed_urls_assenti"
+input  = {}
+expect = { ok = false, error_contains = "seed_urls" }
+
+[[tests]]
+name   = "errore_se_seed_urls_vuoto_senza_search_query"
+input  = { seed_urls = [] }
+expect = { ok = false, error_contains = "seed_urls" }

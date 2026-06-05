@@ -1,0 +1,70 @@
+# Manifest dell'executor `find_credentials` — Metnos v1.1
+# Naming compositivo: azione_oggetto. 16 OBJECT credentials (10/5/2026).
+# Invariante di sicurezza: metadata-only (capability metnos:credentials_metadata_only).
+
+manifest_format = "1.0"
+
+name        = "find_credentials"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["credenziali", "chiavi", "token", "segreti", "configurate",
+                "quali account", "elenca credenziali", "registro credenziali",
+                "credentials", "secrets", "stored keys", "list credentials",
+                "configured services", "api keys", "logins"]
+
+[description]
+it = "Elenca le credenziali configurate nello storage cifrato di Metnos. DEVI usarla per 'che credenziali ho configurate?', 'mostrami i token salvati', 'quali servizi sono autenticati?'. Ritorna SOLO metadati (binding, fingerprint sha256 troncato, nomi dei campi presenti, eta in giorni, stato configured|expired|incomplete): i valori cleartext NON vengono MAI esposti al PLANNER. Senza `query` ritorna tutte le entry; con `query` filtra per substring case-insensitive su binding e scopes. `top_k` opzionale e' un cap esplicito: se raggiunto, `truncated=true` con `available_total`. NON DEVI usarla per leggere il valore di una credenziale (i valori vengono caricati internamente dagli executor consumer via `credentials.load(binding)`, fuori vista LLM); NON DEVI usarla per creare o modificare credenziali (uso `set_credentials`). USO CORRETTO: `find_credentials()` o `find_credentials(query='google')` o `find_credentials(top_k=10)`. ERRORE: `find_credentials(query='')` con stringa vuota esplicita (omettila per lista intera). Output: `{ok, entries:[{binding, fingerprint, scopes, age_days, status, fields_present}], n_entries, truncated?, available_total?, truncated_what?, cap_field?, cap_value?}`."
+en = "Lists credentials configured in Metnos encrypted storage. MUST be used for 'which credentials are configured?', 'show stored tokens', 'which services are authenticated?'. Returns metadata ONLY (binding, truncated sha256 fingerprint, names of present fields, age in days, status configured|expired|incomplete): cleartext values are NEVER exposed to the PLANNER. Without `query` returns all entries; with `query` filters by case-insensitive substring on binding and scopes. `top_k` optional explicit cap: if reached, `truncated=true` with `available_total`. MUST NOT be used to read a credential value (values are loaded in-process by consumer executors via `credentials.load(binding)`, out of LLM sight); MUST NOT be used to create or modify credentials (use `set_credentials`). CORRECT USE: `find_credentials()` or `find_credentials(query='google')` or `find_credentials(top_k=10)`. ERROR: `find_credentials(query='')` with explicit empty string (omit for full list). Output: `{ok, entries:[{binding, fingerprint, scopes, age_days, status, fields_present}], n_entries, truncated?, available_total?, truncated_what?, cap_field?, cap_value?}`."
+
+[code]
+files  = ["find_credentials.py"]
+digest = "sha256:723200802f10085d0b8314f0f55ee95b578098d22318730133979335fd7dd761"
+
+[args]
+type     = "object"
+required = []
+
+[args.properties.query]
+type        = "string"
+
+[args.properties.query.description]
+it = "Substring case-insensitive di filtro su binding e scopes (opzionale). Se omesso ritorna tutte le entry. Stringa esplicitamente vuota e' rifiutata."
+en = "Case-insensitive substring filter on binding and scopes (optional). If omitted returns all entries. Explicitly empty string is rejected."
+
+[args.properties.top_k]
+type        = "integer"
+
+[args.properties.top_k.description]
+it = "Cap esplicito al numero di entry restituite (opzionale, default = nessun cap). Se raggiunto, `truncated=true` + `available_total` per consentire riformulazione."
+en = "Explicit cap on returned entries count (optional, default = no cap). If reached, `truncated=true` + `available_total` to allow follow-up."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  entries: Array<{binding, fingerprint, scopes, age_days, status, fields_present}>,
+  n_entries: int,
+  truncated?: bool,
+  truncated_what?: str,
+  used?: int,
+  available_total?: int,
+  cap_field?: str,
+  cap_value?: int,
+  error?: str
+}
+"""
+
+[[capabilities]]
+name = "metnos:credentials_metadata_only"
+hint = ["~/.local/share/metnos/credentials/"]
+
+[[capabilities]]
+name = "metnos:read"
+hint = ["~/.local/share/metnos/credentials/"]
+
+reversible = true
+
+[[tests]]
+name   = "rejects_explicit_empty_query"
+input  = { query = "" }
+expect = { ok = false, error_contains = "query" }

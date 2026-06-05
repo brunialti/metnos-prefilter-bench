@@ -1,0 +1,52 @@
+# Manifest dell'executor `get_images_indices` — Metnos v1.1
+# Naming compositivo: azione_oggetto[_modalita'] (verb=get, obj=images,
+# modalita'=indices). ADR 0086 (rinominato 5/5/2026).
+
+manifest_format = "1.0"
+
+name        = "get_images_indices"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["status", "introspection", "indice", "index", "stato", "snapshot", "info", "foto", "image"]
+
+[description]
+it = "Status degli indici immagini per `base_path`. Per ogni `idx` (scene/persons/gps) ritorna: se esiste, n_entries, last_refresh_at, size_mb, model, dim. NON costruisce indici (introspection-only, snapshot di stato dell'indice). Esempio: usa per dashboard admin o per decidere se rifare un indice (mtime piu' vecchio di X giorni). Output: `entries=[{idx, exists, n_entries, last_refresh_at, size_mb, ...}]`."
+en = "Status of image indices for `base_path`. For each `idx` (scene/persons/gps) return: if it exists, n_entries, last_refresh_at, size_mb, model, dim. MUST NOT build indices (introspection-only, snapshot of index state). Example: use for admin dashboard or to decide whether to rebuild an index (mtime older than X days). Output: `entries=[{idx, exists, n_entries, last_refresh_at, size_mb, ...}]`."
+
+[code]
+files  = ["get_images_indices.py"]
+digest = "sha256:6d2f18bcb46e102ce222e7800c6b6d41429978b17913ef3eca447f83591d3324"
+
+[args]
+type     = "object"
+required = ["base_path"]
+
+[args.properties.base_path]
+type        = "string"
+
+[args.properties.base_path.description]
+it = "Directory radice della collezione (la stessa usata in create_images_indices). Path assoluto o ~ espandibile."
+en = "Collection root directory (the same one used in create_images_indices). Absolute path or expandable ~."
+
+[args.properties.idx]
+type        = "string"
+enum        = ["scene", "persons", "gps", "all"]
+default     = "all"
+
+[args.properties.idx.description]
+it = "Quale indice ispezionare. 'all' (default) = tutti i tipi; altrimenti uno solo."
+en = "Which index to inspect. 'all' (default) = all types; otherwise only one."
+
+[[capabilities]]
+name = "index.read"
+hint = ["~/.local/share/metnos/index/image/**"]
+
+[[tests]]
+name   = "base_path_qualunque_ok_lista_anche_se_vuota"
+input  = { base_path = "/tmp/metnos_test_idx_get_inexistent", idx = "all" }
+expect = { ok = true }
+
+[[tests]]
+name   = "idx_invalido_fallisce"
+input  = { base_path = "/tmp/metnos_test_idx_get", idx = "pippo" }
+expect = { ok = false, error_contains = "idx" }

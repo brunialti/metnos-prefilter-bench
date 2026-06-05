@@ -1,0 +1,237 @@
+# Manifest dell'executor `find_file` — Metnos v1.1
+# Naming compositivo: azione_oggetto. Promosso a seed il 27 aprile 2026.
+
+manifest_format = "1.0"
+
+name        = "find_files"
+version     = "0.2.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "find", "trova", "cerca", "search", "ricerca", "file", "documento", "glob", "pattern"
+            ]
+
+[description]
+it = """Cerca file per nome/pattern in una directory. Ricorsivo di default, ritorna SOLO file (no dir salvo include_dirs=true). Match case-insensitive.
+
+Pattern: stringa singola ("*.jpg"), compound ("*.jpg,*.png" o "*.jpg|*.png"), array (["*.jpg","*.png"]). Default ["*"] se non specificato.
+
+USO: preferibile a list_dirs+filter_entries quando conosci le estensioni. Filtra alla sorgente, niente sistema, niente sub-dir indesiderate.
+
+OK: find_files(base_path="/home/user/images", patterns=["*.jpg","*.png","*.heic"], recursive=true).
+
+Output entries=[{path,name,type,mime,kind,size,mtime}]. Per filtri/sort: filter_entries/sort_entries (no get_files).
+
+Truncation: truncated_what='file' + used + cap_field='max_results'."""
+en = """Search files by name/pattern in a directory. Recursive by default, returns ONLY files (no dirs unless include_dirs=true). Case-insensitive match.
+
+Pattern: single string ("*.jpg"), compound ("*.jpg,*.png" or "*.jpg|*.png"), array (["*.jpg","*.png"]). Default ["*"] if missing.
+
+USE: preferable to list_dirs+filter_entries when you know extensions. Filters at the source, no system files, no unwanted sub-dirs.
+
+OK: find_files(base_path="/home/user/images", patterns=["*.jpg","*.png","*.heic"], recursive=true).
+
+Output entries=[{path,name,type,mime,kind,size,mtime}]. For filter/sort: filter_entries/sort_entries (no get_files).
+
+Truncation: truncated_what='file' + used + cap_field='max_results'."""
+
+[code]
+files  = ["find_files.py"]
+digest = "sha256:375b5626c7d196a062ab0a598d3168cfa68b0bff1947f6a08a793fe192ffe566"
+
+[args]
+type     = "object"
+required = ["base_path"]
+
+[args.properties.base_path]
+type        = "string"
+
+[args.properties.base_path.description]
+it = "Directory di partenza della ricerca. Path assoluto o ~ espandibile (es. '~/images', '/opt/metnos'). Deve essere dentro lo scope di lettura concesso."
+en = "Starting directory for the search. Absolute path or expandable ~ (e.g., '~/images', '/opt/metnos'). Must be within the granted reading scope."
+
+[args.properties.pattern]
+type        = "string"
+
+[args.properties.pattern.description]
+it = "Pattern glob singolo da cercare nei nomi. Es. 'README.md', '*.pdf', 'diario_*'. Per piu' pattern usa virgole/pipe ('*.jpg,*.png') o l'array patterns."
+en = "Single glob pattern to search for in names. E.g. 'README.md', '*.pdf', 'diario_*'. For multiple patterns use commas/pipe ('*.jpg,*.png') or the patterns array."
+
+[args.properties.patterns]
+type        = "array"
+
+[args.properties.patterns.description]
+it = "Lista di pattern glob. Match se almeno un pattern matcha. Es. ['*.jpg','*.png']. Cumulativo con pattern."
+en = "List of glob patterns. Match if at least one pattern matches. E.g. ['*.jpg','*.png']. Cumulative with patterns."
+
+[args.properties.case_sensitive]
+type        = "boolean"
+default     = false
+
+[args.properties.case_sensitive.description]
+it = "Se true, match case-sensitive. Default false: '.JPG' matcha '*.jpg'."
+en = "If true, match case-sensitive. Default false: '.JPG' matches '*.jpg'."
+
+[args.properties.recursive]
+type        = "boolean"
+default     = true
+
+[args.properties.recursive.description]
+it = "Se true (default), cerca anche dentro le sottocartelle."
+en = "If true (default), also search inside subdirectories."
+
+[args.properties.max_results]
+type        = "integer"
+minimum     = 1
+default     = 1000
+
+[args.properties.max_results.description]
+it = "Tetto massimo di risultati. Default 1000. Quando raggiunto, l'output ha truncated=true e il runtime aggiunge un avviso al messaggio finale."
+en = "Maximum number of results. Default 1000. When reached, the output has truncated=true and the runtime adds a warning to the final message."
+
+[args.properties.max_depth]
+type        = "integer"
+minimum     = 0
+default     = 10
+
+[args.properties.max_depth.description]
+it = "Profondita' massima della ricorsione (livelli di sottocartelle). Default 10."
+en = "Maximum recursion depth (subfolder levels). Default 10."
+
+[args.properties.include_dirs]
+type        = "boolean"
+default     = false
+
+[args.properties.include_dirs.description]
+it = "Se true, include anche le directory che matchano. Default false (solo file)."
+en = "If true, also include directories that match. Default false (files only)."
+
+[args.properties.client]
+type        = "string"
+enum        = ["local"]
+default     = "local"
+
+[args.properties.client.description]
+it = "Implementazione backend (default 'local' = filesystem locale). Plugin esterni futuri (gdrive, dropbox, ecc.) potranno aggiungere altri client."
+en = "Backend implementation (default 'local' = local filesystem). Future external plugins (gdrive, dropbox, etc.) may add other clients."
+
+[output]
+schema_inline = """
+{
+  ok: bool,
+  entries: Array<{
+    path: str, name: str, type: str, mime: str,
+    kind: str, size: int, mtime: float
+  }>,
+  matches: Array<str>,
+  metadata: {
+    base_path: str, patterns: Array<str>, recursive: bool,
+    case_sensitive: bool, count: int, visited: int, truncated: bool
+  },
+  truncated?: bool,
+  truncated_what?: str,
+  used?: int,
+  error?: str
+}
+"""
+
+[[capabilities]]
+name = "fs:read"
+hint = ["~/notes/**", "/tmp/**"]
+
+[[tests]]
+name     = "trova_file_esatto"
+setup    = "mkdir -p /tmp/metnos_test_find/sub && echo a > /tmp/metnos_test_find/hello.txt && echo b > /tmp/metnos_test_find/sub/deeper.txt"
+input    = { pattern = "hello.txt", base_path = "/tmp/metnos_test_find" }
+expect   = { ok = true, matches_contains = "hello.txt" }
+teardown = "rm -rf /tmp/metnos_test_find"
+
+[[tests]]
+name     = "trova_pattern_glob_ricorsivo"
+setup    = "mkdir -p /tmp/metnos_test_find/sub && echo a > /tmp/metnos_test_find/a.md && echo b > /tmp/metnos_test_find/sub/b.md"
+input    = { pattern = "*.md", base_path = "/tmp/metnos_test_find" }
+expect   = { ok = true, matches_contains = "b.md" }
+teardown = "rm -rf /tmp/metnos_test_find"
+
+[[tests]]
+name     = "case_insensitive_default"
+setup    = "mkdir -p /tmp/metnos_test_find && touch /tmp/metnos_test_find/A.JPG /tmp/metnos_test_find/b.txt"
+input    = { pattern = "*.jpg", base_path = "/tmp/metnos_test_find" }
+expect   = { ok = true, matches_contains = "A.JPG" }
+teardown = "rm -rf /tmp/metnos_test_find"
+
+[[tests]]
+name     = "compound_pattern_virgole"
+setup    = "mkdir -p /tmp/metnos_test_find && touch /tmp/metnos_test_find/a.jpg /tmp/metnos_test_find/b.png /tmp/metnos_test_find/c.txt"
+input    = { pattern = "*.jpg,*.png", base_path = "/tmp/metnos_test_find" }
+expect   = { ok = true, metadata_field_eq = { count = 2 } }
+teardown = "rm -rf /tmp/metnos_test_find"
+
+[[tests]]
+name     = "patterns_array"
+setup    = "mkdir -p /tmp/metnos_test_find && touch /tmp/metnos_test_find/a.jpg /tmp/metnos_test_find/b.gif /tmp/metnos_test_find/c.txt"
+input    = { patterns = ["*.jpg", "*.gif"], base_path = "/tmp/metnos_test_find" }
+expect   = { ok = true, metadata_field_eq = { count = 2 } }
+teardown = "rm -rf /tmp/metnos_test_find"
+
+[[tests]]
+name     = "non_ricorsivo_salta_subdir"
+setup    = "mkdir -p /tmp/metnos_test_find/sub && echo a > /tmp/metnos_test_find/a.md && echo b > /tmp/metnos_test_find/sub/b.md"
+input    = { pattern = "*.md", base_path = "/tmp/metnos_test_find", recursive = false }
+expect   = { ok = true, metadata_field_eq = { count = 1 } }
+teardown = "rm -rf /tmp/metnos_test_find"
+
+[[tests]]
+name     = "max_results_tronca"
+setup    = "mkdir -p /tmp/metnos_test_find && for i in 1 2 3 4 5; do echo x > /tmp/metnos_test_find/file$i.txt; done"
+input    = { pattern = "*.txt", base_path = "/tmp/metnos_test_find", max_results = 2 }
+expect   = { ok = true, metadata_field_eq = { count = 2, truncated = true } }
+teardown = "rm -rf /tmp/metnos_test_find"
+
+[[tests]]
+name   = "fallisce_su_base_path_inesistente"
+input  = { pattern = "*.txt", base_path = "/tmp/metnos_does_not_exist_xyz" }
+expect = { ok = false, error_contains = "Percorso non trovato" }
+
+[[tests]]
+name   = "blocca_base_path_fuori_scope"
+input  = { pattern = "*.conf", base_path = "/etc" }
+expect = { ok = false, error_contains = "outside allowed scope" }
+
+# Sample concreto di output (one-shot per synt + fast-path generator).
+[[tests]]
+name        = "happy_path_sample"
+setup       = "mkdir -p /tmp/metnos_sample_find && touch /tmp/metnos_sample_find/foto1.jpg /tmp/metnos_sample_find/foto2.jpg"
+input       = { pattern = "*.jpg", base_path = "/tmp/metnos_sample_find" }
+expect      = { ok = true, metadata_field_eq = { count = 2 } }
+teardown    = "rm -rf /tmp/metnos_sample_find"
+expect_full = """
+{
+  "ok": true,
+  "entries": [
+    {"path": "/home/user/images/2024/foto1.jpg", "name": "foto1.jpg",
+     "type": "file", "mime": "image/jpeg", "kind": "image",
+     "size": 2458123, "mtime": 1717234567.0},
+    {"path": "/home/user/images/2024/foto2.jpg", "name": "foto2.jpg",
+     "type": "file", "mime": "image/jpeg", "kind": "image",
+     "size": 1923456, "mtime": 1717234890.0}
+  ],
+  "matches": [
+    "/home/user/images/2024/foto1.jpg",
+    "/home/user/images/2024/foto2.jpg"
+  ],
+  "metadata": {
+    "base_path": "/home/user/images/2024",
+    "patterns": ["*.jpg"], "recursive": true,
+    "case_sensitive": false, "count": 2, "visited": 47,
+    "truncated": false
+  }
+}
+"""
+
+[args.properties.kind]
+type        = "string"
+default     = ""
+
+[args.properties.kind.description]
+it = "t"
+en = "t"

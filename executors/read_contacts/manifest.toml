@@ -1,0 +1,84 @@
+# Manifest dell'executor `read_contacts` — Metnos v1.1 (24/5/2026)
+# Naming compositivo §2.2: read_contacts. Lettura puntuale per id/alias.
+
+manifest_format = "1.0"
+
+name        = "read_contacts"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "read", "leggi", "get", "ottieni",
+    "contatto", "contatti", "contact", "contacts",
+    "rubrica", "address book",
+    "dettaglio contatto", "info contatto", "scheda contatto"
+]
+
+[description]
+it = """Legge UN contatto puntuale dalla rubrica esterna per `contact_id` (slug del name) o alias `email`/`phone` esatto.
+
+USO: dopo find_contacts che ha trovato N match, chiamare con `contact_id=<slug>` per leggere i dettagli completi. Oppure passare direttamente `email=...` o `phone=...` per match esatto.
+
+NON CONFONDERE CON: `read_persons` (utenti sistema). Vedi find_contacts per la distinzione.
+
+OK: read_contacts(contact_id="luca-bianchi") -> entries=[{name:"Luca Bianchi", emails:["luca@..."], phones:["+39..."]}].
+
+Output entries=[contact] (0 o 1). Almeno uno fra contact_id/email/phone richiesto."""
+en = """Read ONE contact from external address book by `contact_id` (slug of name) or exact alias `email`/`phone`.
+
+USE: after find_contacts found N matches, call with `contact_id=<slug>` to read full details. Or pass `email=...` or `phone=...` directly for exact match.
+
+DO NOT CONFUSE WITH: `read_persons` (system users). See find_contacts for the distinction.
+
+OK: read_contacts(contact_id="luca-bianchi") -> entries=[{name:"Luca Bianchi", emails:["luca@..."], phones:["+39..."]}].
+
+Output entries=[contact] (0 or 1). At least one of contact_id/email/phone required."""
+
+[code]
+files  = ["read_contacts.py"]
+digest = "sha256:df87bf64a23ffb53d466c6a331f4c7a625201257b009cad9fefa873aac5447af"
+
+[args]
+type     = "object"
+
+[args.properties.contact_id]
+type    = "string"
+[args.properties.contact_id.description]
+it = "Slug del name (es. 'luca-bianchi'). MATCH ESATTO sullo slug deterministico."
+en = "Slug of name (e.g. 'luca-bianchi'). EXACT MATCH on deterministic slug."
+
+[args.properties.email]
+type    = "string"
+[args.properties.email.description]
+it = "Email esatta. MATCH ESATTO (case-insensitive) su un elemento di emails[]."
+en = "Exact email. EXACT MATCH (case-insensitive) on one element of emails[]."
+
+[args.properties.phone]
+type    = "string"
+[args.properties.phone.description]
+it = "Numero telefono esatto. MATCH ESATTO su un elemento di phones[]."
+en = "Exact phone number. EXACT MATCH on one element of phones[]."
+
+[args.properties.client]
+type    = "string"
+enum    = ["google_workspace"]
+default = "google_workspace"
+[args.properties.client.description]
+it = "Backend rubrica. Default 'google_workspace'."
+en = "Address book backend. Default 'google_workspace'."
+
+[[capabilities]]
+name = "exec_subprocess"
+hint = ["subprocess Python google_api.py contacts list"]
+
+[[capabilities]]
+name = "exec_net"
+hint = ["Google People API HTTPS"]
+
+[reversible]
+value = false
+
+[tests]
+"per id"    = {args = {contact_id = "test-stub"}, expected = {ok = true}}
+"per email" = {args = {email = "stub@example.com"}, expected = {ok = true}}
+"per phone" = {args = {phone = "+390000000000"}, expected = {ok = true}}
+"nessun id" = {args = {}, expected = {ok = false}}

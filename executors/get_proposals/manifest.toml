@@ -1,0 +1,78 @@
+# Manifest dell'executor `get_proposals` — Metnos v1.1
+# 3/5/2026: review pull-on-demand delle proposte introvertive.
+# Legge i JSONL append-only in `~/.local/share/metnos/introvertiva/`
+# (audit di run_all dei processi DEDUPE / GENERALIZE / SPECIALIZE),
+# ritorna entries strutturati. Niente azione: solo lettura.
+
+manifest_format = "1.0"
+
+name        = "get_proposals"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = ["proposte introvertiva", "proposte introvertive",
+                "proposals introvertiva", "introvertiva", "introvertive",
+                "introvertivo", "review pending", "review introvertiva",
+                "candidati introvertiva", "introvertive candidates",
+                "dedupe mnest", "deduplicazione mnest", "consolidamento mnest",
+                "generalize", "generalizzazione", "macro-executor", "macro",
+                "specialize", "specializzazione", "specializzato",
+                "promozione executor", "consolida mnest", "audit introvertiva",
+                "synt", "mnestoma", "introspezione",
+                "evaluator", "accept proposal", "reject proposal"]
+# Termini ambigui rimossi 11/5/2026 (F4 bonifica): `mostra/mostrami/vedi/
+# elenca/elenco` matchavano qualunque query di consultazione ("mostra le
+# foto", "elenca i file") inquinando il routing. `stanotte/ieri-sera/
+# ultima-volta` matchavano modificatori temporali generici ("annulla
+# l'ultima azione" → tie-break con undo_last_turn). Il PLANNER prompt
+# (Z.due) gia' indirizza esplicitamente queste query al tool corretto.
+# 12/5/2026 (F5 bonifica): termini singoli generici «proposte/proposta/
+# proposals/review/pending/candidati/candidates/dedupe/consolidamento»
+# matchavano «proponi 3 proposte» o «pending appointment». Tutti
+# qualificati con suffisso/prefisso «introvertiva/mnest» discriminante.
+# Bug live turn 35431172: get_proposals iniettato via consumer_match su
+# arg `kind` (fix collaterale in adaptive_rerank._GENERIC_PIPING_ARGS).
+revertible  = true
+lifecycle   = "active"
+
+[description]
+it = "Restituisce le proposte introvertive accumulate (DEDUPE / GENERALIZE / SPECIALIZE) prodotte dal task notturno `introvertiva_propose`. NON fa lookup di mail/file/messaggi: legge dal corpus del Synt/mnestoma. L'utente chiede in NL queste cose e il PLANNER invoca questo tool: «mostra le proposte introvertive», «mostrami le proposte di stanotte», «cosa ha proposto l'introvertiva», «review pending», «che dedupe ho da fare», «mostra i candidati a generalize», «mostra le specialize proposte», «proposte di stanotte», «pending review». Argomento `kind` opzionale: 'dedupe' | 'generalize' | 'specialize' | 'all' (default 'all'). Argomento `since_iso` opzionale: solo proposte da quel timestamp in poi (default: ultime 7 notti). Output: entries=[{kind, ts, payload}], dove `payload` e' il record completo della proposta (signature/cluster/argomento dominante a seconda di `kind`)."
+en = "Returns the accumulated introvertive proposals (DEDUPE / GENERALIZE / SPECIALIZE) produced by the nightly task `introvertiva_propose`. DOES NOT perform lookup of mail/files/messages: reads from the Synt/mnestoma corpus. The user asks for these things in NL and the PLANNER invokes this tool: \"show introvertive proposals\", \"show me last night's proposals\", \"what did the introvertive propose\", \"review pending\", \"what dedupe do I have to do\", \"show generalize candidates\", \"show proposed specializes\", \"last night's proposals\", \"pending review\". Optional argument `kind`: 'dedupe' | 'generalize' | 'specialize' | 'all' (default 'all'). Optional argument `since_iso`: only proposals from that timestamp onwards (default: last 7 nights). Output: entries=[{kind, ts, payload}], where `payload` is the complete proposal record (signature/cluster/dominant topic depending on `kind`)."
+
+[code]
+files  = ["get_proposals.py"]
+digest = "sha256:9965999b95147256e5d2e77f3994970c31b019f7c13670951e29679f86893f65"
+
+[args]
+type = "object"
+
+[args.properties.kind]
+type        = "string"
+enum        = ["dedupe", "generalize", "specialize", "all"]
+default     = "all"
+
+[args.properties.kind.description]
+it = "Tipo di proposta da restituire. 'dedupe' = consolidamenti mnest; 'generalize' = catene candidate a macro-executor; 'specialize' = args dominanti che giustificano variante specializzata; 'all' = unione di tutte e tre."
+en = "Type of proposal to return. 'dedupe' = memory consolidations; 'generalize' = candidate chains for macro-executor; 'specialize' = dominant args justifying a specialized variant; 'all' = union of all three."
+
+[args.properties.since_iso]
+type        = "string"
+
+[args.properties.since_iso.description]
+it = "Timestamp ISO (es. '2026-05-01T00:00:00Z') da cui includere le proposte. Default: 7 giorni fa (rolling window settimanale)."
+en = "ISO Timestamp (e.g., '2026-05-01T00:00:00Z') from which to include proposals. Default: 7 days ago (rolling weekly window)."
+
+[args.properties.max_results]
+type        = "integer"
+default     = 50
+minimum     = 1
+
+# revertible e reverse_pattern sono campi TOP-LEVEL del manifest
+# (gia' dichiarati sopra). NIENTE sezione `[capabilities]` qui:
+# `[capabilities]` con membri scalari verrebbe parsata come dict e poi
+# letta dal loader come list[str] dei suoi keys (bug osservato 3/5/2026
+# 22:27). Per dichiarare capabilities reali si usa `[[capabilities]]`
+# (array of tables, ognuna con `name` e `hint`).
+
+[args.properties.max_results.description]
+it = "Cap superiore sulle entries ritornate. Default 50."
+en = "Upper cap on the returned entries. Default 50."

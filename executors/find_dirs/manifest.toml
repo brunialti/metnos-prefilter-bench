@@ -1,0 +1,141 @@
+# Manifest dell'executor `find_dirs` — Metnos v1.1
+# Walk ricorsivo dell'albero di directory con metadati aggregati per dir.
+
+manifest_format = "1.0"
+
+name        = "find_dirs"
+version     = "0.1.0"
+author      = "Roberto Brunialti"
+affinity    = [
+    "find", "trova", "cerca", "list", "elenca", "search", "directory", "dirs", "cartelle",
+                "folder", "subdir", "sottocartella", "sottocartelle", "tree", "albero",
+                "walk", "stats", "statistiche", "popolose", "popolate", "size", "dimensione",
+                "metadata", "metadati"
+            ]
+revertible      = false
+lifecycle       = "active"
+
+[description]
+it = """Walk ricorsivo dell'albero. Ritorna SOLO directory con metadati aggregati per ognuna: file_count (diretti, NON ricorsivo), total_bytes, size_min, size_max, mtime, name.
+
+USO: directory piu' popolose/grandi, panoramica sottoalbero. Per file singoli: find_files. Per contenuto di UNA dir: list_dirs.
+
+METADATA AGGREGATI (gia' calcolati, niente compute_entries dopo):
+- count_dirs: numero di directory.
+- file_count_total: totale file ricorsivo sotto base_path.
+
+DEVI: per "quanti file in X" leggere metadata.file_count_total; per "quante cartelle in X" leggere metadata.count_dirs. UN SOLO step find_dirs basta.
+NON DEVI: chiamare compute_entries op=count su entries di find_dirs — conterebbe le cartelle credendo siano file.
+OK: find_dirs(base_path=X) → final_answer("{metadata.file_count_total} file in {metadata.count_dirs} cartelle").
+ERRORE: find_dirs → compute_entries(op=count) → "858 file": sono 858 cartelle, non file.
+
+Truncation: truncated_what='directory' + used + cap_field='max_results'."""
+en = """Recursive tree walk. Returns ONLY directories with aggregated metadata per dir: file_count (direct, NOT recursive), total_bytes, size_min, size_max, mtime, name.
+
+USE: most populated/largest dirs, subtree overview. For single files: find_files. For contents of ONE dir: list_dirs.
+
+AGGREGATED METADATA (precomputed, no compute_entries needed):
+- count_dirs: number of directories.
+- file_count_total: total recursive file count under base_path.
+
+DO: for "how many files in X" read metadata.file_count_total; for "how many folders in X" read metadata.count_dirs. ONE find_dirs step is enough.
+DO NOT: call compute_entries op=count on find_dirs entries — it would count folders thinking they are files.
+OK: find_dirs(base_path=X) → final_answer("{metadata.file_count_total} files in {metadata.count_dirs} folders").
+ERROR: find_dirs → compute_entries(op=count) → "858 files": those are 858 folders, not files.
+
+Truncation: truncated_what='directory' + used + cap_field='max_results'."""
+
+[code]
+files  = ["find_dirs.py"]
+digest = "sha256:4a270be02868c41e6b0a9964363ee58ef245fb32e3879706c430d0ae44c83dab"
+
+[args]
+type     = "object"
+required = ["base_path"]
+
+[args.properties.base_path]
+type        = "string"
+
+[args.properties.base_path.description]
+it = "Directory radice del walk. Path assoluto o ~ espandibile (es. '~', '/opt/metnos'). Deve essere dentro lo scope di lettura concesso."
+en = "Walk root directory. Absolute path or expandable ~ (e.g., '~', '/opt/metnos'). MUST be within the granted read scope."
+
+[args.properties.recursive]
+type        = "boolean"
+default     = true
+
+[args.properties.recursive.description]
+it = "Se true (default), attraversa tutto l'albero discendente. Se false, ritorna solo la base_path con i suoi metadati immediati."
+en = "If true (default), traverse the entire descendant tree. If false, return only the base_path with its immediate metadata."
+
+[args.properties.max_depth]
+type        = "integer"
+minimum     = 0
+default     = 10
+
+[args.properties.max_depth.description]
+it = "Profondita' massima della ricorsione (livelli di sottocartelle). 0 = solo base_path. Default 10."
+en = "Maximum recursion depth (subfolder levels). 0 = only base_path. Default 10."
+
+[args.properties.max_results]
+type        = "integer"
+minimum     = 1
+default     = 1000
+
+[args.properties.max_results.description]
+it = "Tetto massimo di directory restituite. Default 1000. Quando raggiunto, l'output ha truncated=true e il runtime aggiunge un avviso al messaggio finale."
+en = "Maximum number of directories returned. Default 1000. When reached, the output has truncated=true and the runtime adds a warning to the final message."
+
+[args.properties.include_hidden]
+type        = "boolean"
+default     = false
+
+[args.properties.include_hidden.description]
+it = "Se true, include directory che iniziano con '.' (es. .git, .cache). Default false."
+en = "If true, include directories that start with '.' (e.g., .git, .cache). Default false."
+
+[args.properties.client]
+type        = "string"
+enum        = ["local"]
+default     = "local"
+
+[args.properties.client.description]
+it = "Implementazione backend (default 'local' = filesystem locale). Plugin esterni futuri (gdrive, dropbox, ecc.) potranno aggiungere altri client."
+en = "Backend implementation (default 'local' = local filesystem). Future external plugins (gdrive, dropbox, etc.) may add other clients."
+
+[[capabilities]]
+name = "fs:read"
+hint = ["~/**", "/opt/**", "/tmp/**"]
+
+[[tests]]
+name     = "walk_semplice"
+setup    = "mkdir -p /tmp/metnos_test_finddirs/a/aa /tmp/metnos_test_finddirs/b && echo 1 > /tmp/metnos_test_finddirs/a/x.txt && echo 2 > /tmp/metnos_test_finddirs/a/aa/y.txt && echo 3 > /tmp/metnos_test_finddirs/b/z.txt"
+input    = { base_path = "/tmp/metnos_test_finddirs" }
+expect   = { ok = true, metadata_field_eq = { count = 3 } }
+teardown = "rm -rf /tmp/metnos_test_finddirs"
+
+[[tests]]
+name     = "non_ricorsivo"
+setup    = "mkdir -p /tmp/metnos_test_finddirs/a && echo 1 > /tmp/metnos_test_finddirs/a/x.txt"
+input    = { base_path = "/tmp/metnos_test_finddirs", recursive = false }
+expect   = { ok = true, metadata_field_eq = { count = 1 } }
+teardown = "rm -rf /tmp/metnos_test_finddirs"
+
+[[tests]]
+name     = "max_results_tronca"
+setup    = "mkdir -p /tmp/metnos_test_finddirs/a /tmp/metnos_test_finddirs/b /tmp/metnos_test_finddirs/c"
+input    = { base_path = "/tmp/metnos_test_finddirs", max_results = 2 }
+expect   = { ok = true, metadata_field_eq = { count = 2, truncated = true } }
+teardown = "rm -rf /tmp/metnos_test_finddirs"
+
+[[tests]]
+name     = "exclude_hidden_default"
+setup    = "mkdir -p /tmp/metnos_test_finddirs/visible /tmp/metnos_test_finddirs/.hidden && echo 1 > /tmp/metnos_test_finddirs/visible/x.txt"
+input    = { base_path = "/tmp/metnos_test_finddirs" }
+expect   = { ok = true, metadata_field_eq = { count = 1 } }
+teardown = "rm -rf /tmp/metnos_test_finddirs"
+
+[[tests]]
+name   = "fallisce_su_base_path_inesistente"
+input  = { base_path = "/tmp/metnos_does_not_exist_xyz" }
+expect = { ok = false, error_contains = "Percorso non trovato" }
