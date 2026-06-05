@@ -4,6 +4,10 @@ Reproducible benchmark for **closed-vocabulary tool selection** in an LLM agent 
 the harness behind the write-up *"I deleted the vector DB from my agent's tool
 selection. Same recall, none of the cost."*
 
+> Part of **Metnos**, a self-hosted, local-first personal assistant built on
+> synthesized executors and a ReAct planner. Project & docs: **https://metnos.com**.
+> This repo is the slice you need to reproduce the tool-selection benchmark.
+
 The claim: when your tools are named as a **closed compositional grammar**
 (`verb_object[_qualifier]`), a plain CPU token-matcher plus a few typed rules
 selects tools **as well as a BGE-M3 dense baseline** — with no embedding model, no
@@ -36,8 +40,9 @@ The dense baseline (BGE-M3) is optional and skipped by default — see
 | `runtime/` | the **real** production prefilter and strategies (the bench calls them, doesn't reimplement) |
 | `executors/*/manifest.toml` | the 74 tool manifests — the closed-vocabulary catalog itself |
 
-This is a curated, self-contained slice of a larger self-hosted assistant (Metnos);
-it is the subset needed to reproduce the benchmark, nothing more.
+This is a curated, self-contained slice of a larger self-hosted assistant
+([Metnos](https://metnos.com)); it is the subset needed to reproduce the benchmark,
+nothing more. The full assistant lives at **https://metnos.com**.
 
 ## Method honesty
 
